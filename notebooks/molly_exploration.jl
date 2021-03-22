@@ -9,17 +9,15 @@ begin
 	import Pkg
 	Pkg.activate(mktempdir())
 	Pkg.add([
-			"Images"
-			"ImageMagick"
 			"Makie"
 			"Molly"
 			"Plots"
+			"PlutoUI"
 	])
-	using Images
-	using ImageMagick
 	using Molly
 	using Makie
 	using Plots
+	using PlutoUI
 end
 
 # ╔═╡ b7ce7172-7b19-11eb-1c9b-49731d0c8da3
@@ -144,14 +142,10 @@ We can use [Makie.jl](http://makie.juliaplots.org/stable/) to visualize the simu
 """
 
 # ╔═╡ 4697498c-7c47-11eb-11e0-dd4c1c40b300
-file = visualize(s.loggers["coords"], box_size, "example_simulation.gif", markersize=10);
-
-# ╔═╡ 57af423e-7c50-11eb-3259-c95cf3682337
-image = Images.load(file);
+file = visualize(s.loggers["coords"], box_size, "../artifacts/example_simulation.gif", markersize=10);
 
 # ╔═╡ 2ae89586-7c53-11eb-05fd-1377defa0aab
-# How to show gif in notebook?
-# show(image)
+md"""$(LocalResource(file))"""
 
 # ╔═╡ 781a77ee-7c4d-11eb-16ec-31a1e4773418
 md"""
@@ -234,8 +228,7 @@ Simulations can be run on the GPU of a CUDA-compatible device. Doing this requir
 # ╠═3a631c3a-7c45-11eb-0801-91f5abc6bfac
 # ╟─31dedb40-7c47-11eb-3bc4-3949dffaf1d9
 # ╠═4697498c-7c47-11eb-11e0-dd4c1c40b300
-# ╠═57af423e-7c50-11eb-3259-c95cf3682337
-# ╠═2ae89586-7c53-11eb-05fd-1377defa0aab
+# ╟─2ae89586-7c53-11eb-05fd-1377defa0aab
 # ╟─781a77ee-7c4d-11eb-16ec-31a1e4773418
 # ╟─bbfb64fe-7c53-11eb-27a9-7dc6e2e7e444
 # ╠═69ff4a44-7c53-11eb-048d-cd7fd21ad475
