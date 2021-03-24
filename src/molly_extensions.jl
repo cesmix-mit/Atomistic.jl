@@ -2,7 +2,8 @@ using LinearAlgebra
 using Molly
 using Parameters
 
-export EquipartitionThermostat,
+export CustomLennardJones,
+    FixedVelocityThermostat,
     KineticEnergyLogger,
     PotentialEnergyLogger,
     VelocityLogger
@@ -13,15 +14,29 @@ import Molly.kinetic_energy
 import Molly.potential_energy
 import Molly.DefaultFloat
 
+# CUSTOM POTENTIAL
+
+struct CustomLennardJones <: GeneralInteraction
+    nl_only::Bool
+end
+
+function force(inter::CustomLennardJones, coord_i, coord_j, atom_i, atom_j, box_size)
+    # TODO
+end
+
+function potential_energy(inter::CustomLennardJones, s::Simulation, i::Integer, j::Integer)
+    # TODO
+end
+
 # CUSTOM THERMOSTAT
 
 kB = 1.380649e-23 # Boltzmann constant in J / K
 
-@with_kw struct EquipartitionThermostat{T <: Int} <: Thermostat
+@with_kw struct FixedVelocityThermostat{T <: Int} <: Thermostat
     dof::T = 3
 end
 
-function apply_thermostat!(velocities, s::Simulation, thermostat::EquipartitionThermostat)
+function apply_thermostat!(velocities, s::Simulation, thermostat::FixedVelocityThermostat)
     # return [
     #     normalize(v) * √(thermostat.dof * kB * s.temperature / (s.atoms[i].mass * 1.66054e-27)) * 10^-3
     #     for (i, v) ∈ enumerate(velocities)
