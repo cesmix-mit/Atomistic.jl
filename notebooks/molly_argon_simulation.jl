@@ -47,7 +47,7 @@ end
 
 # ╔═╡ d8daea28-817a-11eb-26e1-a909bc31bf83
 md"""
-# Example MD Simulation of Argon Gas
+# Example MD Simulation of Liquid Argon using Molly
 """
 
 # ╔═╡ c7559cde-817b-11eb-1d86-b5df501583b5
