@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.14.1
 
 using Markdown
 using InteractiveUtils
@@ -61,7 +61,7 @@ begin
 	
 	reference_temp = 94.4 # K
 	mean_v = √(kb * reference_temp / m) # m/s
-	thermostat_prob = 0.01
+	thermostat_prob = 0.1
 	
 	eq_steps = 2000
 	prod_steps = 5000
