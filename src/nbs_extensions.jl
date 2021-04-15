@@ -1,6 +1,8 @@
 using NBodySimulator
 using Plots
 using StaticArrays
+using Unitful
+using UnitfulAtomic
 using UnitfulRecipes
 
 function get_final_bodies(result::NBodySimulator.SimulationResult)
@@ -8,9 +10,9 @@ function get_final_bodies(result::NBodySimulator.SimulationResult)
 	positions = get_position(result, result.solution.t[end])
 	velocities = get_velocity(result, result.solution.t[end])
 	masses = get_masses(result.simulation.system)
-	bodies = MassBody[]
+	bodies = Array{MassBody}(undef, N)
 	for i ∈ 1:N
-		push!(bodies, MassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i]))
+		bodies[i] = MassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i])
 	end
 	return bodies
 end
@@ -70,7 +72,14 @@ end
 function plot_rdf(result::NBodySimulator.SimulationResult)
     N = length(result.simulation.system.bodies)
     T = result.solution.destats.naccept - 1
-    σ = result.simulation.system.potentials[:lennard_jones].σ
+	potentials = result.simulation.system.potentials
+	if :lennard_jones ∈ keys(potentials)
+		σ = potentials[:lennard_jones].σ
+	elseif :custom_lennard_jones ∈ keys(potentials)
+		σ = potentials[:custom_lennard_jones].σ
+	else
+		error("No σ value defined")
+	end
     rs, grf = @time rdf(result)
     plot(
 		title="Radial Distribution Function [n = $(N)] [T = $(T)]",
@@ -82,4 +91,53 @@ function plot_rdf(result::NBodySimulator.SimulationResult)
 		[auconvert(u"bohr", r) for r ∈ rs] / auconvert(u"bohr", σ),
 		grf
 	)
+end
+
+struct CustomLennardJonesParameters{pType <: Real} <: PotentialParameters
+    ϵ::pType
+    σ::pType
+    R::pType
+    σ2::pType
+    R2::pType
+end
+
+function CustomLennardJonesParameters(ϵ::Real, σ::Real, R::Real)
+    CustomLennardJonesParameters(ϵ, σ, R, σ^2, R^2)
+end
+
+import NBodySimulator.get_accelerating_function
+function get_accelerating_function(parameters::CustomLennardJonesParameters, simulation::NBodySimulation)
+    (ms, indices) = obtain_data_for_lennard_jones_interaction(simulation.system)
+    (dv, u, v, t, i) -> pairwise_lennard_jones_acceleration!(dv, u, i, indices, ms, parameters, simulation.boundary_conditions)
+end
+
+function obtain_data_for_lennard_jones_interaction(system::PotentialNBodySystem)
+    bodies = system.bodies
+    n = length(bodies)
+    ms = zeros(typeof(first(bodies).m), n)
+    indices = zeros(Int, n)
+    for i = 1:n
+        ms[i] = bodies[i].m
+        indices[i] = i
+    end
+    return (ms, indices)
+end
+
+function pairwise_lennard_jones_acceleration!(dv, rs, i::Integer, indices::Vector{<:Integer}, ms::Vector{<:Real}, parameters::CustomLennardJonesParameters, pbc::NBodySimulator.BoundaryConditions)
+    force = @SVector [0.0, 0.0, 0.0];
+    ri = @SVector [rs[1, i], rs[2, i], rs[3, i]]
+
+    for j ∈ indices
+        if j != i
+            rj = @SVector [rs[1, j], rs[2, j], rs[3, j]]
+            (rij, r, rij_2) = NBodySimulator.get_interparticle_distance(ri, rj, pbc)
+
+            if rij_2 < parameters.R2
+                σ_rij_6 = (parameters.σ2 / rij_2)^3
+                σ_rij_12 = σ_rij_6^2
+                force += (2 * σ_rij_12 - σ_rij_6 ) * rij / rij_2
+            end
+        end
+    end
+    @. dv +=  24 * parameters.ϵ * force / ms[i]
 end

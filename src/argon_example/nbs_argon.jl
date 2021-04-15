@@ -4,7 +4,7 @@ using StaticArrays
 using Unitful
 using UnitfulAtomic
 
-include("../nbody_extensions.jl")
+include("../nbs_extensions.jl")
 
 function equilibrate(N::Integer, box_size::Quantity, Δt::Quantity, eq_steps::Integer, reference_temp::Quantity, thermostat_prob::AbstractFloat)
     m = auconvert(6.6335209e-26u"kg")
@@ -15,6 +15,7 @@ function equilibrate(N::Integer, box_size::Quantity, Δt::Quantity, eq_steps::In
 
     initial_bodies = generate_bodies_in_cell_nodes(N, ustrip(m), ustrip(mean_v), ustrip(box_size))
 	potentials = Dict(:lennard_jones => LennardJonesParameters(ustrip(ϵ), ustrip(σ), ustrip(cutoff)))
+	# potentials = Dict(:custom_lennard_jones => CustomLennardJonesParameters(ustrip(ϵ), ustrip(σ), ustrip(cutoff)))
 	eq_system = PotentialNBodySystem(initial_bodies, potentials)
 
     boundary_conditions = CubicPeriodicBoundaryConditions(ustrip(box_size))

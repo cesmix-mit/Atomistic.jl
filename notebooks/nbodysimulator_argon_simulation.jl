@@ -43,7 +43,7 @@ end;
 
 # ╔═╡ a7e0d1eb-2595-4cb8-ba82-dae054c90305
 begin
-	M = ingredients("../src/nbody_extensions.jl");
+	M = ingredients("../src/nbs_extensions.jl");
 	import .M:
 		get_final_bodies
 end;

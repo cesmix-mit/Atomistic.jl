@@ -1,4 +1,4 @@
-include("./nbody_argon.jl")
+include("./nbs_argon.jl")
 include("./dftk_argon.jl")
 
 # N = 864
