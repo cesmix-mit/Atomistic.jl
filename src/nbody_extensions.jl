@@ -1,6 +1,7 @@
 using NBodySimulator
 using Plots
 using StaticArrays
+using UnitfulRecipes
 
 function get_final_bodies(result::NBodySimulator.SimulationResult)
 	N = length(result.simulation.system.bodies)
@@ -37,7 +38,7 @@ function plot_temperature(result::NBodySimulator.SimulationResult, stride::Integ
 	)
 end
 
-function plot_energy(result::NBodySimulator.SimulationResult, stride::Integer, time_scale::AbstractFloat=1e12)
+function plot_energy(result::NBodySimulator.SimulationResult, stride::Integer)
     N = length(result.simulation.system.bodies)
     time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(result.solution.t) if (i - 1) % stride == 0]
     plot(
@@ -68,7 +69,7 @@ end
 
 function plot_rdf(result::NBodySimulator.SimulationResult)
     N = length(result.simulation.system.bodies)
-    T = length(result.solution.t)
+    T = result.solution.destats.naccept - 1
     σ = result.simulation.system.potentials[:lennard_jones].σ
     rs, grf = @time rdf(result)
     plot(

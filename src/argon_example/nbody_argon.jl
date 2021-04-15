@@ -1,10 +1,8 @@
 using LinearAlgebra
 using NBodySimulator
-using Plots
 using StaticArrays
 using Unitful
 using UnitfulAtomic
-using UnitfulRecipes
 
 include("../nbody_extensions.jl")
 
@@ -29,21 +27,3 @@ function equilibrate(N::Integer, box_size::Quantity, Δt::Quantity, eq_steps::In
 	eq_bodies = get_final_bodies(eq_result)
 	return eq_result, eq_bodies
 end
-
-N = 864
-# N = 100
-box_size = auconvert(3.47786u"nm")
-
-reference_temp = auconvert(94.4u"K")
-thermostat_prob = 0.1
-
-steps = 2000
-Δt = auconvert(1e-2u"ps")
-
-stride = 10
-
-result, bodies = equilibrate(N, box_size, Δt, steps, reference_temp, thermostat_prob)
-
-display(plot_temperature(result, stride))
-display(plot_energy(result, stride))
-# display(plot_rdf(result))
