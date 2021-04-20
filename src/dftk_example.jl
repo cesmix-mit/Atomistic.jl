@@ -3,8 +3,6 @@ using Plots
 using Unitful
 using UnitfulAtomic
 
-setup_threading()
-
 ### Copied from https://juliamolsim.github.io/DFTK.jl/stable/guide/tutorial/
 
 println("step 1")

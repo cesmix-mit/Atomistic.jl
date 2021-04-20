@@ -70,16 +70,12 @@ function plot_energy(result::NBodySimulator.SimulationResult, stride::Integer)
 end
 
 function plot_rdf(result::NBodySimulator.SimulationResult)
+	if :lennard_jones ∉ keys(result.simulation.system.potentials)
+		error("No Lennard-Jones Potential")
+	end
     N = length(result.simulation.system.bodies)
     T = result.solution.destats.naccept - 1
-	potentials = result.simulation.system.potentials
-	if :lennard_jones ∈ keys(potentials)
-		σ = potentials[:lennard_jones].σ
-	elseif :custom_lennard_jones ∈ keys(potentials)
-		σ = potentials[:custom_lennard_jones].σ
-	else
-		error("No σ value defined")
-	end
+	σ = result.simulation.system.potentials[:lennard_jones].σ
     rs, grf = @time rdf(result)
     plot(
 		title="Radial Distribution Function [n = $(N)] [T = $(T)]",
