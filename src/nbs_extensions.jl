@@ -27,7 +27,7 @@ function plot_temperature(result::NBodySimulator.SimulationResult, stride::Integ
 	)
 	plot!(
 		time_range,
-		t -> auconvert(u"K", temperature(result, ustrip(auconvert(t)))),
+		t -> auconvert(u"K", temperature(result, austrip(t))),
 		label="Simulation Temperature",
 		color=1
 	)
@@ -51,19 +51,19 @@ function plot_energy(result::NBodySimulator.SimulationResult, stride::Integer)
 	)
 	plot!(
 		time_range,
-		t -> auconvert(u"hartree", kinetic_energy(result, ustrip(auconvert(t)))),
+		t -> auconvert(u"hartree", kinetic_energy(result, austrip(t))),
 		label="Kinetic Energy",
 		color=2
 	)
 	plot!(
 		time_range,
-		t -> auconvert(u"hartree", potential_energy(result, ustrip(auconvert(t)))),
+		t -> auconvert(u"hartree", potential_energy(result, austrip(t))),
 		label="Potential Energy",
 		color=1
 	)
 	plot!(
 		time_range,
-		t -> auconvert(u"hartree", total_energy(result, ustrip(auconvert(t)))),
+		t -> auconvert(u"hartree", total_energy(result, austrip(t))),
 		label="Total Energy",
 		color=3
 	)
@@ -84,7 +84,7 @@ function plot_rdf(result::NBodySimulator.SimulationResult)
         legend=false
 	)
 	plot!(
-		[auconvert(u"bohr", r) for r ∈ rs] / auconvert(u"bohr", σ),
+		auconvert.(u"bohr", rs) / auconvert(u"bohr", σ),
 		grf
 	)
 end

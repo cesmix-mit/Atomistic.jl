@@ -13,7 +13,7 @@ function calculate_forces(bodies::Array{MassBody}, box_size::Quantity)
     Ar = ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier))
 
     # Specify type and positions of atoms
-    atoms = [Ar => [[auconvert(u"bohr", p) / box_size for p ∈ b.r] for b ∈ bodies]]
+    atoms = [Ar => [auconvert.(u"bohr", b.r) / box_size for b ∈ bodies]]
 
     # 2. Select model and basis
     model = model_LDA(lattice, atoms)
