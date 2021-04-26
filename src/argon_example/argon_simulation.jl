@@ -8,17 +8,25 @@ box_size = auconvert(3.47786u"nm")
 reference_temp = auconvert(94.4u"K")
 thermostat_prob = 0.1
 
-# steps = 2000
-steps = 100000
+# eq_steps = 2000
+eq_steps = 100000
 Δt = auconvert(1e-2u"ps")
 
-stride = steps ÷ 200
+eq_stride = eq_steps ÷ 200
 
-result, bodies = equilibrate(N, box_size, Δt, steps, reference_temp, thermostat_prob)
+eq_result, eq_bodies = equilibrate(N, box_size, Δt, eq_steps, reference_temp, thermostat_prob)
 
-display(plot_temperature(result, stride))
-display(plot_energy(result, stride))
-display(plot_rdf(result))
+display(plot_temperature(eq_result, eq_stride))
+display(plot_energy(eq_result, eq_stride))
+display(plot_rdf(eq_result))
 
-forces = calculate_forces(bodies, box_size)
-[auconvert.(u"hartree/bohr", f) for f in forces]
+forces = calculate_dftk_forces(eq_bodies, box_size)
+
+dftk_force_steps = 100
+dftk_force_stride = dftk_force_steps ÷ 10
+
+result, bodies = dftk_force_simulate(eq_bodies, forces, box_size, Δt, dftk_force_steps)
+display(plot_temperature(result, dftk_force_stride))
+display(plot_energy(result, dftk_force_stride))
+
+;

@@ -20,24 +20,29 @@ end
 function plot_temperature(result::NBodySimulator.SimulationResult, stride::Integer)
     N = length(result.simulation.system.bodies)
     time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(result.solution.t) if (i - 1) % stride == 0]
-    plot(
+    p = plot(
 		title="Temperature during Simulation [n = $(N)]",
 		xlab="Time",
 		ylab="Temperature",
 	)
 	plot!(
+		p,
 		time_range,
 		t -> auconvert(u"K", temperature(result, austrip(t))),
 		label="Simulation Temperature",
 		color=1
 	)
-	plot!(
-		time_range,
-		t -> auconvert(u"K", result.simulation.thermostat.T),
-		label="Reference Temperature",
-		color=2,
-		linestyle=:dash
-	)
+	if (!(result.simulation.thermostat isa NBodySimulator.NullThermostat))
+		plot!(
+			p,
+			time_range,
+			t -> auconvert(u"K", result.simulation.thermostat.T),
+			label="Reference Temperature",
+			color=2,
+			linestyle=:dash
+		)
+	end
+	p
 end
 
 function plot_energy(result::NBodySimulator.SimulationResult, stride::Integer)
@@ -136,4 +141,13 @@ function pairwise_lennard_jones_acceleration!(dv, rs, i::Integer, indices::Vecto
         end
     end
     @. dv +=  24 * parameters.ϵ * force / ms[i]
+end
+
+struct DFTKForceParameters{pType <: Real} <: PotentialParameters
+	forces::Array{SVector{3, pType}}
+end
+
+function get_accelerating_function(parameters::DFTKForceParameters, simulation::NBodySimulation)
+    masses = get_masses(simulation.system)
+    (dv, u, v, t, i) -> begin dv .+= parameters.forces[i] / masses[i] end
 end

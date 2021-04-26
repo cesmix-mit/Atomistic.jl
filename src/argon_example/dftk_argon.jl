@@ -4,7 +4,7 @@ using UnitfulAtomic
 
 setup_threading()
 
-function calculate_forces(bodies::Array{MassBody}, box_size::Quantity)
+function calculate_dftk_forces(bodies::Array{MassBody}, box_size::Quantity)
     # 1. Define lattice and atomic positions
     # a = 5.26u"angstrom"          # Argon lattice constant
     lattice = box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]]
@@ -25,5 +25,5 @@ function calculate_forces(bodies::Array{MassBody}, box_size::Quantity)
     # 3. Run the SCF procedure to obtain the ground state
     @time scfres = self_consistent_field(basis, tol=1e-4)
 
-    return compute_forces_cart(scfres)[1]
+    return [auconvert.(u"hartree/bohr", f) for f in compute_forces_cart(scfres)[1]]
 end
