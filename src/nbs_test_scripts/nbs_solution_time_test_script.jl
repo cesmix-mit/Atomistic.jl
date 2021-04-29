@@ -1,21 +1,8 @@
 using LinearAlgebra
 using NBodySimulator
-using Profile
 using StaticArrays
 using Unitful
 using UnitfulAtomic
-
-function get_final_bodies(result::NBodySimulator.SimulationResult)
-	N = length(result.simulation.system.bodies)
-	positions = get_position(result, result.solution.t[end])
-	velocities = get_velocity(result, result.solution.t[end])
-	masses = get_masses(result.simulation.system)
-	bodies = Array{MassBody}(undef, N)
-	for i ∈ 1:N
-		bodies[i] = MassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i])
-	end
-	return bodies
-end
 
 function equilibrate(N::Integer, box_size::Quantity, Δt::Quantity, eq_steps::Integer, reference_temp::Quantity, thermostat_prob::AbstractFloat)
     m = auconvert(6.6335209e-26u"kg")
@@ -34,12 +21,10 @@ function equilibrate(N::Integer, box_size::Quantity, Δt::Quantity, eq_steps::In
 	
 	simulator = VelocityVerlet()
 
-    eq_result = @time run_simulation(eq_simulation, simulator, dt=ustrip(Δt))
-	eq_bodies = get_final_bodies(eq_result)
-	return eq_result, eq_bodies
+    return @time run_simulation(eq_simulation, simulator, dt=ustrip(Δt))
 end
 
-N = 864
+N = 1
 box_size = auconvert(3.47786u"nm")
 
 reference_temp = auconvert(94.4u"K")
@@ -48,7 +33,5 @@ thermostat_prob = 0.1
 steps = 2000
 Δt = auconvert(1e-2u"ps")
 
-stride = steps ÷ 200
-
-result, bodies = equilibrate(N, box_size, Δt, steps, reference_temp, thermostat_prob)
-@profview rdf(result)
+result = equilibrate(N, box_size, Δt, steps, reference_temp, thermostat_prob)
+result.solution.t
