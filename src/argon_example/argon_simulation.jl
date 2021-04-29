@@ -20,6 +20,8 @@ display(plot_temperature(eq_result, eq_stride))
 display(plot_energy(eq_result, eq_stride))
 display(plot_rdf(eq_result))
 
+# display(analyze_convergence(eq_bodies, box_size))
+
 forces = calculate_dftk_forces(eq_bodies, box_size)
 
 dftk_force_steps = 100
