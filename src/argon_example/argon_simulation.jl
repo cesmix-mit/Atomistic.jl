@@ -21,6 +21,7 @@ display(plot_energy(eq_result, eq_stride))
 display(plot_rdf(eq_result))
 
 force_parameters = DFTKForceGenerationParameters(
+    box_size,
     box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
     ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
     [1, 1, 1],
@@ -28,9 +29,9 @@ force_parameters = DFTKForceGenerationParameters(
     1e-4
 )
 
-# display(analyze_convergence(eq_bodies, box_size, force_parameters, [e * u"hartree" for e in (10, 12, 14, 16, 18, 20)]))
+# display(analyze_convergence(eq_bodies, force_parameters, [e * u"hartree" for e in (10, 12, 14, 16, 18, 20)]))
 
-forces = generate_forces(eq_bodies, box_size, force_parameters)
+forces = generate_forces(eq_bodies, force_parameters)
 
 dftk_force_steps = 100
 dftk_force_stride = dftk_force_steps ÷ 10
