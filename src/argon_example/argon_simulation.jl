@@ -1,5 +1,15 @@
-include("./nbs_argon.jl")
+# TODO: remove relative path
+include("../../../ASEPotential/src/ASEPotential.jl")
+using .ASEPotential
+
+include("../molecular_simulation.jl")
+include("../ase_potential_integration.jl")
 include("../dftk_integration.jl")
+include("../nbs_extensions.jl")
+
+# using Random
+
+include("./nbs_argon.jl")
 
 # N = 864
 N = 5
@@ -20,10 +30,10 @@ display(plot_temperature(eq_result, eq_stride))
 display(plot_energy(eq_result, eq_stride))
 display(plot_rdf(eq_result))
 
-force_parameters = DFTKForceGenerationParameters(
+dftk_force_parameters = DFTKForceGenerationParameters(
     box_size,
-    box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
     ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
+    box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
     [1, 1, 1],
     10u"hartree",
     1e-4
@@ -31,13 +41,31 @@ force_parameters = DFTKForceGenerationParameters(
 
 # display(analyze_convergence(eq_bodies, force_parameters, [e * u"hartree" for e in (10, 12, 14, 16, 18, 20)]))
 
-forces = generate_forces(eq_bodies, force_parameters)
+# Random.seed!(0)
+dftk_forces = generate_forces(eq_bodies, dftk_force_parameters)
+# println(dftk_forces)
 
-dftk_force_steps = 100
-dftk_force_stride = dftk_force_steps ÷ 10
+# dftk_force_steps = 100
+# dftk_force_stride = dftk_force_steps ÷ 10
 
-result, bodies = simulate(eq_bodies, forces, box_size, Δt, dftk_force_steps)
-display(plot_temperature(result, dftk_force_stride))
-display(plot_energy(result, dftk_force_stride))
+# result, bodies = simulate(eq_bodies, dftk_forces, box_size, Δt, dftk_force_steps)
+# display(plot_temperature(result, dftk_force_stride))
+# display(plot_energy(result, dftk_force_stride))
+
+ase_dftk_force_parameters = ASEForceGenerationParameters(
+    box_size,
+    ElementCoulomb(:Ar),
+    box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
+    ASEPotential.DFTKCalculatorParameters(
+        ecut=10u"hartree",
+        kpts=[1, 1, 1],
+        scftol=1e-4,
+        n_threads=8
+    )
+)
+
+# Random.seed!(0)
+ase_dftk_forces = generate_forces(eq_bodies, ase_dftk_force_parameters)
+# println(ase_dftk_forces)
 
 ;

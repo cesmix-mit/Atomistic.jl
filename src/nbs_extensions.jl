@@ -1,10 +1,3 @@
-using NBodySimulator
-using Plots
-using StaticArrays
-using Unitful
-using UnitfulAtomic
-using UnitfulRecipes
-
 function simulate(bodies::Vector{MassBody}, potential::PotentialParameters, box_size::Quantity, Δt::Quantity, steps::Integer)
 	potentials = Dict(:custom => potential)
 	system = PotentialNBodySystem(bodies, potentials)

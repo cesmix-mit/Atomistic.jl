@@ -1,11 +1,3 @@
-using LinearAlgebra
-using NBodySimulator
-using StaticArrays
-using Unitful
-using UnitfulAtomic
-
-include("../nbs_extensions.jl")
-
 function equilibrate(N::Integer, box_size::Quantity, Δt::Quantity, eq_steps::Integer, reference_temp::Quantity, thermostat_prob::AbstractFloat)
     m = auconvert(6.6335209e-26u"kg")
     σ = auconvert(0.34u"nm")

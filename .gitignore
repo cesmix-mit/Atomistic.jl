@@ -25,3 +25,8 @@ Manifest.toml
 
 # Directory used for storing artifacts from notebooks
 artifacts/
+
+*dftk.json
+*dftk.log
+*dftk.checkpoint.jld2
+*dftk.scfres.jld2

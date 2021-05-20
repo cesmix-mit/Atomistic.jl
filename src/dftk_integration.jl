@@ -1,26 +1,9 @@
-using DFTK
-using NBodySimulator
-using StaticArrays
-using Unitful
-using UnitfulAtomic
-
-include("./molecular_simulation.jl")
-
 setup_threading()
-
-struct DFTKPotentialParameters{pType <: Real} <: PotentialParameters
-	forces::Vector{SVector{3, pType}}
-end
-
-function NBodySimulator.get_accelerating_function(parameters::DFTKPotentialParameters, simulation::NBodySimulation)
-    masses = get_masses(simulation.system)
-    (dv, u, v, t, i) -> begin dv .+= parameters.forces[i] / masses[i] end
-end
 
 struct DFTKForceGenerationParameters <: ForceGenerationParameters
     box_size::Quantity
-    lattice::AbstractArray{Quantity, 2}
     psp::ElementPsp
+    lattice::AbstractArray{Quantity, 2}
     kgrid::AbstractVector{Integer}
     Ecut::Quantity
     tolerance::AbstractFloat
@@ -37,7 +20,7 @@ end
 
 function generate_forces(bodies::Vector{MassBody}, parameters::DFTKForceGenerationParameters)
     scfres = calculate_scf(bodies, parameters)
-    return DFTKPotentialParameters(compute_forces_cart(scfres)[1])
+    return ParticleForcePotentialParameters(compute_forces_cart(scfres)[1])
 end
 
 function analyze_convergence(bodies::Vector{MassBody}, parameters::DFTKForceGenerationParameters, cutoffs::Vector{<:Quantity})
