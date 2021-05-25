@@ -1,7 +1,3 @@
-# TODO: remove relative path
-include("../../../ASEPotential/src/ASEPotential.jl")
-using .ASEPotential
-
 include("../molecular_simulation.jl")
 include("../ase_potential_integration.jl")
 include("../dftk_integration.jl")
@@ -43,7 +39,7 @@ dftk_force_parameters = DFTKForceGenerationParameters(
 
 # Random.seed!(0)
 dftk_forces = generate_forces(eq_bodies, dftk_force_parameters)
-# println(dftk_forces)
+println(dftk_forces)
 
 # dftk_force_steps = 100
 # dftk_force_stride = dftk_force_steps ÷ 10
@@ -66,6 +62,6 @@ ase_dftk_force_parameters = ASEForceGenerationParameters(
 
 # Random.seed!(0)
 ase_dftk_forces = generate_forces(eq_bodies, ase_dftk_force_parameters)
-# println(ase_dftk_forces)
+println(ase_dftk_forces)
 
 ;
