@@ -24,7 +24,7 @@ function generate_forces(bodies::Vector{MassBody}, parameters::DFTKForceGenerati
 end
 
 function analyze_convergence(bodies::Vector{MassBody}, parameters::DFTKForceGenerationParameters, cutoffs::Vector{<:Quantity})
-    options = Dict(Ecut => DFTKForceGenerationParameters(parameters.box_size, parameters.lattice, parameters.psp, parameters.kgrid, Ecut, parameters.tolerance) for Ecut in cutoffs)
+    options = Dict(Ecut => DFTKForceGenerationParameters(parameters.box_size, parameters.psp, parameters.lattice, parameters.kgrid, Ecut, parameters.tolerance) for Ecut in cutoffs)
     fields = Dict(Ecut => calculate_scf(bodies, options[Ecut]) for Ecut in cutoffs)
     energies = Dict(Ecut => fields[Ecut].energies.total for Ecut in cutoffs)
     plot(

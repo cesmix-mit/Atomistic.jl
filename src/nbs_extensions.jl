@@ -1,15 +1,18 @@
-function simulate(bodies::Vector{MassBody}, potential::PotentialParameters, box_size::Quantity, Δt::Quantity, steps::Integer)
-	potentials = Dict(:custom => potential)
+function simulate(bodies::Vector{MassBody}, potentials::Dict{Symbol, <:PotentialParameters}, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"ps", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
 	system = PotentialNBodySystem(bodies, potentials)
 
 	boundary_conditions = CubicPeriodicBoundaryConditions(ustrip(box_size))
-	simulation = NBodySimulation(system, (0.0, steps * ustrip(Δt)), boundary_conditions, 1.0)
+	simulation = NBodySimulation(system, (ustrip(t_0), ustrip(t_0) + steps * ustrip(Δt)), boundary_conditions, thermostat, 1.0)
 
 	simulator = VelocityVerlet()
 
 	result = @time run_simulation(simulation, simulator, dt=ustrip(Δt))
 	bodies = get_final_bodies(result)
 	return result, bodies
+end
+
+function simulate(bodies::Vector{MassBody}, potential::PotentialParameters, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"ps", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
+	simulate(bodies, Dict(:custom => potential), box_size, Δt, steps, t_0, thermostat)
 end
 
 function get_final_bodies(result::NBodySimulator.SimulationResult)
@@ -26,27 +29,42 @@ end
 
 function plot_temperature(result::NBodySimulator.SimulationResult, stride::Integer)
     N = length(result.simulation.system.bodies)
-    time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(result.solution.t) if (i - 1) % stride == 0]
     p = plot(
 		title="Temperature during Simulation [n = $(N)]",
 		xlab="Time",
 		ylab="Temperature",
 	)
+	plot_temperature!(p, result, stride)
+end
+
+function plot_temperature!(p::Plots.Plot, result::NBodySimulator.SimulationResult, stride::Integer)
+	time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(result.solution.t) if (i - 1) % stride == 0]
+	if (austrip(time_range[1]) != 0)
+		vline!(
+			p,
+			[time_range[1]],
+			label=false,
+			color=:black,
+			linestyle=:dot,
+			lw=2
+		)
+	end
 	plot!(
 		p,
 		time_range,
 		t -> auconvert(u"K", temperature(result, austrip(t))),
-		label="Simulation Temperature",
-		color=1
+		label=(austrip(time_range[1]) == 0 ? "Simulation Temperature" : nothing),
+		color=1,
 	)
 	if (!(result.simulation.thermostat isa NBodySimulator.NullThermostat))
 		plot!(
 			p,
 			time_range,
 			t -> auconvert(u"K", result.simulation.thermostat.T),
-			label="Reference Temperature",
+			label=(austrip(time_range[1]) == 0 ? "Reference Temperature" : nothing),
 			color=2,
-			linestyle=:dash
+			linestyle=:dash,
+			lw=2
 		)
 	end
 	p
@@ -54,29 +72,46 @@ end
 
 function plot_energy(result::NBodySimulator.SimulationResult, stride::Integer)
     N = length(result.simulation.system.bodies)
-    time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(result.solution.t) if (i - 1) % stride == 0]
-    plot(
+    p = plot(
 		title="Energy during Simulation [n = $(N)]",
 		xlab="Time",
 		ylab="Energy",
 		legend=:right
 	)
+	plot_energy!(p, result, stride)
+end
+
+function plot_energy!(p::Plots.Plot, result::NBodySimulator.SimulationResult, stride::Integer)
+	time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(result.solution.t) if (i - 1) % stride == 0]
+	if (austrip(time_range[1]) != 0)
+		vline!(
+			p,
+			[time_range[1]],
+			label=false,
+			color=:black,
+			linestyle=:dot,
+			lw=2
+		)
+	end
 	plot!(
+		p,
 		time_range,
 		t -> auconvert(u"hartree", kinetic_energy(result, austrip(t))),
-		label="Kinetic Energy",
+		label=(austrip(time_range[1]) == 0 ? "Kinetic Energy" : nothing),
 		color=2
 	)
 	plot!(
+		p,
 		time_range,
 		t -> auconvert(u"hartree", potential_energy(result, austrip(t))),
-		label="Potential Energy",
+		label=(austrip(time_range[1]) == 0 ? "Potential Energy" : nothing),
 		color=1
 	)
 	plot!(
+		p,
 		time_range,
 		t -> auconvert(u"hartree", total_energy(result, austrip(t))),
-		label="Total Energy",
+		label=(austrip(time_range[1]) == 0 ? "Total Energy" : nothing),
 		color=3
 	)
 end
