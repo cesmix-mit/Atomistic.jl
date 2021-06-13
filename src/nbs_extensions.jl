@@ -7,19 +7,23 @@ function simulate(bodies::Vector{MassBody}, potentials::Dict{Symbol, <:Potential
 	simulator = VelocityVerlet()
 
 	result = @time run_simulation(simulation, simulator, dt=ustrip(Δt))
-	bodies = get_final_bodies(result)
+	bodies = extract_final_bodies(result)
 	return result, bodies
 end
 
-function simulate(bodies::Vector{MassBody}, potential::PotentialParameters, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"ps", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
+function simulate(bodies::AbstractVector{MassBody}, potential::PotentialParameters, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"ps", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
 	simulate(bodies, Dict(:custom => potential), box_size, Δt, steps, t_0, thermostat)
 end
 
-function get_final_bodies(result::NBodySimulator.SimulationResult)
-	N = length(result.simulation.system.bodies)
+function extract_final_bodies(result::NBodySimulator.SimulationResult)
 	positions = get_position(result, result.solution.t[end])
 	velocities = get_velocity(result, result.solution.t[end])
 	masses = get_masses(result.simulation.system)
+	return construct_bodies(positions, velocities, masses)
+end
+
+function construct_bodies(positions::AbstractMatrix{<:Real}, velocities::AbstractMatrix{<:Real}, masses::AbstractVector{<:Real})
+	N = length(masses)
 	bodies = Array{MassBody}(undef, N)
 	for i ∈ 1:N
 		bodies[i] = MassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i])
@@ -116,14 +120,14 @@ function plot_energy!(p::Plots.Plot, result::NBodySimulator.SimulationResult, st
 	)
 end
 
-function plot_rdf(result::NBodySimulator.SimulationResult)
-	if :lennard_jones ∉ keys(result.simulation.system.potentials)
-		error("No Lennard-Jones Potential")
+function plot_rdf(result::NBodySimulator.SimulationResult; σ::Union{Quantity, Missing}=missing, sample_fraction::Integer=20)
+	if σ === missing && :lennard_jones ∉ keys(result.simulation.system.potentials)
+		error("No σ specified")
 	end
     N = length(result.simulation.system.bodies)
     T = result.solution.destats.naccept
-	σ = result.simulation.system.potentials[:lennard_jones].σ
-    rs, grf = @time custom_rdf(result, 20) # using the trailing 5% of the data for the RDF
+	σ = σ !== missing ? austrip(σ) : result.simulation.system.potentials[:lennard_jones].σ
+    rs, grf = @time custom_rdf(result, sample_fraction)
     plot(
 		title="Radial Distribution Function [n = $(N)] [T = $(T)]",
 		xlab="Distance r/σ",
@@ -136,12 +140,11 @@ function plot_rdf(result::NBodySimulator.SimulationResult)
 	)
 end
 
-import NBodySimulator.obtain_data_for_lennard_jones_interaction
 function custom_rdf(sr::NBodySimulator.SimulationResult, sample_fraction::Integer=10)
     n = length(sr.simulation.system.bodies)
     pbc = sr.simulation.boundary_conditions
 
-    (ms, indxs) = obtain_data_for_lennard_jones_interaction(sr.simulation.system)
+    (ms, indxs) = NBodySimulator.obtain_data_for_lennard_jones_interaction(sr.simulation.system)
     indlen = length(indxs)
 	trange = sr.solution.t[end - length(sr.solution.t) ÷ sample_fraction + 1:end]
 

@@ -13,7 +13,7 @@ Base.@kwdef struct DFTKForceGenerationParameters <: ForceGenerationParameters
 end
 DFTKForceGenerationParameters(parameters::DFTKForceGenerationParameters, Ecut::Quantity) = DFTKForceGenerationParameters(parameters.box_size, parameters.psp, parameters.lattice, Ecut, parameters.kgrid, parameters.n_bands, parameters.tol, parameters.α, parameters.mixing);
 
-function calculate_scf(bodies::Vector{MassBody}, parameters::DFTKForceGenerationParameters)
+function calculate_scf(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters)
     atoms = [parameters.psp => [auconvert.(u"bohr", b.r) / parameters.box_size for b ∈ bodies]]
     
     model = model_LDA(parameters.lattice, atoms)
@@ -22,12 +22,12 @@ function calculate_scf(bodies::Vector{MassBody}, parameters::DFTKForceGeneration
     return @time self_consistent_field(basis; (f=>getfield(parameters, f) for f in (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== missing)...)
 end
 
-function generate_forces(bodies::Vector{MassBody}, parameters::DFTKForceGenerationParameters)
+function generate_forces(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters)
     scfres = calculate_scf(bodies, parameters)
-    return ParticleForcePotentialParameters(compute_forces_cart(scfres)[1])
+    return compute_forces_cart(scfres)[1]
 end
 
-function analyze_convergence(bodies::Vector{MassBody}, parameters::DFTKForceGenerationParameters, cutoffs::Vector{<:Quantity})
+function analyze_convergence(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters, cutoffs::AbstractVector{<:Quantity})
     options = Dict(Ecut => DFTKForceGenerationParameters(parameters, Ecut) for Ecut in cutoffs)
     fields = Dict(Ecut => calculate_scf(bodies, options[Ecut]) for Ecut in cutoffs)
     energies = Dict(Ecut => fields[Ecut].energies.total for Ecut in cutoffs)

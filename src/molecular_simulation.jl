@@ -7,14 +7,26 @@ using Unitful
 using UnitfulAtomic
 using UnitfulRecipes
 
-abstract type ForceGenerationParameters end
+abstract type ForceGenerationParameters <: PotentialParameters end
 
-struct ParticleForcePotentialParameters <: PotentialParameters
-	forces::Vector{SVector{3, Real}}
-end
-ParticleForcePotentialParameters(forces::Matrix{<:Real}) = ParticleForcePotentialParameters([@SVector [forces[i, 1], forces[i, 2], forces[i, 3]] for i ∈ 1:size(forces)[1]])
-
-function NBodySimulator.get_accelerating_function(parameters::ParticleForcePotentialParameters, simulation::NBodySimulation)
+function NBodySimulator.get_accelerating_function(parameters::ForceGenerationParameters, simulation::NBodySimulation)
+    forces = generate_forces(simulation.system.bodies, parameters)
     masses = get_masses(simulation.system)
-    (dv, u, v, t, i) -> begin dv .+= parameters.forces[i] / masses[i] end
+    (dv, u, v, t, i) -> begin dv .+= forces[i] / masses[i] end
+end
+
+Base.@kwdef struct AbInitioPotentialParameters <: PotentialParameters
+    forceGenerationParameters::ForceGenerationParameters
+    forceCache::Dict{Real, Vector{SVector{3, Real}}} = Dict{Real, Vector{SVector{3, Real}}}()
+end
+
+function NBodySimulator.get_accelerating_function(parameters::AbInitioPotentialParameters, simulation::NBodySimulation)
+    masses = get_masses(simulation.system)
+    (dv, u, v, t, i) -> begin
+        if t ∉ keys(parameters.forceCache)
+            bodies = construct_bodies(u, v, masses)
+            parameters.forceCache[t] = generate_forces(bodies, parameters.forceGenerationParameters)
+        end
+        dv .+= parameters.forceCache[t][i] / masses[i]
+    end
 end

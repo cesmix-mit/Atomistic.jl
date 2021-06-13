@@ -1,5 +1,5 @@
 # Based on this guide: https://ase.tufts.edu/chemistry/lin/images/FortranMD_TeachersGuide.pdf
-# Uses DFTK in place of LJ for the production stage as a proof-of-concept
+# Uses DFTK in place of LJ for the production stage as a proof-of-concept ab initio MD simulation
 # Note that the choice of parameters is for demonstration purposes and the results are non-physical
 
 include("../../src/molecular_simulation.jl")
@@ -26,28 +26,28 @@ display(plot_temperature(eq_result, eq_stride))
 display(plot_energy(eq_result, eq_stride))
 display(plot_rdf(eq_result, sample_fraction=2))
 
-# This scipt only runs DFTK once as a proof of concept -- note that this is not sensible for an ab initio simulation
-
-dftk_parameters = DFTKForceGenerationParameters(
-    box_size=box_size,
-    psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
-    lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
-    Ecut=10u"hartree",
-    kgrid=[1, 1, 1],
-    α=0.7,
-    mixing=LdosMixing()
+ab_initio_parameters = AbInitioPotentialParameters(
+    forceGenerationParameters=DFTKForceGenerationParameters(
+        box_size=box_size,
+        psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
+        lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
+        Ecut=10u"hartree",
+        kgrid=[1, 1, 1],
+        α=0.7,
+        mixing=LdosMixing()
+    )
 )
 
-dftk_force_steps = 100
+ab_initio_steps = 10
 
-result, bodies = simulate(eq_bodies, dftk_parameters, box_size, Δt, dftk_force_steps)
+result, bodies = simulate(eq_bodies, ab_initio_parameters, box_size, Δt, ab_initio_steps)
 
-dftk_force_stride = dftk_force_steps ÷ 10
+ab_initio_stride = 1
 
 # Ploting on separate plots because the timespan is so much smaller than in the first phase
 
-display(plot_temperature(result, dftk_force_stride))
-display(plot_energy(result, dftk_force_stride))
+display(plot_temperature(result, ab_initio_stride))
+display(plot_energy(result, ab_initio_stride))
 display(plot_rdf(result, σ=σ, sample_fraction=1))
 
 ;
