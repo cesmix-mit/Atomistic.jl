@@ -8,13 +8,13 @@ include("../../src/nbs_extensions.jl")
 
 include("./nbs_argon.jl")
 
-N = 5
-box_size = auconvert(3.47786u"nm")
+N = 8
+box_size = 4 * auconvert(0.34u"nm") # arbitrarly choosing 4σ
 
 reference_temp = auconvert(94.4u"K")
-thermostat_prob = 0.1
+thermostat_prob = 0.1 # this number was chosen arbitrarily
 
-eq_steps = 100000
+eq_steps = 200000
 Δt = auconvert(1e-2u"ps")
 
 eq_result, eq_bodies = argon_simulate_equilibration(N, box_size, Δt, eq_steps, reference_temp, thermostat_prob)
@@ -28,12 +28,13 @@ display(plot_rdf(eq_result))
 # This scipt only runs DFTK once as a proof of concept -- note that this is not sensible for an ab initio simulation
 
 dftk_force_parameters = DFTKForceGenerationParameters(
-    box_size,
-    ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
-    box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
-    [1, 1, 1],
-    10u"hartree",
-    1e-4
+    box_size=box_size,
+    psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
+    lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
+    Ecut=10u"hartree",
+    kgrid=[1, 1, 1],
+    α=0.7,
+    mixing=LdosMixing()
 )
 
 dftk_forces = generate_forces(eq_bodies, dftk_force_parameters)

@@ -7,11 +7,11 @@ include("../../src/nbs_extensions.jl")
 
 include("./nbs_argon.jl")
 
-N = 5
-box_size = auconvert(3.47786u"nm")
+N = 8
+box_size = 4 * auconvert(0.34u"nm") # arbitrarly choosing 4σ
 
 reference_temp = auconvert(94.4u"K")
-thermostat_prob = 0.1
+thermostat_prob = 0.1 # this number was chosen arbitrarily
 
 eq_steps = 100000
 Δt = auconvert(1e-2u"ps")
@@ -23,15 +23,17 @@ display(plot_rdf(eq_result))
 lattice = box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]]
 kpts = [1, 1, 1]
 ecut = 10u"hartree"
-scftol = 1e-4
+tol=1e-6
 
 dftk_force_parameters = DFTKForceGenerationParameters(
-    box_size,
-    ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
-    lattice,
-    kpts,
-    ecut,
-    scftol
+    box_size=box_size,
+    psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
+    lattice=lattice,
+    Ecut=ecut,
+    kgrid=kpts,
+    tol=tol,
+    # α=0.7,
+    # mixing=LdosMixing()
 )
 
 dftk_forces = generate_forces(eq_bodies, dftk_force_parameters)
@@ -44,7 +46,7 @@ ase_dftk_force_parameters = ASEForceGenerationParameters(
     ASEPotential.DFTKCalculatorParameters(
         ecut=ecut,
         kpts=kpts,
-        scftol=scftol,
+        scftol=tol,
         n_threads=8
     )
 )

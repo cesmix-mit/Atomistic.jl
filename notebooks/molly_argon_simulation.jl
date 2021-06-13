@@ -91,7 +91,7 @@ md"""
 
 # ╔═╡ b4379f32-817e-11eb-2689-9d11da52ae75
 md"""
-### Initialization
+### LaunchEmbedded
 """
 
 # ╔═╡ cfc54920-817e-11eb-2758-4748397ddf98
@@ -212,7 +212,7 @@ md"""
 
 # ╔═╡ 075b19a8-8ccb-11eb-171a-3d8e8586716c
 md"""
-### Initialization
+### LaunchEmbedded
 """
 
 # ╔═╡ 2d16a780-8cca-11eb-1768-27072238f6f0

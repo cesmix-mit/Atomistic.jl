@@ -112,7 +112,7 @@ The referenced guide uses a GROMACS coordinate file for the initialization, but 
 
 # ╔═╡ 097cf250-9241-11eb-3489-c70ca430c691
 md"""
-### Initialization
+### LaunchEmbedded
 """
 
 # ╔═╡ 5aa365e4-91f4-11eb-291e-79be718a7132
@@ -158,7 +158,7 @@ md"""
 
 # ╔═╡ 70396e06-91f4-11eb-26c0-3940a8f546af
 md"""
-### Initialization
+### LaunchEmbedded
 """
 
 # ╔═╡ 71a390b4-91f4-11eb-2a16-492dffa48054

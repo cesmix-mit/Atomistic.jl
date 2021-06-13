@@ -123,7 +123,7 @@ function plot_rdf(result::NBodySimulator.SimulationResult)
     N = length(result.simulation.system.bodies)
     T = result.solution.destats.naccept
 	σ = result.simulation.system.potentials[:lennard_jones].σ
-    rs, grf = @time custom_rdf(result, 20)
+    rs, grf = @time custom_rdf(result, 20) # using the trailing 5% of the data for the RDF
     plot(
 		title="Radial Distribution Function [n = $(N)] [T = $(T)]",
 		xlab="Distance r/σ",
@@ -146,7 +146,7 @@ function custom_rdf(sr::NBodySimulator.SimulationResult, sample_fraction::Intege
 	trange = sr.solution.t[end - length(sr.solution.t) ÷ sample_fraction + 1:end]
 
     maxbin = 1000
-    dr = pbc.L / maxbin
+    dr = pbc.L / 2 / maxbin
     hist = zeros(maxbin)
     for t ∈ trange
         cc = get_position(sr, t)

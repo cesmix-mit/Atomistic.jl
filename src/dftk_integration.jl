@@ -1,21 +1,25 @@
 setup_threading()
 
-struct DFTKForceGenerationParameters <: ForceGenerationParameters
+Base.@kwdef struct DFTKForceGenerationParameters <: ForceGenerationParameters
     box_size::Quantity
     psp::ElementPsp
     lattice::AbstractArray{Quantity, 2}
-    kgrid::AbstractVector{Integer}
     Ecut::Quantity
-    tolerance::AbstractFloat
+    kgrid::AbstractVector{Integer}
+    n_bands::Union{Integer, Missing} = missing
+    tol::Union{AbstractFloat, Missing} = missing
+    α::Union{AbstractFloat, Missing} = missing
+    mixing = missing # There is no abstract type for mixing :(
 end
+DFTKForceGenerationParameters(parameters::DFTKForceGenerationParameters, Ecut::Quantity) = DFTKForceGenerationParameters(parameters.box_size, parameters.psp, parameters.lattice, Ecut, parameters.kgrid, parameters.n_bands, parameters.tol, parameters.α, parameters.mixing);
 
 function calculate_scf(bodies::Vector{MassBody}, parameters::DFTKForceGenerationParameters)
     atoms = [parameters.psp => [auconvert.(u"bohr", b.r) / parameters.box_size for b ∈ bodies]]
-
+    
     model = model_LDA(parameters.lattice, atoms)
     basis = PlaneWaveBasis(model, parameters.Ecut; kgrid=parameters.kgrid)
 
-    return @time self_consistent_field(basis, tol=parameters.tolerance)
+    return @time self_consistent_field(basis; (f=>getfield(parameters, f) for f in (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== missing)...)
 end
 
 function generate_forces(bodies::Vector{MassBody}, parameters::DFTKForceGenerationParameters)
@@ -24,7 +28,7 @@ function generate_forces(bodies::Vector{MassBody}, parameters::DFTKForceGenerati
 end
 
 function analyze_convergence(bodies::Vector{MassBody}, parameters::DFTKForceGenerationParameters, cutoffs::Vector{<:Quantity})
-    options = Dict(Ecut => DFTKForceGenerationParameters(parameters.box_size, parameters.psp, parameters.lattice, parameters.kgrid, Ecut, parameters.tolerance) for Ecut in cutoffs)
+    options = Dict(Ecut => DFTKForceGenerationParameters(parameters, Ecut) for Ecut in cutoffs)
     fields = Dict(Ecut => calculate_scf(bodies, options[Ecut]) for Ecut in cutoffs)
     energies = Dict(Ecut => fields[Ecut].energies.total for Ecut in cutoffs)
     plot(
