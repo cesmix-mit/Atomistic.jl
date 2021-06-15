@@ -8,9 +8,15 @@ include("../../src/nbs_extensions.jl")
 
 include("./nbs_argon.jl")
 
-N = 8
+
+if isfile("run.traj")
+    rm("run.traj")
+end
+
+N = 4
 σ = auconvert(0.34u"nm")
-box_size = 4σ # arbitrarly choosing 4σ
+# box_size = 4σ # arbitrarly choosing 4σ
+box_size = 20u"bohr"
 
 reference_temp = auconvert(94.4u"K")
 thermostat_prob = 0.1 # this number was chosen arbitrarily
@@ -31,14 +37,14 @@ ab_initio_parameters = AbInitioPotentialParameters(
         box_size=box_size,
         psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
         lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
-        Ecut=10u"hartree",
+        Ecut=5u"hartree",
         kgrid=[1, 1, 1],
         α=0.7,
         mixing=LdosMixing()
     )
 )
 
-ab_initio_steps = 10
+ab_initio_steps = 200
 
 result, bodies = simulate(eq_bodies, ab_initio_parameters, box_size, Δt, ab_initio_steps)
 

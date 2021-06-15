@@ -1,4 +1,5 @@
-setup_threading()
+setup_threading(n_blas=4)
+using PyCall
 
 Base.@kwdef struct DFTKForceGenerationParameters <: ForceGenerationParameters
     box_size::Quantity
@@ -10,16 +11,34 @@ Base.@kwdef struct DFTKForceGenerationParameters <: ForceGenerationParameters
     tol::Union{AbstractFloat, Missing} = missing
     α::Union{AbstractFloat, Missing} = missing
     mixing = missing # There is no abstract type for mixing :(
+    previousscfres = Any[nothing]
 end
 DFTKForceGenerationParameters(parameters::DFTKForceGenerationParameters, Ecut::Quantity) = DFTKForceGenerationParameters(parameters.box_size, parameters.psp, parameters.lattice, Ecut, parameters.kgrid, parameters.n_bands, parameters.tol, parameters.α, parameters.mixing);
 
 function calculate_scf(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters)
-    atoms = [parameters.psp => [auconvert.(u"bohr", b.r) / parameters.box_size for b ∈ bodies]]
-    
+    function trunc(r)
+        r - floor(Int, r)
+    end
+    atoms = [parameters.psp => [trunc.(b.r / austrip(parameters.box_size)) for b ∈ bodies]]
+
+    asa = ase_atoms(austrip.(parameters.lattice), atoms)
+    traj = pyimport("ase.io.trajectory").Trajectory("run.traj", "a", asa)
+    traj.write(asa)
+    traj.close()
+
     model = model_LDA(parameters.lattice, atoms)
     basis = PlaneWaveBasis(model, parameters.Ecut; kgrid=parameters.kgrid)
 
-    return @time self_consistent_field(basis; (f=>getfield(parameters, f) for f in (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== missing)...)
+    extraargs = (; )
+    if parameters.previousscfres[1] !== nothing
+        scfres = parameters.previousscfres[1]
+        extraargs = (ψ=scfres.ψ, ρ=scfres.ρ, )
+    end
+
+    scfres =  @time self_consistent_field(basis; extraargs..., (f=>getfield(parameters, f) for f in (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== missing)...)
+
+    parameters.previousscfres[1] = scfres
+    scfres
 end
 
 function generate_forces(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters)
