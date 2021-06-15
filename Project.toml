@@ -2,6 +2,7 @@
 ASEPotential = "756cd54d-5d9c-4a09-a510-9b20339e7260"
 DFTK = "acf6eb54-70d9-11e9-0013-234b7a5f5337"
 NBodySimulator = "0e6f8da7-a7fc-5c8b-a220-74e902c310f9"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 UnitfulAtomic = "a7773ee8-282e-5fa2-be4e-bd808c38a91a"
 UnitfulRecipes = "42071c24-d89e-48dd-8a24-8a12d9b8861f"
