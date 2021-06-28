@@ -1,5 +1,4 @@
 setup_threading(n_blas=4)
-using PyCall
 
 Base.@kwdef struct DFTKForceGenerationParameters <: ForceGenerationParameters
     box_size::Quantity
@@ -11,34 +10,34 @@ Base.@kwdef struct DFTKForceGenerationParameters <: ForceGenerationParameters
     tol::Union{AbstractFloat, Missing} = missing
     α::Union{AbstractFloat, Missing} = missing
     mixing = missing # There is no abstract type for mixing :(
-    previousscfres = Any[nothing]
+    previous_scfres::Base.RefValue{Any} = Ref{Any}()
 end
-DFTKForceGenerationParameters(parameters::DFTKForceGenerationParameters, Ecut::Quantity) = DFTKForceGenerationParameters(parameters.box_size, parameters.psp, parameters.lattice, Ecut, parameters.kgrid, parameters.n_bands, parameters.tol, parameters.α, parameters.mixing);
+DFTKForceGenerationParameters(parameters::DFTKForceGenerationParameters, Ecut::Quantity) = DFTKForceGenerationParameters(
+    box_size=parameters.box_size,
+    psp=parameters.psp,
+    lattice=parameters.lattice,
+    Ecut=Ecut,
+    kgrid=parameters.kgrid,
+    n_bands=parameters.n_bands,
+    tol=parameters.tol,
+    α=parameters.α,
+    mixing=parameters.mixing,
+)
+
+function dftk_atoms(element::DFTK.Element, bodies::AbstractVector{MassBody}, box_size::Quantity)
+    [element => [austrip.(b.r * u"bohr" / box_size) for b ∈ bodies]]
+end
 
 function calculate_scf(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters)
-    function trunc(r)
-        r - floor(Int, r)
-    end
-    atoms = [parameters.psp => [trunc.(b.r / austrip(parameters.box_size)) for b ∈ bodies]]
-
-    asa = ase_atoms(austrip.(parameters.lattice), atoms)
-    traj = pyimport("ase.io.trajectory").Trajectory("run.traj", "a", asa)
-    traj.write(asa)
-    traj.close()
+    atoms = dftk_atoms(parameters.psp, bodies, parameters.box_size)
 
     model = model_LDA(parameters.lattice, atoms)
     basis = PlaneWaveBasis(model, parameters.Ecut; kgrid=parameters.kgrid)
 
-    extraargs = (; )
-    if parameters.previousscfres[1] !== nothing
-        scfres = parameters.previousscfres[1]
-        extraargs = (ψ=scfres.ψ, ρ=scfres.ρ, )
-    end
-
-    scfres =  @time self_consistent_field(basis; extraargs..., (f=>getfield(parameters, f) for f in (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== missing)...)
-
-    parameters.previousscfres[1] = scfres
-    scfres
+    extra_args = isassigned(parameters.previous_scfres) ? (ψ=parameters.previous_scfres[].ψ, ρ=parameters.previous_scfres[].ρ) : (; )
+    scfres =  @time self_consistent_field(basis; extra_args..., (f=>getfield(parameters, f) for f ∈ (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== missing)...)
+    parameters.previous_scfres[] = scfres
+    return scfres
 end
 
 function generate_forces(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters)
@@ -47,17 +46,19 @@ function generate_forces(bodies::AbstractVector{MassBody}, parameters::DFTKForce
 end
 
 function analyze_convergence(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters, cutoffs::AbstractVector{<:Quantity})
-    options = Dict(Ecut => DFTKForceGenerationParameters(parameters, Ecut) for Ecut in cutoffs)
-    fields = Dict(Ecut => calculate_scf(bodies, options[Ecut]) for Ecut in cutoffs)
-    energies = Dict(Ecut => fields[Ecut].energies.total for Ecut in cutoffs)
+    energies = Vector{Float64}()
+    for Ecut ∈ cutoffs
+        params = DFTKForceGenerationParameters(parameters, Ecut)
+        scfres = calculate_scf(bodies, params)
+        push!(energies, scfres.energies.total)
+    end
+    
     plot(
 		title="DFTK Analysis",
 		xlab="Ecut",
 		ylab="Total Energy",
-        legend=false
-	)
-	plot!(
+        legend=false,
         cutoffs,
-        c -> auconvert(u"hartree", energies[c])
+        energies * u"hartree"
 	)
 end

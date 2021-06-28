@@ -3,28 +3,19 @@
 # Note that the choice of parameters is for demonstration purposes and the results are non-physical
 
 include("../../src/molecular_simulation.jl")
-include("../../src/dftk_integration.jl")
-include("../../src/nbs_extensions.jl")
 
 include("./nbs_argon.jl")
 
+N = 8
+box_size = 4σ # arbitrarly choosing 4σ
 
-if isfile("run.traj")
-    rm("run.traj")
-end
-
-N = 4
-σ = auconvert(0.34u"nm")
-# box_size = 4σ # arbitrarly choosing 4σ
-box_size = 20u"bohr"
-
-reference_temp = auconvert(94.4u"K")
+reference_temp = 94.4u"K"
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 
 eq_steps = 20000
-Δt = auconvert(1e-2u"ps")
+Δt = 1e-2u"ps"
 
-eq_result, eq_bodies = argon_simulate_equilibration(N, box_size, Δt, eq_steps, reference_temp, thermostat_prob)
+eq_result, eq_bodies = simulate_lennard_jones_argon_equilibration(N, box_size, Δt, eq_steps, reference_temp, thermostat_prob)
 
 eq_stride = eq_steps ÷ 200
 
@@ -37,7 +28,7 @@ ab_initio_parameters = AbInitioPotentialParameters(
         box_size=box_size,
         psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
         lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
-        Ecut=5u"hartree",
+        Ecut=5u"hartree", # very non-physical but fast for demonstration purposes
         kgrid=[1, 1, 1],
         α=0.7,
         mixing=LdosMixing()
@@ -46,14 +37,22 @@ ab_initio_parameters = AbInitioPotentialParameters(
 
 ab_initio_steps = 200
 
-result, bodies = simulate(eq_bodies, ab_initio_parameters, box_size, Δt, ab_initio_steps)
+ab_initio_result, ab_initio_bodies = simulate(eq_bodies, ab_initio_parameters, box_size, Δt, ab_initio_steps)
 
 ab_initio_stride = 1
 
 # Ploting on separate plots because the timespan is so much smaller than in the first phase
 
-display(plot_temperature(result, ab_initio_stride))
-display(plot_energy(result, ab_initio_stride))
-display(plot_rdf(result, σ=σ, sample_fraction=1))
+display(plot_temperature(ab_initio_result, ab_initio_stride))
+display(plot_energy(ab_initio_result, ab_initio_stride))
+display(plot_rdf(ab_initio_result, σ=σ, sample_fraction=1))
+
+write_trajectory(
+    ab_initio_result,
+    box_size,
+    ab_initio_parameters.forceGenerationParameters.psp,
+    ab_initio_parameters.forceGenerationParameters.lattice,
+    "artifacts/argon_ab_initio.traj"
+)
 
 ;

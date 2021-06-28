@@ -1,20 +1,21 @@
-function argon_simulate_equilibration(N::Integer, box_size::Quantity, Δt::Quantity, steps::Integer, reference_temp::Quantity, thermostat_prob::AbstractFloat)
-    m = auconvert(6.6335209e-26u"kg")
-    mean_v = auconvert(√(u"k" * reference_temp / m))
+m = 6.6335209e-26u"kg"
+σ = 0.34u"nm"
+cutoff = 0.765u"nm"
+ϵ = 1.657e-21u"J"
 
-    initial_bodies = generate_bodies_in_cell_nodes(N, ustrip(m), ustrip(mean_v), ustrip(box_size))
-	thermostat = AndersenThermostat(ustrip(reference_temp), thermostat_prob / ustrip(Δt))
+function simulate_lennard_jones_argon_equilibration(N::Integer, box_size::Quantity, Δt::Quantity, steps::Integer, reference_temp::Quantity, thermostat_prob::AbstractFloat)
+    mean_v = √(u"k" * reference_temp / m)
 
-	return simulate(initial_bodies, argon_lennard_jones(), box_size, Δt, steps, 0.0u"ps", thermostat)
+    initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(mean_v), austrip(box_size))
+	thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
+
+	return simulate(initial_bodies, lennard_jones_argon(), box_size, Δt, steps, 0.0u"s", thermostat)
 end
 
-function argon_simulate_production(bodies::Vector{MassBody}, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity)
-	return simulate(bodies, argon_lennard_jones(), box_size, Δt, steps, t_0)
+function simulate_lennard_jones_argon_production(bodies::Vector{MassBody}, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity)
+	return simulate(bodies, lennard_jones_argon(), box_size, Δt, steps, t_0)
 end
 
-function argon_lennard_jones()
-	σ = auconvert(0.34u"nm")
-	cutoff = auconvert(0.765u"nm")
-	ϵ = auconvert(1.657e-21u"J")
-	return Dict(:lennard_jones => LennardJonesParameters(ustrip(ϵ), ustrip(σ), ustrip(cutoff)))
-end
+lennard_jones_argon() = Dict(:lennard_jones => LennardJonesParameters(austrip(ϵ), austrip(σ), austrip(cutoff)))
+
+;

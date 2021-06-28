@@ -6,8 +6,8 @@ struct ASEForceGenerationParameters <: ForceGenerationParameters
 end
 
 function generate_forces(bodies::AbstractVector{MassBody}, parameters::ASEForceGenerationParameters)
-    dftk_atoms = [parameters.element => [auconvert.(u"bohr", b.r) / parameters.box_size for b ∈ bodies]]
-    atoms = ase_atoms(austrip.(parameters.lattice), dftk_atoms)
+    atoms = dftk_atoms(parameters.element, bodies, parameters.box_size)
+    atoms = ase_atoms(austrip.(parameters.lattice), atoms)
     forces = @time get_forces(atoms, parameters.parameters)
     return [@SVector [forces[i, 1], forces[i, 2], forces[i, 3]] for i ∈ 1:size(forces)[1]]
 end

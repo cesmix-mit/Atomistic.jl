@@ -1,29 +1,34 @@
-function simulate(bodies::Vector{MassBody}, potentials::Dict{Symbol, <:PotentialParameters}, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"ps", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
+function simulate(bodies::Vector{MassBody}, potentials::Dict{Symbol, <:PotentialParameters}, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"s", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
 	system = PotentialNBodySystem(bodies, potentials)
 
-	boundary_conditions = CubicPeriodicBoundaryConditions(ustrip(box_size))
-	simulation = NBodySimulation(system, (ustrip(t_0), ustrip(t_0) + steps * ustrip(Δt)), boundary_conditions, thermostat, 1.0)
+	boundary_conditions = CubicPeriodicBoundaryConditions(austrip(box_size))
+	simulation = NBodySimulation(system, (austrip(t_0), austrip(t_0) + steps * austrip(Δt)), boundary_conditions, thermostat, 1.0)
 
 	simulator = VelocityVerlet()
 
-	result = @time run_simulation(simulation, simulator, dt=ustrip(Δt))
-	bodies = extract_final_bodies(result)
+	result = @time run_simulation(simulation, simulator, dt=austrip(Δt))
+	bodies = extract_bodies(result)
 	return result, bodies
 end
 
-function simulate(bodies::AbstractVector{MassBody}, potential::PotentialParameters, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"ps", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
+function simulate(bodies::AbstractVector{MassBody}, potential::PotentialParameters, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"s", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
 	simulate(bodies, Dict(:custom => potential), box_size, Δt, steps, t_0, thermostat)
 end
 
-function extract_final_bodies(result::NBodySimulator.SimulationResult)
-	positions = get_position(result, result.solution.t[end])
-	velocities = get_velocity(result, result.solution.t[end])
+function extract_bodies(result::NBodySimulator.SimulationResult, t::Integer=0)
+	positions = get_position(result, result.solution.t[t > 0 ? t : end])
+	velocities = get_velocity(result, result.solution.t[t > 0 ? t : end])
 	masses = get_masses(result.simulation.system)
-	return construct_bodies(positions, velocities, masses)
+	return construct_bodies(positions, velocities, masses, result.simulation.boundary_conditions)
 end
 
-function construct_bodies(positions::AbstractMatrix{<:Real}, velocities::AbstractMatrix{<:Real}, masses::AbstractVector{<:Real})
+function construct_bodies(positions::AbstractMatrix{<:Real}, velocities::AbstractMatrix{<:Real}, masses::AbstractVector{<:Real}, boundary_conditions::NBodySimulator.BoundaryConditions)
 	N = length(masses)
+	if isa(boundary_conditions, CubicPeriodicBoundaryConditions)
+		positions .%= boundary_conditions.L
+		positions .+= boundary_conditions.L
+		positions .%= boundary_conditions.L
+	end
 	bodies = Array{MassBody}(undef, N)
 	for i ∈ 1:N
 		bodies[i] = MassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i])
@@ -100,21 +105,21 @@ function plot_energy!(p::Plots.Plot, result::NBodySimulator.SimulationResult, st
 	plot!(
 		p,
 		time_range,
-		t -> auconvert(u"hartree", kinetic_energy(result, austrip(t))),
+		t -> kinetic_energy(result, austrip(t))u"hartree",
 		label=(austrip(time_range[1]) == 0 ? "Kinetic Energy" : nothing),
 		color=2
 	)
 	plot!(
 		p,
 		time_range,
-		t -> auconvert(u"hartree", potential_energy(result, austrip(t))),
+		t -> potential_energy(result, austrip(t))u"hartree",
 		label=(austrip(time_range[1]) == 0 ? "Potential Energy" : nothing),
 		color=1
 	)
 	plot!(
 		p,
 		time_range,
-		t -> auconvert(u"hartree", total_energy(result, austrip(t))),
+		t -> total_energy(result, austrip(t))u"hartree",
 		label=(austrip(time_range[1]) == 0 ? "Total Energy" : nothing),
 		color=3
 	)
@@ -126,7 +131,7 @@ function plot_rdf(result::NBodySimulator.SimulationResult; σ::Union{Quantity, M
 	end
     N = length(result.simulation.system.bodies)
     T = result.solution.destats.naccept
-	σ = σ !== missing ? austrip(σ) : result.simulation.system.potentials[:lennard_jones].σ
+	σ = σ !== missing ? σ : result.simulation.system.potentials[:lennard_jones].σ * u"bohr"
     rs, grf = @time custom_rdf(result, sample_fraction)
     plot(
 		title="Radial Distribution Function [n = $(N)] [T = $(T)]",
@@ -135,7 +140,7 @@ function plot_rdf(result::NBodySimulator.SimulationResult; σ::Union{Quantity, M
         legend=false
 	)
 	plot!(
-		auconvert.(u"bohr", rs) / auconvert(u"bohr", σ),
+		rs * u"bohr" / σ,
 		grf
 	)
 end
@@ -144,7 +149,7 @@ function custom_rdf(sr::NBodySimulator.SimulationResult, sample_fraction::Intege
     n = length(sr.simulation.system.bodies)
     pbc = sr.simulation.boundary_conditions
 
-    (ms, indxs) = NBodySimulator.obtain_data_for_lennard_jones_interaction(sr.simulation.system)
+    ms, indxs = NBodySimulator.obtain_data_for_lennard_jones_interaction(sr.simulation.system)
     indlen = length(indxs)
 	trange = sr.solution.t[end - length(sr.solution.t) ÷ sample_fraction + 1:end]
 
@@ -185,5 +190,5 @@ function custom_rdf(sr::NBodySimulator.SimulationResult, sample_fraction::Intege
         rs[bin] = rlower + dr / 2
     end
 
-    return (rs, gr)
+    rs, gr
 end
