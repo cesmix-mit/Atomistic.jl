@@ -1,18 +1,46 @@
-function simulate(bodies::Vector{MassBody}, potentials::Dict{Symbol, <:PotentialParameters}, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"s", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
-	system = PotentialNBodySystem(bodies, potentials)
+Base.@kwdef struct NBSParameters <: MolecularDynamicsParameters
+	potentials::Dict{Symbol, PotentialParameters}=Dict{Symbol, PotentialParameters}()
+	box_size::Quantity
+	Δt::Quantity
+	steps::Integer
+	t₀::Quantity=0.0u"s"
+	thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat()
+	simulator::OrdinaryDiffEqAlgorithm=VelocityVerlet()
+end
 
-	boundary_conditions = CubicPeriodicBoundaryConditions(austrip(box_size))
-	simulation = NBodySimulation(system, (austrip(t_0), austrip(t_0) + steps * austrip(Δt)), boundary_conditions, thermostat, 1.0)
+struct CustomPotentialParameters <: PotentialParameters
+    nuclear_potential_parameters::NuclearPotentialParameters
+	timestep_cache::Base.RefValue{Real}
+    force_cache::Base.RefValue{Vector{SVector{3, Real}}}
+	CustomPotentialParameters(nuclear_potential_parameters::NuclearPotentialParameters) = new(nuclear_potential_parameters, Ref{Real}(), Ref{Vector{SVector{3, Real}}}())
+end
 
-	simulator = VelocityVerlet()
+function NBodySimulator.get_accelerating_function(parameters::CustomPotentialParameters, simulation::NBodySimulation)
+    masses = get_masses(simulation.system)
+    (dv, u, v, t, i) -> begin
+        if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
+            bodies = construct_bodies(u, v, masses, simulation.boundary_conditions)
+			parameters.timestep_cache[] = t
+            parameters.force_cache[] = generate_forces(bodies, parameters.nuclear_potential_parameters)
+        end
+        dv .+= parameters.force_cache[][i] / masses[i]
+    end
+end
 
-	result = @time run_simulation(simulation, simulator, dt=austrip(Δt))
+function simulate(bodies::AbstractVector{<:MassBody}, parameters::NBSParameters)
+	system = PotentialNBodySystem(bodies, parameters.potentials)
+
+	boundary_conditions = CubicPeriodicBoundaryConditions(austrip(parameters.box_size))
+	simulation = NBodySimulation(system, (austrip(parameters.t₀), austrip(parameters.t₀ + parameters.steps * parameters.Δt)), boundary_conditions, parameters.thermostat, 1.0)
+
+	result = @time run_simulation(simulation, parameters.simulator, dt=austrip(parameters.Δt))
 	bodies = extract_bodies(result)
 	return result, bodies
 end
 
-function simulate(bodies::AbstractVector{MassBody}, potential::PotentialParameters, box_size::Quantity, Δt::Quantity, steps::Integer, t_0::Quantity=0.0u"s", thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat())
-	simulate(bodies, Dict(:custom => potential), box_size, Δt, steps, t_0, thermostat)
+function simulate(bodies::AbstractVector{<:MassBody}, parameters::NBSParameters, nuclear_potential_parameters::NuclearPotentialParameters)
+	parameters.potentials[:custom] = CustomPotentialParameters(nuclear_potential_parameters)
+	simulate(bodies, parameters)
 end
 
 function extract_bodies(result::NBodySimulator.SimulationResult, t::Integer=0)
@@ -23,17 +51,10 @@ function extract_bodies(result::NBodySimulator.SimulationResult, t::Integer=0)
 end
 
 function construct_bodies(positions::AbstractMatrix{<:Real}, velocities::AbstractMatrix{<:Real}, masses::AbstractVector{<:Real}, boundary_conditions::NBodySimulator.BoundaryConditions)
-	N = length(masses)
 	if isa(boundary_conditions, CubicPeriodicBoundaryConditions)
-		positions .%= boundary_conditions.L
-		positions .+= boundary_conditions.L
-		positions .%= boundary_conditions.L
+		positions = mod.(positions, boundary_conditions.L)
 	end
-	bodies = Array{MassBody}(undef, N)
-	for i ∈ 1:N
-		bodies[i] = MassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i])
-	end
-	return bodies
+	return [MassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i]) for i ∈ 1:length(masses)]
 end
 
 function plot_temperature(result::NBodySimulator.SimulationResult, stride::Integer)

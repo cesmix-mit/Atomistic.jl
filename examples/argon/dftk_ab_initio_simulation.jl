@@ -8,51 +8,51 @@ include("./nbs_argon.jl")
 
 N = 8
 box_size = 4σ # arbitrarly choosing 4σ
-
 reference_temp = 94.4u"K"
 thermostat_prob = 0.1 # this number was chosen arbitrarily
-
-eq_steps = 20000
 Δt = 1e-2u"ps"
 
-eq_result, eq_bodies = simulate_lennard_jones_argon_equilibration(N, box_size, Δt, eq_steps, reference_temp, thermostat_prob)
+initial_bodies = argon_initial_bodies(N, box_size, reference_temp)
+eq_parameters = NBSParameters(
+	potentials=argon_lennard_jones(),
+	box_size=box_size,
+	Δt=Δt,
+	steps=20000,
+	thermostat=argon_equilibration_thermostat(reference_temp, thermostat_prob)
+)
+eq_result, eq_bodies = simulate(initial_bodies, eq_parameters)
 
-eq_stride = eq_steps ÷ 200
+eq_stride = eq_parameters.steps ÷ 200
 
 display(plot_temperature(eq_result, eq_stride))
 display(plot_energy(eq_result, eq_stride))
 display(plot_rdf(eq_result, sample_fraction=2))
 
-ab_initio_parameters = AbInitioPotentialParameters(
-    forceGenerationParameters=DFTKForceGenerationParameters(
-        box_size=box_size,
-        psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
-        lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
-        Ecut=5u"hartree", # very non-physical but fast for demonstration purposes
-        kgrid=[1, 1, 1],
-        α=0.7,
-        mixing=LdosMixing()
-    )
+nbs_parameters = NBSParameters(
+    box_size=box_size,
+    Δt=Δt,
+    steps=200,
+    t₀=eq_parameters.steps * Δt
 )
-
-ab_initio_steps = 200
-
-ab_initio_result, ab_initio_bodies = simulate(eq_bodies, ab_initio_parameters, box_size, Δt, ab_initio_steps)
-
-ab_initio_stride = 1
+dftk_parameters = DFTKParameters(
+    box_size=box_size,
+    psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
+    lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
+    Ecut=5u"hartree", # very non-physical but fast for demonstration purposes
+    kgrid=[1, 1, 1],
+    α=0.7,
+    mixing=LdosMixing()
+)
+ab_initio_result, ab_initio_bodies = simulate(eq_bodies, nbs_parameters, dftk_parameters)
 
 # Ploting on separate plots because the timespan is so much smaller than in the first phase
+
+ab_initio_stride = 1
 
 display(plot_temperature(ab_initio_result, ab_initio_stride))
 display(plot_energy(ab_initio_result, ab_initio_stride))
 display(plot_rdf(ab_initio_result, σ=σ, sample_fraction=1))
 
-write_trajectory(
-    ab_initio_result,
-    box_size,
-    ab_initio_parameters.forceGenerationParameters.psp,
-    ab_initio_parameters.forceGenerationParameters.lattice,
-    "artifacts/argon_ab_initio.traj"
-)
+write_trajectory(ab_initio_result, box_size, dftk_parameters.psp, dftk_parameters.lattice, "artifacts/argon_ab_initio.traj")
 
 ;

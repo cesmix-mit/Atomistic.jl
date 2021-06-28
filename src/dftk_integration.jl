@@ -1,18 +1,18 @@
 setup_threading(n_blas=4)
 
-Base.@kwdef struct DFTKForceGenerationParameters <: ForceGenerationParameters
+Base.@kwdef struct DFTKParameters <: NuclearPotentialParameters
     box_size::Quantity
     psp::ElementPsp
     lattice::AbstractArray{Quantity, 2}
     Ecut::Quantity
     kgrid::AbstractVector{Integer}
-    n_bands::Union{Integer, Missing} = missing
-    tol::Union{AbstractFloat, Missing} = missing
-    α::Union{AbstractFloat, Missing} = missing
-    mixing = missing # There is no abstract type for mixing :(
+    n_bands::Union{Integer, Nothing} = nothing
+    tol::Union{AbstractFloat, Nothing} = nothing
+    α::Union{AbstractFloat, Nothing} = nothing
+    mixing = nothing # There is no abstract type for mixing :(
     previous_scfres::Base.RefValue{Any} = Ref{Any}()
 end
-DFTKForceGenerationParameters(parameters::DFTKForceGenerationParameters, Ecut::Quantity) = DFTKForceGenerationParameters(
+DFTKParameters(parameters::DFTKParameters, Ecut::Quantity) = DFTKParameters(
     box_size=parameters.box_size,
     psp=parameters.psp,
     lattice=parameters.lattice,
@@ -24,11 +24,11 @@ DFTKForceGenerationParameters(parameters::DFTKForceGenerationParameters, Ecut::Q
     mixing=parameters.mixing,
 )
 
-function dftk_atoms(element::DFTK.Element, bodies::AbstractVector{MassBody}, box_size::Quantity)
+function dftk_atoms(element::DFTK.Element, bodies::AbstractVector{<:MassBody}, box_size::Quantity)
     [element => [austrip.(b.r * u"bohr" / box_size) for b ∈ bodies]]
 end
 
-function calculate_scf(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters)
+function calculate_scf(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters)
     atoms = dftk_atoms(parameters.psp, bodies, parameters.box_size)
 
     model = model_LDA(parameters.lattice, atoms)
@@ -40,15 +40,15 @@ function calculate_scf(bodies::AbstractVector{MassBody}, parameters::DFTKForceGe
     return scfres
 end
 
-function generate_forces(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters)
+function generate_forces(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters)
     scfres = calculate_scf(bodies, parameters)
     return compute_forces_cart(scfres)[1]
 end
 
-function analyze_convergence(bodies::AbstractVector{MassBody}, parameters::DFTKForceGenerationParameters, cutoffs::AbstractVector{<:Quantity})
+function analyze_convergence(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters, cutoffs::AbstractVector{<:Quantity})
     energies = Vector{Float64}()
     for Ecut ∈ cutoffs
-        params = DFTKForceGenerationParameters(parameters, Ecut)
+        params = DFTKParameters(parameters, Ecut)
         scfres = calculate_scf(bodies, params)
         push!(energies, scfres.energies.total)
     end
