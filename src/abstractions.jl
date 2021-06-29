@@ -1,0 +1,2 @@
+abstract type NuclearPotentialParameters end
+abstract type MolecularDynamicsParameters end

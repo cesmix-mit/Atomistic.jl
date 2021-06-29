@@ -161,7 +161,7 @@ function plot_rdf(result::NBodySimulator.SimulationResult; σ::Union{Quantity, M
         legend=false
 	)
 	plot!(
-		rs * u"bohr" / σ,
+		rs * u"bohr" / auconvert(σ),
 		grf
 	)
 end

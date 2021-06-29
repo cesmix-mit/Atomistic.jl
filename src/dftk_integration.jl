@@ -1,5 +1,3 @@
-setup_threading(n_blas=4)
-
 Base.@kwdef struct DFTKParameters <: NuclearPotentialParameters
     box_size::Quantity
     psp::ElementPsp
@@ -24,25 +22,27 @@ DFTKParameters(parameters::DFTKParameters, Ecut::Quantity) = DFTKParameters(
     mixing=parameters.mixing,
 )
 
-function dftk_atoms(element::DFTK.Element, bodies::AbstractVector{<:MassBody}, box_size::Quantity)
-    [element => [austrip.(b.r * u"bohr" / box_size) for b ∈ bodies]]
+function generate_forces(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters)
+    scfres = calculate_scf(bodies, parameters)
+    return compute_forces_cart(scfres)[1]
 end
 
 function calculate_scf(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters)
+    setup_threading(n_blas=4)
+    
     atoms = dftk_atoms(parameters.psp, bodies, parameters.box_size)
 
     model = model_LDA(parameters.lattice, atoms)
     basis = PlaneWaveBasis(model, parameters.Ecut; kgrid=parameters.kgrid)
 
     extra_args = isassigned(parameters.previous_scfres) ? (ψ=parameters.previous_scfres[].ψ, ρ=parameters.previous_scfres[].ρ) : (; )
-    scfres =  @time self_consistent_field(basis; extra_args..., (f=>getfield(parameters, f) for f ∈ (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== missing)...)
+    scfres =  @time self_consistent_field(basis; extra_args..., (f=>getfield(parameters, f) for f ∈ (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== nothing)...)
     parameters.previous_scfres[] = scfres
     return scfres
 end
 
-function generate_forces(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters)
-    scfres = calculate_scf(bodies, parameters)
-    return compute_forces_cart(scfres)[1]
+function dftk_atoms(element::DFTK.Element, bodies::AbstractVector{<:MassBody}, box_size::Quantity)
+    [element => [austrip.(b.r * u"bohr" / box_size) for b ∈ bodies]]
 end
 
 function analyze_convergence(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters, cutoffs::AbstractVector{<:Quantity})

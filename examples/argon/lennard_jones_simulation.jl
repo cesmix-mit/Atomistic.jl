@@ -1,7 +1,5 @@
 # Based on this guide: https://ase.tufts.edu/chemistry/lin/images/FortranMD_TeachersGuide.pdf
 
-include("../../src/molecular_simulation.jl")
-
 include("./nbs_argon.jl")
 
 N = 864
@@ -40,7 +38,7 @@ display(plot_temperature!(temp, prod_result, prod_stride))
 display(plot_energy!(energy, prod_result, prod_stride))
 
 rdf = plot_rdf(prod_result)
-savefig(rdf, "artifacts/argon_lj_rdf.svg")
 display(rdf)
+savefig(rdf, "artifacts/argon_lj_rdf.svg")
 
 ;

@@ -1,7 +1,5 @@
 # Script to compare the results of interfacing with DFTK.jl directly and through the ASEPotential.jl -- ase.py -- asedftk.py -- DFTK.jl pipeline
 
-include("../../src/molecular_simulation.jl")
-
 include("./nbs_argon.jl")
 
 N = 8

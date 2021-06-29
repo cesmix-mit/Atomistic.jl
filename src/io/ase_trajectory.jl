@@ -6,9 +6,8 @@ function write_trajectory(result::NBodySimulator.SimulationResult, box_size::Qua
     traj = pyimport("ase.io.trajectory").Trajectory(filename, "a")
     for t ∈ 1:length(result.solution.t)
         bodies = extract_bodies(result, t)
-        atoms = dftk_atoms(element, bodies, box_size)
-        asa = ase_atoms(austrip.(lattice), atoms)
-        traj.write(asa)
+        atoms = ase_atoms(element, bodies, box_size, lattice)
+        traj.write(atoms)
     end
     traj.close()
 end

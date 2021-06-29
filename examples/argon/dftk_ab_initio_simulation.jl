@@ -2,8 +2,6 @@
 # Uses DFTK in place of LJ for the production stage as a proof-of-concept ab initio MD simulation
 # Note that the choice of parameters is for demonstration purposes and the results are non-physical
 
-include("../../src/molecular_simulation.jl")
-
 include("./nbs_argon.jl")
 
 N = 8

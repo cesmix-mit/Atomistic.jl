@@ -1,7 +1,5 @@
 # Script to demonstrate convergence analysis of Ecut values for DFTK.jl
 
-include("../../src/molecular_simulation.jl")
-
 include("./nbs_argon.jl")
 
 N = 8
