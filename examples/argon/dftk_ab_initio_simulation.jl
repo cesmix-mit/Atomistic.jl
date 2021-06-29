@@ -18,7 +18,7 @@ eq_parameters = NBSParameters(
 	box_size=box_size,
 	Δt=Δt,
 	steps=20000,
-	thermostat=argon_equilibration_thermostat(reference_temp, thermostat_prob)
+	thermostat=argon_equilibration_thermostat(reference_temp, thermostat_prob, Δt)
 )
 eq_result, eq_bodies = simulate(initial_bodies, eq_parameters)
 
