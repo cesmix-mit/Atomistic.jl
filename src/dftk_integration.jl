@@ -1,3 +1,5 @@
+# Integrations with DFTK.jl
+
 Base.@kwdef struct DFTKParameters <: NuclearPotentialParameters
     box_size::Quantity
     psp::ElementPsp

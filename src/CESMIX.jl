@@ -10,7 +10,7 @@ using Unitful
 using UnitfulAtomic
 using UnitfulRecipes
 
-export NuclearPotentialParameters, MolecularDynamicsParameters
+export NuclearPotentialParameters, MolecularDynamicsParameters, LJParameters
 include("abstractions.jl")
 
 export NBSParameters, simulate, extract_bodies, plot_temperature, plot_temperature!, plot_energy, plot_energy!, plot_rdf

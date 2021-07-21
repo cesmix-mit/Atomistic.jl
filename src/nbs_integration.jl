@@ -1,3 +1,5 @@
+# Integrations with NBodySimulator.jl
+
 Base.@kwdef struct NBSParameters <: MolecularDynamicsParameters
 	potentials::Dict{Symbol, PotentialParameters}=Dict{Symbol, PotentialParameters}()
 	box_size::Quantity
@@ -36,6 +38,11 @@ function simulate(bodies::AbstractVector{<:MassBody}, parameters::NBSParameters)
 	result = @time run_simulation(simulation, parameters.simulator, dt=austrip(parameters.Δt))
 	bodies = extract_bodies(result)
 	return result, bodies
+end
+
+function simulate(bodies::AbstractVector{<:MassBody}, parameters::NBSParameters, nuclear_potential_parameters::LJParameters)
+	parameters.potentials[:lennard_jones] = LennardJonesParameters(austrip(nuclear_potential_parameters.ϵ), austrip(nuclear_potential_parameters.σ), austrip(nuclear_potential_parameters.R))
+	simulate(bodies, parameters)
 end
 
 function simulate(bodies::AbstractVector{<:MassBody}, parameters::NBSParameters, nuclear_potential_parameters::NuclearPotentialParameters)

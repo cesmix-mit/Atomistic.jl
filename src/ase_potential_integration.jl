@@ -1,3 +1,5 @@
+# Integrations with ASEPotential.jl
+
 struct ASEPotentialParameters <: NuclearPotentialParameters
     box_size::Quantity
     element::ElementCoulomb

@@ -1,22 +1,32 @@
 # Script to demonstrate convergence analysis of Ecut values for DFTK.jl
 
-include("./nbs_argon.jl")
+using CESMIX
+using DFTK
+using NBodySimulator
+using Unitful
+using UnitfulAtomic
 
 N = 8
-box_size = 4σ # arbitrarly choosing 4σ
+m = 6.6335209e-26u"kg"
+box_size = 1.5u"nm" # this number was chosen arbitrarily
 reference_temp = 94.4u"K"
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
-initial_bodies = argon_initial_bodies(N, box_size, reference_temp)
+potential_parameters = LJParameters(
+	ϵ = 1.657e-21u"J",
+	σ = 0.34u"nm",
+	R = 0.765u"nm"
+)
+
+initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(√(u"k" * reference_temp / m)), austrip(box_size))
 eq_parameters = NBSParameters(
-	potentials=argon_lennard_jones(),
 	box_size=box_size,
 	Δt=Δt,
 	steps=20000,
-	thermostat=argon_equilibration_thermostat(reference_temp, thermostat_prob, Δt)
+	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 )
-eq_result, eq_bodies = simulate(initial_bodies, eq_parameters)
+eq_result, eq_bodies = simulate(initial_bodies, eq_parameters, potential_parameters)
 
 display(plot_rdf(eq_result, sample_fraction=2))
 

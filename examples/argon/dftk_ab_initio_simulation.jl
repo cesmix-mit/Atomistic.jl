@@ -1,24 +1,34 @@
 # Based on this guide: https://ase.tufts.edu/chemistry/lin/images/FortranMD_TeachersGuide.pdf
 # Uses DFTK in place of LJ for the production stage as a proof-of-concept ab initio MD simulation
-# Note that the choice of parameters is for demonstration purposes and the results are non-physical
+# Note that the choice of parameters is for demonstration purposes, and the results are non-physical
 
-include("./nbs_argon.jl")
+using CESMIX
+using DFTK
+using NBodySimulator
+using Unitful
+using UnitfulAtomic
 
 N = 8
-box_size = 4σ # arbitrarly choosing 4σ
+m = 6.6335209e-26u"kg"
+box_size = 1.5u"nm" # this number was chosen arbitrarily
 reference_temp = 94.4u"K"
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
-initial_bodies = argon_initial_bodies(N, box_size, reference_temp)
+potential_parameters = LJParameters(
+	ϵ = 1.657e-21u"J",
+	σ = 0.34u"nm",
+	R = 0.765u"nm"
+)
+
+initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(√(u"k" * reference_temp / m)), austrip(box_size))
 eq_parameters = NBSParameters(
-	potentials=argon_lennard_jones(),
 	box_size=box_size,
 	Δt=Δt,
 	steps=20000,
-	thermostat=argon_equilibration_thermostat(reference_temp, thermostat_prob, Δt)
+	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 )
-eq_result, eq_bodies = simulate(initial_bodies, eq_parameters)
+eq_result, eq_bodies = simulate(initial_bodies, eq_parameters, potential_parameters)
 
 eq_stride = eq_parameters.steps ÷ 200
 
@@ -49,7 +59,7 @@ ab_initio_stride = 1
 
 display(plot_temperature(ab_initio_result, ab_initio_stride))
 display(plot_energy(ab_initio_result, ab_initio_stride))
-display(plot_rdf(ab_initio_result, σ=σ, sample_fraction=1))
+display(plot_rdf(ab_initio_result, σ=potential_parameters.σ, sample_fraction=1))
 
 write_trajectory(ab_initio_result, box_size, dftk_parameters.psp, dftk_parameters.lattice, "artifacts/argon_ab_initio.traj")
 
