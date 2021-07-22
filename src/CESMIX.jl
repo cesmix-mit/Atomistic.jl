@@ -10,15 +10,17 @@ using Unitful
 using UnitfulAtomic
 using UnitfulRecipes
 
-export NuclearPotentialParameters, MolecularDynamicsParameters, LJParameters
-include("abstractions.jl")
+export NuclearPotentialParameters, generate_forces, LJParameters
+include("nuclear_potentials/abstractions.jl")
+export ASEPotentialParameters, ASEPotentialParameters
+include("nuclear_potentials/ase_potential_integration.jl")
+export DFTKParameters, dftk_atoms, analyze_convergence
+include("nuclear_potentials/dftk_integration.jl")
 
-export NBSParameters, simulate, extract_bodies, plot_temperature, plot_temperature!, plot_energy, plot_energy!, plot_rdf
-include("nbs_integration.jl")
-
-export DFTKParameters, ASEPotentialParameters, generate_forces, dftk_atoms, ase_atoms, analyze_convergence
-include("dftk_integration.jl")
-include("ase_potential_integration.jl")
+export MolecularDynamicsParameters, MolecularDynamicsResult, simulate, get_bodies, get_time_range, plot_temperature, plot_temperature!, plot_energy, plot_energy!, plot_rdf, calculate_rdf
+include("molecular_dynamics/abstractions.jl")
+export NBSParameters
+include("molecular_dynamics/nbs_integration.jl")
 
 export write_trajectory
 include("io/ase_trajectory.jl")

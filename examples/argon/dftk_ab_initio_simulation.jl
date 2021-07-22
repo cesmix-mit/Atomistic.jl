@@ -12,6 +12,7 @@ N = 8
 m = 6.6335209e-26u"kg"
 box_size = 1.5u"nm" # this number was chosen arbitrarily
 reference_temp = 94.4u"K"
+average_v = √(u"k" * reference_temp / m)
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
@@ -21,22 +22,22 @@ potential_parameters = LJParameters(
 	R = 0.765u"nm"
 )
 
-initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(√(u"k" * reference_temp / m)), austrip(box_size))
+initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(average_v), austrip(box_size))
 eq_parameters = NBSParameters(
 	box_size=box_size,
 	Δt=Δt,
 	steps=20000,
 	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 )
-eq_result, eq_bodies = simulate(initial_bodies, eq_parameters, potential_parameters)
+eq_result = @time simulate(initial_bodies, eq_parameters, potential_parameters)
 
 eq_stride = eq_parameters.steps ÷ 200
 
 display(plot_temperature(eq_result, eq_stride))
 display(plot_energy(eq_result, eq_stride))
-display(plot_rdf(eq_result, sample_fraction=2))
+@time display(plot_rdf(eq_result, potential_parameters.σ, 0.5))
 
-nbs_parameters = NBSParameters(
+ab_initio_parameters = NBSParameters(
     box_size=box_size,
     Δt=Δt,
     steps=200,
@@ -51,15 +52,15 @@ dftk_parameters = DFTKParameters(
     α=0.7,
     mixing=LdosMixing()
 )
-ab_initio_result, ab_initio_bodies = simulate(eq_bodies, nbs_parameters, dftk_parameters)
+ab_initio_result = @time simulate(get_bodies(eq_result), ab_initio_parameters, dftk_parameters)
 
 # Ploting on separate plots because the timespan is so much smaller than in the first phase
 
-ab_initio_stride = 1
+ab_initio_stride = ab_initio_parameters.steps ÷ 200
 
 display(plot_temperature(ab_initio_result, ab_initio_stride))
 display(plot_energy(ab_initio_result, ab_initio_stride))
-display(plot_rdf(ab_initio_result, σ=potential_parameters.σ, sample_fraction=1))
+@time display(plot_rdf(ab_initio_result, potential_parameters.σ, 1))
 
 write_trajectory(ab_initio_result, box_size, dftk_parameters.psp, dftk_parameters.lattice, "artifacts/argon_ab_initio.traj")
 

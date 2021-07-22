@@ -10,6 +10,7 @@ N = 8
 m = 6.6335209e-26u"kg"
 box_size = 1.5u"nm" # this number was chosen arbitrarily
 reference_temp = 94.4u"K"
+average_v = √(u"k" * reference_temp / m)
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
@@ -19,16 +20,16 @@ potential_parameters = LJParameters(
 	R = 0.765u"nm"
 )
 
-initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(√(u"k" * reference_temp / m)), austrip(box_size))
+initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(average_v), austrip(box_size))
 eq_parameters = NBSParameters(
 	box_size=box_size,
 	Δt=Δt,
 	steps=20000,
 	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 )
-eq_result, eq_bodies = simulate(initial_bodies, eq_parameters, potential_parameters)
+eq_result = @time simulate(initial_bodies, eq_parameters, potential_parameters)
 
-display(plot_rdf(eq_result, sample_fraction=2))
+@time display(plot_rdf(eq_result, potential_parameters.σ, 0.5))
 
 dftk_parameters = DFTKParameters(
     box_size=box_size,
@@ -40,6 +41,6 @@ dftk_parameters = DFTKParameters(
     mixing=LdosMixing()
 )
 
-display(analyze_convergence(eq_bodies, dftk_parameters, [5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25]u"hartree"))
+@time display(analyze_convergence(get_bodies(eq_result), dftk_parameters, (5:2.5:25)u"hartree"))
 
 ;

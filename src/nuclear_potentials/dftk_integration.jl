@@ -25,8 +25,7 @@ DFTKParameters(parameters::DFTKParameters, Ecut::Quantity) = DFTKParameters(
 )
 
 function generate_forces(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters)
-    scfres = calculate_scf(bodies, parameters)
-    return compute_forces_cart(scfres)[1]
+    compute_forces_cart(calculate_scf(bodies, parameters))[1]
 end
 
 function calculate_scf(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters)
@@ -38,9 +37,8 @@ function calculate_scf(bodies::AbstractVector{<:MassBody}, parameters::DFTKParam
     basis = PlaneWaveBasis(model, parameters.Ecut; kgrid=parameters.kgrid)
 
     extra_args = isassigned(parameters.previous_scfres) ? (ψ=parameters.previous_scfres[].ψ, ρ=parameters.previous_scfres[].ρ) : (; )
-    scfres =  @time self_consistent_field(basis; extra_args..., (f=>getfield(parameters, f) for f ∈ (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== nothing)...)
+    scfres = self_consistent_field(basis; extra_args..., (f=>getfield(parameters, f) for f ∈ (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== nothing)...)
     parameters.previous_scfres[] = scfres
-    return scfres
 end
 
 function dftk_atoms(element::DFTK.Element, bodies::AbstractVector{<:MassBody}, box_size::Quantity)
@@ -56,11 +54,11 @@ function analyze_convergence(bodies::AbstractVector{<:MassBody}, parameters::DFT
     end
     
     plot(
-		title="DFTK Analysis",
-		xlab="Ecut",
-		ylab="Total Energy",
+        title="DFTK Analysis",
+        xlab="Ecut",
+        ylab="Total Energy",
         legend=false,
         cutoffs,
         energies * u"hartree"
-	)
+    )
 end
