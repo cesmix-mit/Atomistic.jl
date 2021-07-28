@@ -22,9 +22,8 @@ potential_parameters = LJParameters(
 	R = 0.765u"nm"
 )
 
-initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(average_v), austrip(box_size))
+initial_bodies = MassBodies(N, m, average_v, box_size)
 eq_parameters = NBSParameters(
-	box_size=box_size,
 	Δt=Δt,
 	steps=20000,
 	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
@@ -38,13 +37,11 @@ display(plot_energy(eq_result, eq_stride))
 @time display(plot_rdf(eq_result, potential_parameters.σ, 0.5))
 
 ab_initio_parameters = NBSParameters(
-    box_size=box_size,
     Δt=Δt,
     steps=200,
     t₀=eq_parameters.steps * Δt
 )
 dftk_parameters = DFTKParameters(
-    box_size=box_size,
     psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
     lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
     Ecut=5u"hartree", # very non-physical but fast for demonstration purposes
@@ -62,6 +59,6 @@ display(plot_temperature(ab_initio_result, ab_initio_stride))
 display(plot_energy(ab_initio_result, ab_initio_stride))
 @time display(plot_rdf(ab_initio_result, potential_parameters.σ, 1))
 
-write_trajectory(ab_initio_result, box_size, dftk_parameters.psp, dftk_parameters.lattice, "artifacts/argon_ab_initio.traj")
+write_trajectory(ab_initio_result, dftk_parameters.psp, dftk_parameters.lattice, "artifacts/argon_ab_initio.traj")
 
 ;

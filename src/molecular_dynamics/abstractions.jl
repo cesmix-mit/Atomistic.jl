@@ -4,7 +4,7 @@ abstract type MolecularDynamicsParameters end
 
 abstract type MolecularDynamicsResult end
 
-function simulate(bodies::AbstractVector{<:MassBody}, parameters::MolecularDynamicsResult, nuclear_potential_parameters::NuclearPotentialParameters)
+function simulate(state::AtomicConfiguration, parameters::MolecularDynamicsResult, nuclear_potential_parameters::NuclearPotentialParameters)
     throw(UnimplementedError(:simulate, parameters))
 end
 

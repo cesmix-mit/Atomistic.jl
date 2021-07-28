@@ -1,7 +1,6 @@
 # Integrations with DFTK.jl
 
 Base.@kwdef struct DFTKParameters <: NuclearPotentialParameters
-    box_size::Quantity
     psp::ElementPsp
     lattice::AbstractArray{Quantity, 2}
     Ecut::Quantity
@@ -13,7 +12,6 @@ Base.@kwdef struct DFTKParameters <: NuclearPotentialParameters
     previous_scfres::Base.RefValue{Any} = Ref{Any}()
 end
 DFTKParameters(parameters::DFTKParameters, Ecut::Quantity) = DFTKParameters(
-    box_size=parameters.box_size,
     psp=parameters.psp,
     lattice=parameters.lattice,
     Ecut=Ecut,
@@ -24,16 +22,15 @@ DFTKParameters(parameters::DFTKParameters, Ecut::Quantity) = DFTKParameters(
     mixing=parameters.mixing,
 )
 
-function generate_forces(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters)
-    compute_forces_cart(calculate_scf(bodies, parameters))[1]
+function generate_forces(state::AtomicConfiguration, parameters::DFTKParameters)
+    compute_forces_cart(calculate_scf(state, parameters))[1]
 end
 
-function calculate_scf(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters)
+function calculate_scf(state::AtomicConfiguration, parameters::DFTKParameters)
     setup_threading(n_blas=4)
     
-    atoms = dftk_atoms(parameters.psp, bodies, parameters.box_size)
-
-    model = model_LDA(parameters.lattice, atoms)
+    state = DFTKAtoms(state, parameters.psp, parameters.lattice)
+    model = model_LDA(state.lattice, state.atoms)
     basis = PlaneWaveBasis(model, parameters.Ecut; kgrid=parameters.kgrid)
 
     extra_args = isassigned(parameters.previous_scfres) ? (ψ=parameters.previous_scfres[].ψ, ρ=parameters.previous_scfres[].ρ) : (; )
@@ -41,15 +38,11 @@ function calculate_scf(bodies::AbstractVector{<:MassBody}, parameters::DFTKParam
     parameters.previous_scfres[] = scfres
 end
 
-function dftk_atoms(element::DFTK.Element, bodies::AbstractVector{<:MassBody}, box_size::Quantity)
-    [element => [austrip.(b.r * u"bohr" / box_size) for b ∈ bodies]]
-end
-
-function analyze_convergence(bodies::AbstractVector{<:MassBody}, parameters::DFTKParameters, cutoffs::AbstractVector{<:Quantity})
+function analyze_convergence(state::AtomicConfiguration, parameters::DFTKParameters, cutoffs::AbstractVector{<:Quantity})
     energies = Vector{Float64}()
     for Ecut ∈ cutoffs
         params = DFTKParameters(parameters, Ecut)
-        scfres = calculate_scf(bodies, params)
+        scfres = calculate_scf(state, params)
         push!(energies, scfres.energies.total)
     end
     

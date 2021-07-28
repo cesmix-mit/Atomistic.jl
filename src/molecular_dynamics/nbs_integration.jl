@@ -2,7 +2,6 @@
 
 Base.@kwdef struct NBSParameters <: MolecularDynamicsParameters
     potentials::Dict{Symbol, PotentialParameters}=Dict{Symbol, PotentialParameters}()
-    box_size::Quantity
     Δt::Quantity
     steps::Integer
     t₀::Quantity=0.0u"s"
@@ -25,7 +24,7 @@ function NBodySimulator.get_accelerating_function(parameters::CustomPotentialPar
     masses = get_masses(simulation.system)
     (dv, u, v, t, i) -> begin
         if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
-            bodies = construct_bodies(u, v, masses, simulation.boundary_conditions)
+            bodies = MassBodies(u, v, masses, simulation.boundary_conditions.L * u"bohr")
             parameters.timestep_cache[] = t
             parameters.force_cache[] = generate_forces(bodies, parameters.nuclear_potential_parameters)
         end
@@ -33,23 +32,21 @@ function NBodySimulator.get_accelerating_function(parameters::CustomPotentialPar
     end
 end
 
-function simulate(bodies::AbstractVector{<:MassBody}, parameters::NBSParameters)
-    system = PotentialNBodySystem(bodies, parameters.potentials)
-
-    boundary_conditions = CubicPeriodicBoundaryConditions(austrip(parameters.box_size))
-    simulation = NBodySimulation(system, (austrip(parameters.t₀), austrip(parameters.t₀ + parameters.steps * parameters.Δt)), boundary_conditions, parameters.thermostat, 1.0)
-
-    NBSResult(run_simulation(simulation, parameters.simulator, dt=austrip(parameters.Δt)))
-end
-
-function simulate(bodies::AbstractVector{<:MassBody}, parameters::NBSParameters, nuclear_potential_parameters::LJParameters)
-    parameters.potentials[:lennard_jones] = LennardJonesParameters(austrip(nuclear_potential_parameters.ϵ), austrip(nuclear_potential_parameters.σ), austrip(nuclear_potential_parameters.R))
-    simulate(bodies, parameters)
-end
-
-function simulate(bodies::AbstractVector{<:MassBody}, parameters::NBSParameters, nuclear_potential_parameters::NuclearPotentialParameters)
+function simulate(state::AtomicConfiguration, parameters::NBSParameters, nuclear_potential_parameters::NuclearPotentialParameters)
     parameters.potentials[:custom] = CustomPotentialParameters(nuclear_potential_parameters)
-    simulate(bodies, parameters)
+    simulate(MassBodies(state), parameters)
+end
+
+function simulate(state::AtomicConfiguration, parameters::NBSParameters, nuclear_potential_parameters::LJParameters)
+    parameters.potentials[:lennard_jones] = LennardJonesParameters(austrip(nuclear_potential_parameters.ϵ), austrip(nuclear_potential_parameters.σ), austrip(nuclear_potential_parameters.R))
+    simulate(MassBodies(state), parameters)
+end
+
+function simulate(state::MassBodies, parameters::NBSParameters)
+    system = PotentialNBodySystem(state.bodies, parameters.potentials)
+    boundary_conditions = CubicPeriodicBoundaryConditions(austrip(state.box_size))
+    simulation = NBodySimulation(system, (austrip(parameters.t₀), austrip(parameters.t₀ + parameters.steps * parameters.Δt)), boundary_conditions, parameters.thermostat, 1.0)
+    NBSResult(run_simulation(simulation, parameters.simulator, dt=austrip(parameters.Δt)))
 end
 
 function get_bodies(result::NBSResult, t::Integer=0)
@@ -57,18 +54,11 @@ function get_bodies(result::NBSResult, t::Integer=0)
     positions = get_position(sr, sr.solution.t[t > 0 ? t : end])
     velocities = get_velocity(sr, sr.solution.t[t > 0 ? t : end])
     masses = get_masses(sr.simulation.system)
-    construct_bodies(positions, velocities, masses, sr.simulation.boundary_conditions)
+    MassBodies(positions, velocities, masses, sr.simulation.boundary_conditions.L * u"bohr")
 end
 
 function get_time_range(result::NBSResult)
     result.simulation_result.solution.t
-end
-
-function construct_bodies(positions::AbstractMatrix{<:Real}, velocities::AbstractMatrix{<:Real}, masses::AbstractVector{<:Real}, boundary_conditions::NBodySimulator.BoundaryConditions)
-    if isa(boundary_conditions, CubicPeriodicBoundaryConditions)
-        positions = mod.(positions, boundary_conditions.L)
-    end
-    [MassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i]) for i ∈ 1:length(masses)]
 end
 
 function plot_temperature!(p::Plots.Plot, result::NBSResult, stride::Integer)

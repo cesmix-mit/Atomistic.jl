@@ -21,9 +21,8 @@ potential_parameters = LJParameters(
 	R = 0.765u"nm"
 )
 
-initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(average_v), austrip(box_size))
+initial_bodies = MassBodies(N, m, average_v, box_size)
 eq_parameters = NBSParameters(
-	box_size=box_size,
 	Δt=Δt,
 	steps=20000,
 	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
@@ -38,7 +37,6 @@ ecut = 10u"hartree"
 tol=1e-6
 
 dftk_parameters = DFTKParameters(
-    box_size=box_size,
     psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
     lattice=lattice,
     Ecut=ecut,
@@ -52,7 +50,6 @@ dftk_forces = @time generate_forces(get_bodies(eq_result), dftk_parameters)
 @show(dftk_forces)
 
 ase_dftk_parameters = ASEPotentialParameters(
-    box_size,
     ElementCoulomb(:Ar),
     lattice,
     DFTKCalculatorParameters(

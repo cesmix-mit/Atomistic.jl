@@ -20,9 +20,8 @@ potential_parameters = LJParameters(
 	R = 0.765u"nm"
 )
 
-initial_bodies = generate_bodies_in_cell_nodes(N, austrip(m), austrip(average_v), austrip(box_size))
+initial_bodies = MassBodies(N, m, average_v, box_size)
 eq_parameters = NBSParameters(
-	box_size=box_size,
 	Δt=Δt,
 	steps=20000,
 	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
@@ -32,7 +31,6 @@ eq_result = @time simulate(initial_bodies, eq_parameters, potential_parameters)
 @time display(plot_rdf(eq_result, potential_parameters.σ, 0.5))
 
 dftk_parameters = DFTKParameters(
-    box_size=box_size,
     psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
     lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
     Ecut=10u"hartree",

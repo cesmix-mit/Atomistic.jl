@@ -2,7 +2,7 @@
 
 abstract type NuclearPotentialParameters end
 
-function generate_forces(bodies::AbstractVector{<:MassBody}, parameters::NuclearPotentialParameters)
+function generate_forces(state::AtomicConfiguration, parameters::NuclearPotentialParameters)
     throw(UnimplementedError(:generate_forces, parameters))
 end
 
