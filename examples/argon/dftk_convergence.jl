@@ -1,6 +1,6 @@
 # Script to demonstrate convergence analysis of Ecut values for DFTK.jl
 
-using CESMIX
+using Atomistic
 using DFTK
 using NBodySimulator
 using Unitful

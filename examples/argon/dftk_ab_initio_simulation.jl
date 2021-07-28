@@ -2,7 +2,7 @@
 # Uses DFTK in place of LJ for the production stage as a proof-of-concept ab initio MD simulation
 # Note that the choice of parameters is for demonstration purposes, and the results are non-physical
 
-using CESMIX
+using Atomistic
 using DFTK
 using NBodySimulator
 using Unitful

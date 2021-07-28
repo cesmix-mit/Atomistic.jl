@@ -1,4 +1,4 @@
-module CESMIX
+module Atomistic
 
 using ASEPotential
 using DFTK

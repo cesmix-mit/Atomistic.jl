@@ -1,6 +1,6 @@
 # Based on this guide: https://ase.tufts.edu/chemistry/lin/images/FortranMD_TeachersGuide.pdf
 
-using CESMIX
+using Atomistic
 using NBodySimulator
 using Plots
 using Unitful

@@ -1,7 +1,7 @@
 # Script to compare the results of interfacing with DFTK.jl directly and through the ASEPotential.jl --> ase.py --> asedftk.py --> DFTK.jl pipeline
 
 using ASEPotential
-using CESMIX
+using Atomistic
 using DFTK
 using NBodySimulator
 using Unitful
