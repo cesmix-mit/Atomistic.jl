@@ -38,7 +38,7 @@ display(plot_energy(eq_result, eq_stride))
 
 ab_initio_parameters = NBSParameters(
     Δt=Δt,
-    steps=200,
+    steps=5,
     t₀=eq_parameters.steps * Δt
 )
 dftk_parameters = DFTKParameters(
@@ -53,12 +53,13 @@ ab_initio_result = @time simulate(get_bodies(eq_result), ab_initio_parameters, d
 
 # Ploting on separate plots because the timespan is so much smaller than in the first phase
 
-ab_initio_stride = ab_initio_parameters.steps ÷ 200
+ab_initio_stride = ab_initio_parameters.steps ÷ 5
 
 display(plot_temperature(ab_initio_result, ab_initio_stride))
 display(plot_energy(ab_initio_result, ab_initio_stride))
 @time display(plot_rdf(ab_initio_result, potential_parameters.σ, 1))
 
-write_trajectory(ab_initio_result, dftk_parameters.psp, dftk_parameters.lattice, "artifacts/argon_ab_initio.traj")
+write_nbs_animation(ab_initio_result, "artifacts/argon_ab_initio.gif")
+write_ase_trajectory(ab_initio_result, dftk_parameters.psp, dftk_parameters.lattice, "artifacts/argon_ab_initio.traj")
 
 ;

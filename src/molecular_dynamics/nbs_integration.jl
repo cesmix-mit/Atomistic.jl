@@ -118,7 +118,7 @@ function plot_energy!(p::Plots.Plot, result::NBSResult, stride::Integer)
     plot!(
         p,
         time_range,
-        t -> potential_energy(sr, austrip(t))u"hartree",
+        t -> NBodySimulator.potential_energy(sr, austrip(t))u"hartree",
         label=(austrip(time_range[1]) == 0 ? "Potential Energy" : nothing),
         color=1
     )

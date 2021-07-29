@@ -28,7 +28,7 @@ include("molecular_dynamics/abstractions.jl")
 export NBSParameters, NBSResult
 include("molecular_dynamics/nbs_integration.jl")
 
-export write_trajectory
-include("io/ase_trajectory.jl")
+export write_nbs_animation, write_ase_trajectory
+include("io/visualization.jl")
 
 end
