@@ -2,8 +2,12 @@
 
 abstract type NuclearPotentialParameters end
 
-function generate_forces(state::AtomicConfiguration, parameters::NuclearPotentialParameters)
-    throw(UnimplementedError(:generate_forces, parameters))
+function forces(state::AtomicConfiguration, parameters::NuclearPotentialParameters)
+    throw(UnimplementedError(:forces, parameters))
+end
+
+function potential_energy(state::AtomicConfiguration, parameters::NuclearPotentialParameters)
+    throw(UnimplementedError(:potential_energy, parameters))
 end
 
 Base.@kwdef struct LJParameters <: NuclearPotentialParameters

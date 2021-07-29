@@ -22,8 +22,12 @@ DFTKParameters(parameters::DFTKParameters, Ecut::Quantity) = DFTKParameters(
     mixing=parameters.mixing,
 )
 
-function generate_forces(state::AtomicConfiguration, parameters::DFTKParameters)
+function forces(state::AtomicConfiguration, parameters::DFTKParameters)
     compute_forces_cart(calculate_scf(state, parameters))[1]
+end
+
+function potential_energy(state::AtomicConfiguration, parameters::DFTKParameters)
+    calculate_scf(state, parameters).energies.total
 end
 
 function calculate_scf(state::AtomicConfiguration, parameters::DFTKParameters)

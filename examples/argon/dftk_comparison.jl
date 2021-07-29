@@ -1,4 +1,5 @@
 # Script to compare the results of interfacing with DFTK.jl directly and through the ASEPotential.jl --> ase.py --> asedftk.py --> DFTK.jl pipeline
+# Note that comparing these results directly isn't really meaningful because the random number generators aren't seeded in the same way
 
 using ASEPotential
 using Atomistic
@@ -46,8 +47,14 @@ dftk_parameters = DFTKParameters(
     # mixing=LdosMixing()
 )
 
-dftk_forces = @time generate_forces(get_bodies(eq_result), dftk_parameters)
+dftk_forces = @time forces(get_bodies(eq_result), dftk_parameters)
+println()
 @show(dftk_forces)
+println()
+dftk_potential_energy = @time Atomistic.potential_energy(get_bodies(eq_result), dftk_parameters)
+println()
+@show(dftk_potential_energy)
+println()
 
 ase_dftk_parameters = ASEPotentialParameters(
     ElementCoulomb(:Ar),
@@ -60,9 +67,13 @@ ase_dftk_parameters = ASEPotentialParameters(
     )
 )
 
-ase_dftk_forces = @time generate_forces(get_bodies(eq_result), ase_dftk_parameters)
+ase_dftk_forces = @time forces(get_bodies(eq_result), ase_dftk_parameters)
+println()
 @show(ase_dftk_forces)
-
-# Comparing these results isn't really meaningful because the random number generators aren't seeded in the same way
+println()
+ase_dftk_potential_energy = @time Atomistic.potential_energy(get_bodies(eq_result), ase_dftk_parameters)
+println()
+@show(dftk_potential_energy)
+println()
 
 ;

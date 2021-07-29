@@ -26,7 +26,7 @@ function NBodySimulator.get_accelerating_function(parameters::CustomPotentialPar
         if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
             bodies = MassBodies(u, v, masses, simulation.boundary_conditions.L * u"bohr")
             parameters.timestep_cache[] = t
-            parameters.force_cache[] = generate_forces(bodies, parameters.nuclear_potential_parameters)
+            parameters.force_cache[] = forces(bodies, parameters.nuclear_potential_parameters)
         end
         dv .+= parameters.force_cache[][i] / masses[i]
     end

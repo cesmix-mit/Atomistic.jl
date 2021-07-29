@@ -39,5 +39,5 @@ function ASEAtoms(state::MassBodies, element::DFTK.Element, lattice::AbstractArr
     ASEAtoms(DFTKAtoms(state, element, lattice))
 end
 
-length(state::MassBodies) = length(state.bodies)
-length(state::DFTKAtoms) = length(state.atoms)
+Base.length(state::MassBodies) = length(state.bodies)
+Base.length(state::DFTKAtoms) = length(state.atoms)
