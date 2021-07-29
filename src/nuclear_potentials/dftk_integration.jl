@@ -7,8 +7,8 @@ Base.@kwdef struct DFTKParameters <: NuclearPotentialParameters
     kgrid::AbstractVector{Integer}
     n_bands::Union{Integer, Nothing} = nothing
     tol::Union{AbstractFloat, Nothing} = nothing
-    α::Union{AbstractFloat, Nothing} = nothing
-    mixing = nothing # There is no abstract type for mixing :(
+    damping::Union{AbstractFloat, Nothing} = nothing
+    mixing::Union{DFTK.Mixing, Nothing} = nothing
     previous_scfres::Base.RefValue{Any} = Ref{Any}()
 end
 DFTKParameters(parameters::DFTKParameters, Ecut::Quantity) = DFTKParameters(
@@ -18,7 +18,7 @@ DFTKParameters(parameters::DFTKParameters, Ecut::Quantity) = DFTKParameters(
     kgrid=parameters.kgrid,
     n_bands=parameters.n_bands,
     tol=parameters.tol,
-    α=parameters.α,
+    damping=parameters.damping,
     mixing=parameters.mixing,
 )
 
@@ -38,7 +38,7 @@ function calculate_scf(state::AtomicConfiguration, parameters::DFTKParameters)
     basis = PlaneWaveBasis(model, parameters.Ecut; kgrid=parameters.kgrid)
 
     extra_args = isassigned(parameters.previous_scfres) ? (ψ=parameters.previous_scfres[].ψ, ρ=parameters.previous_scfres[].ρ) : (; )
-    scfres = self_consistent_field(basis; extra_args..., (f=>getfield(parameters, f) for f ∈ (:n_bands, :tol, :α, :mixing) if getfield(parameters, f) !== nothing)...)
+    scfres = self_consistent_field(basis; extra_args..., (f=>getfield(parameters, f) for f ∈ (:n_bands, :tol, :damping, :mixing) if getfield(parameters, f) !== nothing)...)
     parameters.previous_scfres[] = scfres
 end
 

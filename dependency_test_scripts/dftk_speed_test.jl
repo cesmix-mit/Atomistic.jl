@@ -12,7 +12,7 @@ model = model_LDA(lattice, atoms, temperature=1e-3)
 basis = PlaneWaveBasis(model, Ecut, kgrid=[1, 1, 1])
 
 DFTK.reset_timer!(DFTK.timer)
-scfres = self_consistent_field(basis, tol=1e-6, α=0.7, mixing=LdosMixing())
+scfres = self_consistent_field(basis, tol=1e-6, damping=0.7, mixing=LdosMixing())
 
 println(scfres.energies)
 println()

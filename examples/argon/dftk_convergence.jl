@@ -35,7 +35,7 @@ dftk_parameters = DFTKParameters(
     lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
     Ecut=10u"hartree",
     kgrid=[1, 1, 1],
-    α=0.7,
+    damping=0.7,
     mixing=LdosMixing()
 )
 

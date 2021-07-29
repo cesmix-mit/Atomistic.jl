@@ -46,7 +46,7 @@ dftk_parameters = DFTKParameters(
     lattice=box_size * [[1. 0 0]; [0 1. 0]; [0 0 1.]],
     Ecut=5u"hartree", # very non-physical but fast for demonstration purposes
     kgrid=[1, 1, 1],
-    α=0.7,
+    damping=0.7,
     mixing=LdosMixing()
 )
 ab_initio_result = @time simulate(get_bodies(eq_result), ab_initio_parameters, dftk_parameters)

@@ -43,7 +43,7 @@ dftk_parameters = DFTKParameters(
     Ecut=ecut,
     kgrid=kpts,
     tol=tol,
-    # α=0.7,
+    # damping=0.7,
     # mixing=LdosMixing()
 )
 
