@@ -38,7 +38,7 @@ display(plot_energy(eq_result, eq_stride))
 
 ab_initio_parameters = NBSParameters(
     Δt=Δt,
-    steps=5,
+    steps=200,
     t₀=eq_parameters.steps * Δt
 )
 dftk_parameters = DFTKParameters(
@@ -53,7 +53,7 @@ ab_initio_result = @time simulate(get_bodies(eq_result), ab_initio_parameters, d
 
 # Ploting on separate plots because the timespan is so much smaller than in the first phase
 
-ab_initio_stride = ab_initio_parameters.steps ÷ 5
+ab_initio_stride = ab_initio_parameters.steps ÷ 200
 
 display(plot_temperature(ab_initio_result, ab_initio_stride))
 display(plot_energy(ab_initio_result, ab_initio_stride))
