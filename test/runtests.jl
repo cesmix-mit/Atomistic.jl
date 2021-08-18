@@ -1,6 +1,6 @@
-using CESMIX
+using Atomistic
 using Test
 
-@testset "CESMIX.jl" begin
+@testset "Atomistic.jl" begin
     # Write your tests here.
 end
