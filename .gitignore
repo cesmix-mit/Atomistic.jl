@@ -1,7 +1,6 @@
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
-Manifest.toml
 
 # Directory used for storing artifacts from notebooks
 artifacts/
