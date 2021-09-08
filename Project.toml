@@ -1,6 +1,6 @@
 name = "Atomistic"
 uuid = "3e762ff9-b8d8-45cf-a902-edcbc7124e71"
-authors = ["Jeremiah DeGreeff <degreeff@mit.edu> and contributors"]
+authors = ["Jeremiah DeGreeff <degreeff@mit.edu>"]
 version = "0.1.0"
 
 [deps]
@@ -24,7 +24,7 @@ StaticArrays = "1"
 Unitful = "1"
 UnitfulAtomic = "1"
 UnitfulRecipes = "1"
-julia = "1"
+julia = "1.6"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
