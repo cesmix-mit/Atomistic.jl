@@ -1,6 +1,5 @@
 module Atomistic
 
-using ASEPotential
 using DFTK
 using NBodySimulator
 using Plots
@@ -18,8 +17,6 @@ include("bodies.jl")
 
 export NuclearPotentialParameters, forces, potential_energy, LJParameters
 include("nuclear_potentials/abstractions.jl")
-export ASEPotentialParameters, ASEPotentialParameters
-include("nuclear_potentials/ase_potential_integration.jl")
 export DFTKParameters, dftk_atoms, analyze_convergence
 include("nuclear_potentials/dftk_integration.jl")
 
