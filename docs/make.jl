@@ -18,7 +18,7 @@ makedocs(;
         "Home" => "index.md"
     ],
     doctest=true,
-    linkcheck=true,
+    # linkcheck=true,
     strict=true
 )
 
