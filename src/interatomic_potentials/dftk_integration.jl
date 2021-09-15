@@ -1,3 +1,5 @@
+# This integration should ultimately live within DFTK.jl itself
+
 # Integrations with DFTK.jl
 
 Base.@kwdef struct DFTKParameters <: NuclearPotentialParameters

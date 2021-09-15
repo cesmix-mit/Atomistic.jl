@@ -1,3 +1,5 @@
+# This file will be superceded by Pontentials.jl
+
 # Nuclear Potential Abstractions
 
 abstract type NuclearPotentialParameters end

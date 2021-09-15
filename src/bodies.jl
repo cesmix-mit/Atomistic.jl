@@ -1,4 +1,7 @@
-# Body Collection Abstractions
+# Parts of this file will be superceded by Pontentials.jl
+# In the long run, we will integrate with a new package coming from the JuliaMolSim community
+
+# Atomic Configuration Abstractions
 
 abstract type AtomicConfiguration end
 
