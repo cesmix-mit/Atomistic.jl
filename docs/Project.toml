@@ -1,5 +1,4 @@
 [deps]
-Atomistic = "3e762ff9-b8d8-45cf-a902-edcbc7124e71"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 
 [compat]
