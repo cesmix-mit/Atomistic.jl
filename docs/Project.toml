@@ -1,5 +1,7 @@
 [deps]
+Atomistic = "3e762ff9-b8d8-45cf-a902-edcbc7124e71"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Potentials = "a9efe35a-c65d-452d-b8a8-82646cd5cb04"
 
 [compat]
 Documenter = "0.27"
