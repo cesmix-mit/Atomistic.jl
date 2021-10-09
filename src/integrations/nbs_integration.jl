@@ -1,23 +1,25 @@
 # Integrations with NBodySimulator.jl
 
-Base.@kwdef struct NBSParameters <: MolecularDynamicsParameters
-    potentials::Dict{Symbol, PotentialParameters}=Dict{Symbol, PotentialParameters}()
+@kwdef struct NBSimulator <: MolecularDynamicsSimulator
+    potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
     Δt::Quantity
     steps::Integer
-    t₀::Quantity=0.0u"s"
-    thermostat::NBodySimulator.Thermostat=NBodySimulator.NullThermostat()
-    simulator::OrdinaryDiffEqAlgorithm=VelocityVerlet()
-end
-
-struct NBSResult <: MolecularDynamicsResult
-    simulation_result::NBodySimulator.SimulationResult
+    t₀::Quantity = 0.0u"s"
+    thermostat::Thermostat = NullThermostat()
+    simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet()
 end
 
 struct CustomPotentialParameters <: PotentialParameters
-    nuclear_potential_parameters::NuclearPotentialParameters
-    timestep_cache::Base.RefValue{Real}
-    force_cache::Base.RefValue{Vector{SVector{3, Real}}}
-    CustomPotentialParameters(nuclear_potential_parameters::NuclearPotentialParameters) = new(nuclear_potential_parameters, Ref{Real}(), Ref{Vector{SVector{3, Real}}}())
+    potential::ArbitraryPotential
+    timestep_cache::RefValue{Real}
+    force_cache::RefValue{Vector{SVector{3,Real}}}
+    CustomPotentialParameters(potential::ArbitraryPotential) = new(potential, Ref{Real}(), Ref{Vector{SVector{3,Real}}}())
+end
+
+@kwdef struct LJParameters
+    ϵ::Quantity
+    σ::Quantity
+    R::Quantity
 end
 
 function NBodySimulator.get_accelerating_function(parameters::CustomPotentialParameters, simulation::NBodySimulation)
@@ -26,31 +28,36 @@ function NBodySimulator.get_accelerating_function(parameters::CustomPotentialPar
         if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
             bodies = MassBodies(u, v, masses, simulation.boundary_conditions.L * u"bohr")
             parameters.timestep_cache[] = t
-            parameters.force_cache[] = forces(bodies, parameters.nuclear_potential_parameters)
+            parameters.force_cache[] = force(bodies, parameters.potential)
+            println(round(t / austrip(1e-2u"ps")))
         end
         dv .+= parameters.force_cache[][i] / masses[i]
     end
 end
 
-function simulate(state::AtomicConfiguration, parameters::NBSParameters, nuclear_potential_parameters::NuclearPotentialParameters)
-    parameters.potentials[:custom] = CustomPotentialParameters(nuclear_potential_parameters)
-    simulate(MassBodies(state), parameters)
+function simulate(state::MassBodies, simulator::NBSimulator, potential::ArbitraryPotential)
+    simulator.potentials[:custom] = CustomPotentialParameters(potential)
+    simulate(state, simulator)
 end
 
-function simulate(state::AtomicConfiguration, parameters::NBSParameters, nuclear_potential_parameters::LJParameters)
-    parameters.potentials[:lennard_jones] = LennardJonesParameters(austrip(nuclear_potential_parameters.ϵ), austrip(nuclear_potential_parameters.σ), austrip(nuclear_potential_parameters.R))
-    simulate(MassBodies(state), parameters)
+function simulate(state::MassBodies, simulator::NBSimulator, potential::LJParameters)
+    simulator.potentials[:lennard_jones] = LennardJonesParameters(austrip(potential.ϵ), austrip(potential.σ), austrip(potential.R))
+    simulate(state, simulator)
 end
 
-function simulate(state::MassBodies, parameters::NBSParameters)
-    system = PotentialNBodySystem(state.bodies, parameters.potentials)
+function simulate(state::MassBodies, simulator::NBSimulator)
+    system = PotentialNBodySystem(state.bodies, simulator.potentials)
     boundary_conditions = CubicPeriodicBoundaryConditions(austrip(state.box_size))
-    simulation = NBodySimulation(system, (austrip(parameters.t₀), austrip(parameters.t₀ + parameters.steps * parameters.Δt)), boundary_conditions, parameters.thermostat, 1.0)
-    NBSResult(run_simulation(simulation, parameters.simulator, dt=austrip(parameters.Δt)))
+    simulation = NBodySimulation(system, (austrip(simulator.t₀), austrip(simulator.t₀ + simulator.steps * simulator.Δt)), boundary_conditions, simulator.thermostat, 1.0)
+    NBSResult(run_simulation(simulation, simulator.simulator, dt=austrip(simulator.Δt)))
+end
+
+struct NBSResult <: MolecularDynamicsResult
+    result::SimulationResult
 end
 
 function get_bodies(result::NBSResult, t::Integer=0)
-    sr = result.simulation_result
+    sr = result.result
     positions = get_position(sr, sr.solution.t[t > 0 ? t : end])
     velocities = get_velocity(sr, sr.solution.t[t > 0 ? t : end])
     masses = get_masses(sr.simulation.system)
@@ -58,11 +65,11 @@ function get_bodies(result::NBSResult, t::Integer=0)
 end
 
 function get_time_range(result::NBSResult)
-    result.simulation_result.solution.t
+    result.result.solution.t
 end
 
-function plot_temperature!(p::Plots.Plot, result::NBSResult, stride::Integer)
-    sr = result.simulation_result
+function plot_temperature!(p::Plot, result::NBSResult, stride::Integer)
+    sr = result.result
     time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(get_time_range(result)) if (i - 1) % stride == 0]
     if (austrip(time_range[1]) != 0)
         vline!(
@@ -81,7 +88,7 @@ function plot_temperature!(p::Plots.Plot, result::NBSResult, stride::Integer)
         label=(austrip(time_range[1]) == 0 ? "Simulation Temperature" : nothing),
         color=1,
     )
-    if (!(sr.simulation.thermostat isa NBodySimulator.NullThermostat))
+    if (!(sr.simulation.thermostat isa NullThermostat))
         plot!(
             p,
             time_range,
@@ -95,8 +102,8 @@ function plot_temperature!(p::Plots.Plot, result::NBSResult, stride::Integer)
     p
 end
 
-function plot_energy!(p::Plots.Plot, result::NBSResult, stride::Integer)
-    sr = result.simulation_result
+function plot_energy!(p::Plot, result::NBSResult, stride::Integer)
+    sr = result.result
     time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(get_time_range(result)) if (i - 1) % stride == 0]
     if (austrip(time_range[1]) != 0)
         vline!(
@@ -132,7 +139,7 @@ function plot_energy!(p::Plots.Plot, result::NBSResult, stride::Integer)
 end
 
 function calculate_rdf(result::NBSResult, sample_fraction::Real)
-    sr = result.simulation_result
+    sr = result.result
     n = length(sr.simulation.system.bodies)
     pbc = sr.simulation.boundary_conditions
     trange = get_time_range(result)[end - floor(Int, length(sr.solution.t) * sample_fraction) + 1:end]

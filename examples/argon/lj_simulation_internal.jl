@@ -14,38 +14,38 @@ average_v = √(u"k" * reference_temp / m)
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
-potential_parameters = LJParameters(
-	ϵ = 1.657e-21u"J",
-	σ = 0.34u"nm",
-	R = 0.765u"nm"
+potential = LJParameters(
+	ϵ=1.657e-21u"J",
+	σ=0.34u"nm",
+	R=0.765u"nm"
 )
 
 initial_bodies = MassBodies(N, m, average_v, box_size)
-eq_parameters = NBSParameters(
+eq_simulator = NBSimulator(
 	Δt=Δt,
 	steps=2000,
 	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 )
-eq_result = @time simulate(initial_bodies, eq_parameters, potential_parameters)
+eq_result = @time simulate(initial_bodies, eq_simulator, potential)
 
 eq_stride = 10
 
 temp = plot_temperature(eq_result, eq_stride)
 energy = plot_energy(eq_result, eq_stride)
 
-prod_parameters = NBSParameters(
+prod_simulator = NBSimulator(
 	Δt=Δt,
 	steps=5000,
-	t₀=eq_parameters.steps * Δt
+	t₀=eq_simulator.steps * Δt
 )
-prod_result = @time simulate(get_bodies(eq_result), prod_parameters, potential_parameters)
+prod_result = @time simulate(get_bodies(eq_result), prod_simulator, potential)
 
 prod_stride = 10
 
 display(plot_temperature!(temp, prod_result, prod_stride))
 display(plot_energy!(energy, prod_result, prod_stride))
 
-rdf = @time plot_rdf(prod_result, potential_parameters.σ, 0.05)
+rdf = @time plot_rdf(prod_result, potential.σ, 0.05)
 display(rdf)
 savefig(rdf, "artifacts/argon_lj_rdf.svg")
 
