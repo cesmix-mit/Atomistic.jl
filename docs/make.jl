@@ -7,11 +7,11 @@ DocMeta.setdocmeta!(Atomistic, :DocTestSetup, :(using Atomistic); recursive=true
 makedocs(;
     modules=[Atomistic],
     authors="CESMIX-MIT",
-    repo="https://github.com/jrdegreeff/Atomistic.jl/blob/{commit}{path}#{line}",
+    repo="https://github.com/cesmix-mit/Atomistic.jl/blob/{commit}{path}#{line}",
     sitename="Atomistic.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://jrdegreeff.github.io/Atomistic.jl",
+        canonical="https://cesmix-mit.github.io/Atomistic.jl",
         assets=String[]
     ),
     pages=[
@@ -23,7 +23,7 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/jrdegreeff/Atomistic.jl.git",
+    repo="github.com/cesmix-mit/Atomistic.jl.git",
     devbranch="main",
     push_preview=true,
 )
