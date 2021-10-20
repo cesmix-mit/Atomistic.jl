@@ -34,7 +34,7 @@ end
 function calculate_scf(state::MassBodies, potential::DFTKPotential)
     state = DFTKAtoms(state, potential.psp, potential.lattice)
     model = model_LDA(state.lattice, state.atoms)
-    basis = PlaneWaveBasis(model, potential.Ecut; kgrid=potential.kgrid)
+    basis = PlaneWaveBasis(model; Ecut=potential.Ecut, kgrid=potential.kgrid)
 
     extra_args = isassigned(potential.previous_scfres) ? (ψ = potential.previous_scfres[].ψ, ρ = potential.previous_scfres[].ρ) : (; )
     scfres = self_consistent_field(basis; extra_args..., (f => getfield(potential, f) for f ∈ (:n_bands, :tol, :damping, :mixing) if getfield(potential, f) !== nothing)...)
