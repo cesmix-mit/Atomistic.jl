@@ -1,3 +1,5 @@
+# functions for exporting results to visualization tools
+
 function write_nbs_animation(result::NBSResult, filename::String)
     animate(result.result, filename)
 end

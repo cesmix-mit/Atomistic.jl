@@ -67,77 +67,28 @@ function get_time_range(result::NBSResult)
     result.result.solution.t
 end
 
-function plot_temperature!(p::Plot, result::NBSResult, stride::Integer)
-    sr = result.result
-    time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(get_time_range(result)) if (i - 1) % stride == 0]
-    if (austrip(time_range[1]) != 0)
-        vline!(
-            p,
-            [time_range[1]],
-            label=false,
-            color=:black,
-            linestyle=:dot,
-            lw=2
-        )
-    end
-    plot!(
-        p,
-        time_range,
-        t -> auconvert(u"K", temperature(sr, austrip(t))),
-        label=(austrip(time_range[1]) == 0 ? "Simulation Temperature" : nothing),
-        color=1,
-    )
-    if (!(sr.simulation.thermostat isa NullThermostat))
-        plot!(
-            p,
-            time_range,
-            t -> auconvert(u"K", sr.simulation.thermostat.T),
-            label=(austrip(time_range[1]) == 0 ? "Reference Temperature" : nothing),
-            color=2,
-            linestyle=:dash,
-            lw=2
-        )
-    end
-    p
+function temperature(result::NBSResult, time::Real)
+    NBodySimulator.temperature(result.result, time)
 end
 
-function plot_energy!(p::Plot, result::NBSResult, stride::Integer)
-    sr = result.result
-    time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(get_time_range(result)) if (i - 1) % stride == 0]
-    if (austrip(time_range[1]) != 0)
-        vline!(
-            p,
-            [time_range[1]],
-            label=false,
-            color=:black,
-            linestyle=:dot,
-            lw=2
-        )
-    end
-    plot!(
-        p,
-        time_range,
-        t -> kinetic_energy(sr, austrip(t))u"hartree",
-        label=(austrip(time_range[1]) == 0 ? "Kinetic Energy" : nothing),
-        color=2
-    )
-    plot!(
-        p,
-        time_range,
-        t -> NBodySimulator.potential_energy(sr, austrip(t))u"hartree",
-        label=(austrip(time_range[1]) == 0 ? "Potential Energy" : nothing),
-        color=1
-    )
-    plot!(
-        p,
-        time_range,
-        t -> total_energy(sr, austrip(t))u"hartree",
-        label=(austrip(time_range[1]) == 0 ? "Total Energy" : nothing),
-        color=3
-    )
+function reference_temperature(result::NBSResult)
+    result.result.simulation.thermostat isa NullThermostat ? nothing : result.result.simulation.thermostat.T
 end
 
-function calculate_rdf(result::NBSResult, sample_fraction::Float64)
+function kinetic_energy(result::NBSResult, time::Real)
+    NBodySimulator.kinetic_energy(result.result, time)
+end
+
+function potential_energy(result::NBSResult, time::Real)
+    NBodySimulator.potential_energy(result.result, time)
+end
+
+function total_energy(result::NBSResult, time::Real)
+    NBodySimulator.total_energy(result.result, time)
+end
+
+function rdf(result::NBSResult, sample_fraction::Float64=1.0)
+    @assert 0 < sample_fraction ≤ 1
     sr = result.result
     n = length(sr.simulation.system.bodies)
     pbc = sr.simulation.boundary_conditions

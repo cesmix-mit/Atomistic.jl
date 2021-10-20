@@ -9,53 +9,23 @@ function get_time_range(result::MolecularDynamicsResult)::Vector{<:Real}
     throw(UnimplementedError(:get_time_range, result))
 end
 
-function plot_temperature!(p::Plot, result::MolecularDynamicsResult, stride::Integer)::Plot
-    throw(UnimplementedError(:plot_temperature!, result))
+function temperature(result::MolecularDynamicsResult, time::Real)::Real
+    throw(UnimplementedError(:temperature, result))
 end
-function plot_energy!(p::Plot, result::MolecularDynamicsResult, stride::Integer)::Plot
-    throw(UnimplementedError(:plot_energy!, result))
-end
-
-function calculate_rdf(result::MolecularDynamicsResult, sample_fraction::Real)::Tuple{Vector{<:Real},Vector{<:Real}}
-    throw(UnimplementedError(:calculate_rdf, result))
+function reference_temperature(result::MolecularDynamicsResult)::Union{Real,Nothing}
+    nothing
 end
 
-function plot_temperature(result::MolecularDynamicsResult, stride::Integer)
-    N = length(get_bodies(result))
-    p = plot(
-        title="Temperature during Simulation [n = $(N)]",
-        xlab="Time",
-        ylab="Temperature",
-    )
-    plot_temperature!(p, result, stride)
+function kinetic_energy(result::MolecularDynamicsResult, time::Real)::Real
+    throw(UnimplementedError(:kinetic_energy, result))
+end
+function potential_energy(result::MolecularDynamicsResult, time::Real)::Real
+    throw(UnimplementedError(:potential_energy, result))
+end
+function total_energy(result::MolecularDynamicsResult, time::Real)::Real
+    throw(UnimplementedError(:total_energy, result))
 end
 
-function plot_energy(result::MolecularDynamicsResult, stride::Integer)
-    N = length(get_bodies(result))
-    p = plot(
-        title="Energy during Simulation [n = $(N)]",
-        xlab="Time",
-        ylab="Energy",
-        legend=:right
-    ) 
-    plot_energy!(p, result, stride)
-end
-
-function plot_rdf(result::MolecularDynamicsResult, σ::Real, sample_fraction::Float64=1.0)
-    plot_rdf(result, σ * u"bohr", sample_fraction)
-end
-function plot_rdf(result::MolecularDynamicsResult, σ::Quantity, sample_fraction::Float64=1.0)
-    N = length(get_bodies(result))
-    T = length(get_time_range(result)) - 1
-    rs, grf = calculate_rdf(result, sample_fraction)
-    plot(
-        title="Radial Distribution Function [n = $(N)] [T = $(T)]",
-        xlab="Distance r/σ",
-        ylab="Radial Distribution g(r)",
-        legend=false
-    )
-    plot!(
-        rs * u"bohr" / auconvert(σ),
-        grf
-    )
+function rdf(result::MolecularDynamicsResult, sample_fraction::Float64=1.0)::Tuple{Vector{<:Real},Vector{<:Real}}
+    throw(UnimplementedError(:rdf, result))
 end

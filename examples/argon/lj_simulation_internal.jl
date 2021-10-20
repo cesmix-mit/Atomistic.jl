@@ -30,8 +30,8 @@ eq_result = @time simulate(initial_bodies, eq_simulator, potential)
 
 eq_stride = 10
 
-temp = plot_temperature(eq_result, eq_stride)
-energy = plot_energy(eq_result, eq_stride)
+temp = @time plot_temperature(eq_result, eq_stride)
+energy = @time plot_energy(eq_result, eq_stride)
 
 prod_simulator = NBSimulator(
 	Δt=Δt,
@@ -42,8 +42,10 @@ prod_result = @time simulate(get_bodies(eq_result), prod_simulator, potential)
 
 prod_stride = 10
 
-display(plot_temperature!(temp, prod_result, prod_stride))
-display(plot_energy!(energy, prod_result, prod_stride))
+@time plot_temperature!(temp, prod_result, prod_stride)
+display(temp)
+@time plot_energy!(energy, prod_result, prod_stride)
+display(energy)
 
 rdf = @time plot_rdf(prod_result, potential.σ, 0.05)
 display(rdf)
