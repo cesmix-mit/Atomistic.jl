@@ -1,5 +1,5 @@
 # Atomic Configuration Abstractions
-# In the long run, we will integrate with the AtomicSpace package coming out of the JuliaMolSim community
+# In the long run, we will integrate with the AtomsBase package coming out of the JuliaMolSim community
 
 abstract type AtomicConfiguration end
 

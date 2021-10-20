@@ -1,5 +1,5 @@
 function write_nbs_animation(result::NBSResult, filename::String)
-    animate(result.simulation_result, filename)
+    animate(result.result, filename)
 end
 
 function write_ase_trajectory(result::MolecularDynamicsResult, element::Element, lattice, filename::String)

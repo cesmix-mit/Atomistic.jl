@@ -29,7 +29,6 @@ function NBodySimulator.get_accelerating_function(parameters::CustomPotentialPar
             bodies = MassBodies(u, v, masses, simulation.boundary_conditions.L * u"bohr")
             parameters.timestep_cache[] = t
             parameters.force_cache[] = force(bodies, parameters.potential)
-            println(round(t / austrip(1e-2u"ps")))
         end
         dv .+= parameters.force_cache[][i] / masses[i]
     end
@@ -138,7 +137,7 @@ function plot_energy!(p::Plot, result::NBSResult, stride::Integer)
     )
 end
 
-function calculate_rdf(result::NBSResult, sample_fraction::Real)
+function calculate_rdf(result::NBSResult, sample_fraction::Float64)
     sr = result.result
     n = length(sr.simulation.system.bodies)
     pbc = sr.simulation.boundary_conditions

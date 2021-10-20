@@ -6,7 +6,7 @@ using NBodySimulator
 using Unitful
 using UnitfulAtomic
 
-# setup_threading(n_blas=4)
+setup_threading(n_blas=4)
 
 N = 8
 m = 6.6335209e-26u"kg"

@@ -41,10 +41,10 @@ function plot_energy(result::MolecularDynamicsResult, stride::Integer)
     plot_energy!(p, result, stride)
 end
 
-function plot_rdf(result::MolecularDynamicsResult, σ::Real, sample_fraction::Real=0.1)
+function plot_rdf(result::MolecularDynamicsResult, σ::Real, sample_fraction::Float64=1.0)
     plot_rdf(result, σ * u"bohr", sample_fraction)
 end
-function plot_rdf(result::MolecularDynamicsResult, σ::Quantity, sample_fraction::Real=0.1)
+function plot_rdf(result::MolecularDynamicsResult, σ::Quantity, sample_fraction::Float64=1.0)
     N = length(get_bodies(result))
     T = length(get_time_range(result)) - 1
     rs, grf = calculate_rdf(result, sample_fraction)

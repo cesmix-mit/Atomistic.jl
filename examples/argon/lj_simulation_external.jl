@@ -45,8 +45,8 @@ prod_stride = 10
 display(plot_temperature!(temp, prod_result, prod_stride))
 display(plot_energy!(energy, prod_result, prod_stride))
 
-rdf = @time plot_rdf(prod_result, potential.σ, 0.05)
-display(rdf)
-savefig(rdf, "artifacts/argon_lj_rdf.svg")
+# rdf = @time plot_rdf(prod_result, potential.σ, 0.05)
+# display(rdf)
+# savefig(rdf, "artifacts/argon_lj_rdf.svg")
 
 ;
