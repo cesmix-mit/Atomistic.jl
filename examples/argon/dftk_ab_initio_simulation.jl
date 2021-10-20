@@ -32,7 +32,7 @@ eq_simulator = NBSimulator(
 )
 eq_result = @time simulate(initial_bodies, eq_simulator, potential)
 
-eq_stride = eq_parameters.steps ÷ 200
+eq_stride = eq_simulator.steps ÷ 200
 
 display(plot_temperature(eq_result, eq_stride))
 display(plot_energy(eq_result, eq_stride))
@@ -41,7 +41,7 @@ display(plot_energy(eq_result, eq_stride))
 ab_initio_simulator = NBSimulator(
     Δt=Δt,
     steps=200,
-    t₀=eq_parameters.steps * Δt
+    t₀=eq_simulator.steps * Δt
 )
 dftk_potential = DFTKPotential(
     psp=ElementPsp(:Ar, psp=load_psp(list_psp(:Ar, functional="lda")[1].identifier)),
