@@ -23,7 +23,7 @@ potential = LennardJones(
 initial_bodies = MassBodies(N, m, average_v, box_size)
 eq_simulator = NBSimulator(
 	Δt=Δt,
-	steps=2000,
+	steps=200,
 	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 )
 eq_result = @time simulate(initial_bodies, eq_simulator, potential)
@@ -35,7 +35,7 @@ energy = @time plot_energy(eq_result, eq_stride)
 
 prod_simulator = NBSimulator(
 	Δt=Δt,
-	steps=5000,
+	steps=500,
 	t₀=eq_simulator.steps * Δt
 )
 prod_result = @time simulate(get_bodies(eq_result), prod_simulator, potential)

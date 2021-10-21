@@ -4,7 +4,7 @@
 @kwdef struct DFTKPotential <: ArbitraryPotential
     psp::ElementPsp
     lattice
-    Ecut::Quantity
+    Ecut::Real
     kgrid::AbstractVector{Integer}
     n_bands::Union{Integer,Nothing} = nothing
     tol::Union{AbstractFloat,Nothing} = nothing
@@ -12,16 +12,18 @@
     mixing::Union{Mixing,Nothing} = nothing
     previous_scfres::RefValue{Any} = Ref{Any}()
 end
-DFTKPotential(parameters::DFTKPotential, Ecut::Quantity) = DFTKPotential(
-    psp=parameters.psp,
-    lattice=parameters.lattice,
-    Ecut=Ecut,
-    kgrid=parameters.kgrid,
-    n_bands=parameters.n_bands,
-    tol=parameters.tol,
-    damping=parameters.damping,
-    mixing=parameters.mixing,
-)
+function DFTKPotential(;
+                       psp::ElementPsp,
+                       lattice,
+                       Ecut::Quantity,
+                       kgrid::AbstractVector{Integer},
+                       n_bands::Union{Integer,Nothing}=nothing,
+                       tol::Union{AbstractFloat,Nothing}=nothing,
+                       damping::Union{AbstractFloat,Nothing}=nothing,
+                       mixing::Union{Mixing,Nothing}=nothing,
+                       previous_scfres::RefValue{Any}=Ref{Any}())
+    DFTKPotential(psp, lattice, austrip(Ecut), kgrid, n_bands, tol, damping, mixing, previous_scfres)
+end
 
 function InteratomicPotentials.force(state::MassBodies, potential::DFTKPotential)
     compute_forces_cart(calculate_scf(state, potential))[1]
@@ -41,11 +43,18 @@ function calculate_scf(state::MassBodies, potential::DFTKPotential)
     potential.previous_scfres[] = scfres
 end
 
-function analyze_convergence(state::MassBodies, potential::DFTKPotential, cutoffs::AbstractVector{<:Quantity})
+function analyze_convergence(state::MassBodies, potential::DFTKPotential, cutoffs::Vector{<:Quantity})
     energies = Vector{Float64}()
     for Ecut ∈ cutoffs
-        params = DFTKPotential(potential, Ecut)
-        scfres = calculate_scf(state, params)
+        parameters = DFTKPotential(psp=potential.psp,
+                                   lattice=potential.lattice,
+                                   Ecut=Ecut,
+                                   kgrid=potential.kgrid,
+                                   n_bands=potential.n_bands,
+                                   tol=potential.tol,
+                                   damping=potential.damping,
+                                   mixing=potential.mixing)
+        scfres = calculate_scf(state, parameters)
         push!(energies, scfres.energies.total)
     end
     

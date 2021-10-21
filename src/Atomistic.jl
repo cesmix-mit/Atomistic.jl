@@ -27,7 +27,7 @@ export MolecularDynamicsSimulator, simulate
 include("abstractions/md_simulator.jl")
 
 include("integrations/ip_integration.jl")
-export NBSimulator, LJParameters, NBSResult
+export NBSimulator, LJPotential, NBSResult
 include("integrations/nbs_integration.jl")
 export DFTKPotential, analyze_convergence
 include("integrations/dftk_integration.jl")

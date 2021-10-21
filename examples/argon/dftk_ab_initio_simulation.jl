@@ -18,7 +18,7 @@ average_v = √(u"k" * reference_temp / m)
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
-potential = LJParameters(
+potential = LJPotential(
 	ϵ=1.657e-21u"J",
 	σ=0.34u"nm",
 	R=0.765u"nm"

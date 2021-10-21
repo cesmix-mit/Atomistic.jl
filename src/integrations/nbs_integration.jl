@@ -1,25 +1,36 @@
 # Integrations with NBodySimulator.jl
 
 @kwdef struct NBSimulator <: MolecularDynamicsSimulator
-    potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
-    Δt::Quantity
+    Δt::Real
     steps::Integer
-    t₀::Quantity = 0.0u"s"
+    t₀::Real = 0.0
     thermostat::Thermostat = NullThermostat()
     simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet()
+    potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
+end
+function NBSimulator(;
+                     Δt::Quantity,
+                     steps::Integer,
+                     t₀::Quantity=0.0u"s",
+                     thermostat::Thermostat=NullThermostat(),
+                     simulator::OrdinaryDiffEqAlgorithm=VelocityVerlet(),
+                     potentials::Dict{Symbol,PotentialParameters}=Dict{Symbol,PotentialParameters}())
+    NBSimulator(austrip(Δt), steps, austrip(t₀), thermostat, simulator, potentials)
 end
 
-struct CustomPotentialParameters <: PotentialParameters
+@kwdef struct CustomPotentialParameters <: PotentialParameters
     potential::ArbitraryPotential
-    timestep_cache::RefValue{Real}
-    force_cache::RefValue{Vector{SVector{3,Real}}}
-    CustomPotentialParameters(potential::ArbitraryPotential) = new(potential, Ref{Real}(), Ref{Vector{SVector{3,Real}}}())
+    timestep_cache::RefValue{Real} = Ref{Real}()
+    force_cache::RefValue{Vector{SVector{3,Real}}} = Ref{Vector{SVector{3,Real}}}()
 end
 
-@kwdef struct LJParameters
-    ϵ::Quantity
-    σ::Quantity
-    R::Quantity
+@kwdef struct LJPotential
+    ϵ::Real
+    σ::Real
+    R::Real
+end
+function LJPotential(; ϵ::Quantity, σ::Quantity, R::Quantity)
+    LJPotential(austrip(ϵ), austrip(σ), austrip(R))
 end
 
 function NBodySimulator.get_accelerating_function(parameters::CustomPotentialParameters, simulation::NBodySimulation)
@@ -35,20 +46,20 @@ function NBodySimulator.get_accelerating_function(parameters::CustomPotentialPar
 end
 
 function simulate(state::MassBodies, simulator::NBSimulator, potential::ArbitraryPotential)
-    simulator.potentials[:custom] = CustomPotentialParameters(potential)
+    simulator.potentials[:custom] = CustomPotentialParameters(potential=potential)
     simulate(state, simulator)
 end
 
-function simulate(state::MassBodies, simulator::NBSimulator, potential::LJParameters)
-    simulator.potentials[:lennard_jones] = LennardJonesParameters(austrip(potential.ϵ), austrip(potential.σ), austrip(potential.R))
+function simulate(state::MassBodies, simulator::NBSimulator, potential::LJPotential)
+    simulator.potentials[:lennard_jones] = LennardJonesParameters(potential.ϵ, potential.σ, potential.R)
     simulate(state, simulator)
 end
 
 function simulate(state::MassBodies, simulator::NBSimulator)
     system = PotentialNBodySystem(state.bodies, simulator.potentials)
     boundary_conditions = CubicPeriodicBoundaryConditions(austrip(state.box_size))
-    simulation = NBodySimulation(system, (austrip(simulator.t₀), austrip(simulator.t₀ + simulator.steps * simulator.Δt)), boundary_conditions, simulator.thermostat, 1.0)
-    NBSResult(run_simulation(simulation, simulator.simulator, dt=austrip(simulator.Δt)))
+    simulation = NBodySimulation(system, (simulator.t₀, simulator.t₀ + simulator.steps * simulator.Δt), boundary_conditions, simulator.thermostat, 1.0)
+    NBSResult(run_simulation(simulation, simulator.simulator, dt=simulator.Δt))
 end
 
 struct NBSResult <: MolecularDynamicsResult
