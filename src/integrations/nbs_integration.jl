@@ -8,8 +8,7 @@
     simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet()
     potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
 end
-function NBSimulator(;
-                     Δt::Quantity,
+function NBSimulator(Δt::Quantity,
                      steps::Integer,
                      t₀::Quantity=0.0u"s",
                      thermostat::Thermostat=NullThermostat(),
@@ -29,7 +28,7 @@ end
     σ::Real
     R::Real
 end
-function LJPotential(; ϵ::Quantity, σ::Quantity, R::Quantity)
+function LJPotential(ϵ::Quantity, σ::Quantity, R::Quantity)
     LJPotential(austrip(ϵ), austrip(σ), austrip(R))
 end
 

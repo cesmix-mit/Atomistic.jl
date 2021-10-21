@@ -5,18 +5,17 @@
     psp::ElementPsp
     lattice
     Ecut::Real
-    kgrid::AbstractVector{Integer}
+    kgrid::AbstractVector{<:Integer}
     n_bands::Union{Integer,Nothing} = nothing
     tol::Union{AbstractFloat,Nothing} = nothing
     damping::Union{AbstractFloat,Nothing} = nothing
     mixing::Union{Mixing,Nothing} = nothing
     previous_scfres::RefValue{Any} = Ref{Any}()
 end
-function DFTKPotential(;
-                       psp::ElementPsp,
+function DFTKPotential(psp::ElementPsp,
                        lattice,
                        Ecut::Quantity,
-                       kgrid::AbstractVector{Integer},
+                       kgrid::AbstractVector{<:Integer},
                        n_bands::Union{Integer,Nothing}=nothing,
                        tol::Union{AbstractFloat,Nothing}=nothing,
                        damping::Union{AbstractFloat,Nothing}=nothing,

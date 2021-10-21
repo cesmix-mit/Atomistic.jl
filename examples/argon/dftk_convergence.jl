@@ -26,6 +26,7 @@ initial_bodies = MassBodies(N, m, average_v, box_size)
 eq_simulator = NBSimulator(
 	Δt=Δt,
 	steps=20000,
+	t₀=0.0u"s",
 	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 )
 eq_result = @time simulate(initial_bodies, eq_simulator, potential)
