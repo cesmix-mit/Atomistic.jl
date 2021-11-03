@@ -18,8 +18,7 @@ function write_ase_trajectory(result::MolecularDynamicsResult, element::Element,
         end
         traj = pyimport("ase.io.trajectory").Trajectory(filename, "a")
         for t ∈ 1:length(get_time_range(result))
-            state = get_bodies(result, t)
-            traj.write(ASEAtoms(state, element, lattice).atoms)
+            traj.write(ase_atoms(lattice, dftk_atoms(get_system(result, t), element)))
         end
         traj.close()
     end

@@ -1,6 +1,12 @@
 # Integrations with DFTK.jl
 # This integration should ultimately live within the DFTK package itself
 
+function dftk_atoms(system::AbstractSystem, element::Element)
+    L = nbody_boundary_conditions(system).L * u"bohr"
+    # TODO: support multiple species
+    [element => [AtomsBase.position(a) ./ L for a ∈ system]]
+end
+
 @kwdef struct DFTKPotential <: ArbitraryPotential
     psp::ElementPsp
     lattice
@@ -14,7 +20,7 @@
 end
 function DFTKPotential(psp::ElementPsp,
                        lattice,
-                       Ecut::Quantity,
+                       Ecut::Unitful.Energy,
                        kgrid::AbstractVector{<:Integer},
                        n_bands::Union{Integer,Nothing}=nothing,
                        tol::Union{AbstractFloat,Nothing}=nothing,
@@ -24,17 +30,17 @@ function DFTKPotential(psp::ElementPsp,
     DFTKPotential(psp, lattice, austrip(Ecut), kgrid, n_bands, tol, damping, mixing, previous_scfres)
 end
 
-function InteratomicPotentials.force(state::MassBodies, potential::DFTKPotential)
-    compute_forces_cart(calculate_scf(state, potential))[1]
+function InteratomicPotentials.potential_energy(system::AbstractSystem, potential::DFTKPotential)
+    calculate_scf(system, potential).energies.total
 end
 
-function potential_energy(state::MassBodies, potential::DFTKPotential)
-    calculate_scf(state, potential).energies.total
+function InteratomicPotentials.force(system::AbstractSystem, potential::DFTKPotential)
+    # TODO: support multiple species
+    compute_forces_cart(calculate_scf(system, potential))[1]
 end
 
-function calculate_scf(state::MassBodies, potential::DFTKPotential)
-    state = DFTKAtoms(state, potential.psp, potential.lattice)
-    model = model_LDA(state.lattice, state.atoms)
+function calculate_scf(system::AbstractSystem, potential::DFTKPotential)
+    model = model_LDA(potential.lattice, dftk_atoms(system, potential.psp))
     basis = PlaneWaveBasis(model; Ecut=potential.Ecut, kgrid=potential.kgrid)
 
     extra_args = isassigned(potential.previous_scfres) ? (ψ = potential.previous_scfres[].ψ, ρ = potential.previous_scfres[].ρ) : (; )
@@ -42,7 +48,7 @@ function calculate_scf(state::MassBodies, potential::DFTKPotential)
     potential.previous_scfres[] = scfres
 end
 
-function analyze_convergence(state::MassBodies, potential::DFTKPotential, cutoffs::Vector{<:Quantity})
+function analyze_convergence(system::AbstractSystem, potential::DFTKPotential, cutoffs::Vector{<:Unitful.Energy})
     energies = Vector{Float64}()
     for Ecut ∈ cutoffs
         parameters = DFTKPotential(psp=potential.psp,
@@ -53,7 +59,7 @@ function analyze_convergence(state::MassBodies, potential::DFTKPotential, cutoff
                                    tol=potential.tol,
                                    damping=potential.damping,
                                    mixing=potential.mixing)
-        scfres = calculate_scf(state, parameters)
+        scfres = calculate_scf(system, parameters)
         push!(energies, scfres.energies.total)
     end
     

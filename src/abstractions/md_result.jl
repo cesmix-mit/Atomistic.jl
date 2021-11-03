@@ -2,8 +2,8 @@
 
 abstract type MolecularDynamicsResult end
 
-function get_bodies(result::MolecularDynamicsResult, t::Integer=0)::Vector{Atom}
-    throw(UnimplementedError(:get_bodies, result))
+function get_system(result::MolecularDynamicsResult, t::Integer=0)::AbstractSystem
+    throw(UnimplementedError(:get_system, result))
 end
 function get_time_range(result::MolecularDynamicsResult)::Vector{<:Real}
     throw(UnimplementedError(:get_time_range, result))
@@ -12,9 +12,7 @@ end
 function temperature(result::MolecularDynamicsResult, time::Real)::Real
     throw(UnimplementedError(:temperature, result))
 end
-function reference_temperature(result::MolecularDynamicsResult)::Union{Real,Nothing}
-    nothing
-end
+reference_temperature(result::MolecularDynamicsResult)::Union{Real,Missing} = missing
 
 function kinetic_energy(result::MolecularDynamicsResult, time::Real)::Real
     throw(UnimplementedError(:kinetic_energy, result))

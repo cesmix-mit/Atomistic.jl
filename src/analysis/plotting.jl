@@ -1,7 +1,7 @@
 # functions for plotting results
 
 function plot_temperature(result::MolecularDynamicsResult, stride::Integer)
-    N = length(get_bodies(result))
+    N = length(get_system(result))
     p = plot(
         title="Temperature during Simulation [n = $(N)]",
         xlab="Time",
@@ -31,7 +31,7 @@ function plot_temperature!(p::Plot, result::MolecularDynamicsResult, stride::Int
         color=1,
     )
     reference_temp = reference_temperature(result)
-    if (!isnothing(reference_temp))
+    if (!ismissing(reference_temp))
         plot!(
             p,
             time_range,
@@ -46,7 +46,7 @@ function plot_temperature!(p::Plot, result::MolecularDynamicsResult, stride::Int
 end
 
 function plot_energy(result::MolecularDynamicsResult, stride::Integer)
-    N = length(get_bodies(result))
+    N = length(get_system(result))
     p = plot(
         title="Energy during Simulation [n = $(N)]",
         xlab="Time",
@@ -95,9 +95,9 @@ end
 function plot_rdf(result::MolecularDynamicsResult, σ::Real, sample_fraction::Float64=1.0)
     plot_rdf(result, σ * u"bohr", sample_fraction)
 end
-function plot_rdf(result::MolecularDynamicsResult, σ::Quantity, sample_fraction::Float64=1.0)
+function plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, sample_fraction::Float64=1.0)
     @assert 0 < sample_fraction ≤ 1
-    N = length(get_bodies(result))
+    N = length(get_system(result))
     T = length(get_time_range(result)) - 1
     rs, grf = rdf(result, sample_fraction)
     @assert length(rs) == length(grf)
