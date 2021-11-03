@@ -18,7 +18,7 @@ jobs:
       - run: |
           julia --project -e '
             using Pkg
-            Pkg.Registry.add(RegistrySpec(url = "https://github.com/cesmix-mit/CESMIX.git"))
+            Pkg.Registry.add(RegistrySpec(url = \"https://github.com/cesmix-mit/CESMIX.git\"))
           '
       - run: |
           julia --project -e '
