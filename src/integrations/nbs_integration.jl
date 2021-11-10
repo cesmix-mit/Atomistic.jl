@@ -51,11 +51,11 @@ function DynamicAtom(b::ElementMassBody, box_size::Unitful.Length)
 end
 
 # TODO: support more boundary conditions
-function AtomsBase.SimpleSystem(bodies::Vector{<:ElementMassBody}, boundary_conditions::CubicPeriodicBoundaryConditions)
-    SimpleSystem(bodies, boundary_conditions.L * u"bohr")
+function DynamicSystem(bodies::Vector{<:ElementMassBody}, boundary_conditions::CubicPeriodicBoundaryConditions, time::Real=0.0)
+    DynamicSystem(bodies, boundary_conditions.L * u"bohr", time * u"ħ_au / hartree")
 end
-function AtomsBase.SimpleSystem(bodies::Vector{<:ElementMassBody}, box_size::Unitful.Length)
-    SimpleSystem(DynamicAtom.(bodies, box_size), box_size)
+function DynamicSystem(bodies::Vector{<:ElementMassBody}, box_size::Unitful.Length, time::Unitful.Time=0.0u"s")
+    DynamicSystem(DynamicAtom.(bodies, box_size), box_size, time)
 end
 
 @kwdef struct InteratomicPotentialParameters <: PotentialParameters
@@ -70,7 +70,7 @@ function NBodySimulator.get_accelerating_function(parameters::InteratomicPotenti
     (dv, u, v, t, i) -> begin
         if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
             particles = [ElementMassBody(SVector{3}(u[:, j]), SVector{3}(v[:, j]), masses[j], elements[j]) for j ∈ 1:length(elements)]
-            system = SimpleSystem(particles, simulation.boundary_conditions)
+            system = DynamicSystem(particles, simulation.boundary_conditions, t)
             parameters.timestep_cache[] = t
             parameters.force_cache[] = force(system, parameters.potential)
         end
@@ -132,7 +132,7 @@ function get_system(result::NBSResult, t::Integer=0)
     masses = get_masses(sr.simulation.system)
     elements = get_elements(sr.simulation.system)
     particles = [ElementMassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i], elements[i]) for i ∈ 1:length(elements)]
-    SimpleSystem(particles, sr.simulation.boundary_conditions)
+    DynamicSystem(particles, sr.simulation.boundary_conditions, time)
 end
 
 function get_time_range(result::NBSResult)

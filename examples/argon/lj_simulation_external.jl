@@ -16,10 +16,10 @@ thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
 initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
-initial_system = SimpleSystem(initial_bodies, box_size)
+initial_system = DynamicSystem(initial_bodies, box_size)
 eq_simulator = NBSimulator(
 	Δt=Δt,
-	steps=200,
+	steps=2000,
 	t₀=0.0u"s",
 	thermostat=AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 )
@@ -34,7 +34,7 @@ energy = @time plot_energy(eq_result, 10)
 
 prod_simulator = NBSimulator(
 	Δt=Δt,
-	steps=500,
+	steps=5000,
 	t₀=eq_simulator.steps * Δt
 )
 prod_result = @time simulate(get_system(eq_result), prod_simulator, potential)

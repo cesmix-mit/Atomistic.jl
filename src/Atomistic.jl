@@ -25,7 +25,7 @@ include("abstractions/md_result.jl")
 export MolecularDynamicsSimulator, simulate
 include("abstractions/md_simulator.jl")
 
-export DynamicAtom
+export DynamicAtom, DynamicSystem
 include("integrations/ab_integration.jl")
 export NBSimulator, LJPotential, NBSResult
 include("integrations/nbs_integration.jl")

@@ -17,7 +17,7 @@ thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
 initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
-initial_system = SimpleSystem(initial_bodies, box_size)
+initial_system = DynamicSystem(initial_bodies, box_size)
 eq_simulator = NBSimulator(
 	Δt=Δt,
 	steps=20000,
