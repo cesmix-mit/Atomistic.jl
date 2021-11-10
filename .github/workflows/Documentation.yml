@@ -15,31 +15,39 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: "1"
-      - run: |
+      - name: add CESMIX registry
+        run: |
           julia --project -e '
             using Pkg
             Pkg.Registry.add(RegistrySpec(url = "https://github.com/cesmix-mit/CESMIX.git"))
           '
         shell: bash
-      - run: |
+      - name: instantiate root
+        run: |
           julia --project -e '
             using Pkg
             Pkg.instantiate()
             Pkg.precompile()
           '
-      - run: |
+      - name: instantiate docs
+        run: |
           julia --project=docs -e '
             using Pkg
             # Until all dependencies are registered
             # Pkg.develop(PackageSpec(path=pwd()))
-            Pkg.instantiate()'
-      - run: |
+            Pkg.instantiate()
+            Pkg.precompile()
+          '
+      - name: run doctests
+        run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
             using Atomistic
             DocMeta.setdocmeta!(Atomistic, :DocTestSetup, :(using Atomistic); recursive=true)
-            doctest(Atomistic)'
-      - run: julia --project=docs docs/make.jl
+            doctest(Atomistic)
+          '
+      - name: generate docs
+        run: julia --project=docs docs/make.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
