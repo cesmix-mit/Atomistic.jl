@@ -27,10 +27,11 @@ function DFTKPotential(psp::ElementPsp,
                        damping::Union{AbstractFloat,Nothing}=nothing,
                        mixing::Union{Mixing,Nothing}=nothing,
                        previous_scfres::RefValue{Any}=Ref{Any}())
-    DFTKPotential(psp, lattice, austrip(Ecut), kgrid, n_bands, tol, damping, mixing, previous_scfres)
+    DFTKPotential(psp, austrip.(lattice), austrip(Ecut), kgrid, n_bands, tol, damping, mixing, previous_scfres)
 end
 
 function InteratomicPotentials.potential_energy(system::AbstractSystem, potential::DFTKPotential)
+    # TODO: this should be able to be cached in some way
     calculate_scf(system, potential).energies.total
 end
 
@@ -59,6 +60,7 @@ function analyze_convergence(system::AbstractSystem, potential::DFTKPotential, c
                                    tol=potential.tol,
                                    damping=potential.damping,
                                    mixing=potential.mixing)
+        @info "Ecut: $(Ecut)"
         scfres = calculate_scf(system, parameters)
         push!(energies, scfres.energies.total)
     end

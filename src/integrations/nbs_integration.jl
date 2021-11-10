@@ -126,7 +126,7 @@ end
 
 function get_system(result::NBSResult, t::Integer=0)
     sr = result.result
-    time = sr.solution.t[t > 0 ? t : end]
+    time = get_time_range(result)[t > 0 ? t : end]
     positions = get_position(sr, time)
     velocities = get_velocity(sr, time)
     masses = get_masses(sr.simulation.system)
@@ -139,7 +139,8 @@ function get_time_range(result::NBSResult)
     result.result.solution.t
 end
 
-function temperature(result::NBSResult, time::Real)
+function temperature(result::NBSResult, t::Integer=0)
+    time = get_time_range(result)[t > 0 ? t : end]
     NBodySimulator.temperature(result.result, time)
 end
 
@@ -147,16 +148,19 @@ function reference_temperature(result::NBSResult)
     result.result.simulation.thermostat isa NullThermostat ? missing : result.result.simulation.thermostat.T
 end
 
-function kinetic_energy(result::NBSResult, time::Real)
+function kinetic_energy(result::NBSResult, t::Integer=0)
+    time = get_time_range(result)[t > 0 ? t : end]
     NBodySimulator.kinetic_energy(result.result, time)
 end
 
-function potential_energy(result::NBSResult, time::Real)
+function potential_energy(result::NBSResult, t::Integer=0)
+    potentials = result.result.simulation.system.potentials
+    # https://github.com/SciML/NBodySimulator.jl/issues/44
+    if :custom ∈ keys(potentials)
+        return InteratomicPotentials.potential_energy(get_system(result, t), potentials[:custom].potential)
+    end
+    time = get_time_range(result)[t > 0 ? t : end]
     NBodySimulator.potential_energy(result.result, time)
-end
-
-function total_energy(result::NBSResult, time::Real)
-    NBodySimulator.total_energy(result.result, time)
 end
 
 function rdf(result::NBSResult, sample_fraction::Float64=1.0)
@@ -165,7 +169,7 @@ function rdf(result::NBSResult, sample_fraction::Float64=1.0)
     n = length(sr.simulation.system.bodies)
     pbc = sr.simulation.boundary_conditions
     trange = get_time_range(result)[end - floor(Int, length(sr.solution.t) * sample_fraction) + 1:end]
-
+    
     maxbin = 1000
     dr = pbc.L / 2 / maxbin
     hist = zeros(maxbin)

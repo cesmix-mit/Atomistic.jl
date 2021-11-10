@@ -55,7 +55,7 @@ ab_initio_result = @time simulate(get_system(eq_result), ab_initio_simulator, df
 # Plotting on separate plots because the timespan is so much smaller than in the first phase
 display(plot_temperature(ab_initio_result, 1))
 display(plot_energy(ab_initio_result, 1))
-display(@time plot_rdf(ab_initio_result, potential.σ, 1))
+display(@time plot_rdf(ab_initio_result, potential.σ))
 
 write_nbs_animation(ab_initio_result, "artifacts/argon_ab_initio.gif")
 write_ase_trajectory(ab_initio_result, dftk_potential.psp, dftk_potential.lattice, "artifacts/argon_ab_initio.traj")

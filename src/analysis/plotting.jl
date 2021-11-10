@@ -7,16 +7,15 @@ function plot_temperature(result::MolecularDynamicsResult, stride::Integer)
         xlab="Time",
         ylab="Temperature",
     )
-    plot_temperature!(p, result, stride)
+    plot_temperature!(p, result, stride, true)
 end
 
-function plot_temperature!(p::Plot, result::MolecularDynamicsResult, stride::Integer)
-    time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(get_time_range(result)) if (i - 1) % stride == 0]
-    firstPlot = austrip(time_range[1]) == 0
-    if (!firstPlot)
+function plot_temperature!(p::Plot, result::MolecularDynamicsResult, stride::Integer, first_plot::Bool=false)
+    time_range = [(t, auconvert(u"ps", time)) for (t, time) ∈ enumerate(get_time_range(result)) if (t - 1) % stride == 0]
+    if (!first_plot)
         vline!(
             p,
-            [time_range[1]],
+            [time_range[1][2]],
             label=false,
             color=:black,
             linestyle=:dot,
@@ -25,18 +24,18 @@ function plot_temperature!(p::Plot, result::MolecularDynamicsResult, stride::Int
     end
     plot!(
         p,
-        time_range,
-        t -> auconvert(u"K", temperature(result, austrip(t))),
-        label=firstPlot ? "Simulation Temperature" : nothing,
+        [time for (t, time) ∈ time_range],
+        [auconvert(u"K", temperature(result, austrip(t))) for (t, time) ∈ time_range],
+        label=first_plot ? "Simulation Temperature" : nothing,
         color=1,
     )
     reference_temp = reference_temperature(result)
     if (!ismissing(reference_temp))
         plot!(
             p,
-            time_range,
-            t -> auconvert(u"K", reference_temp),
-            label=firstPlot ? "Reference Temperature" : nothing,
+            [time for (t, time) ∈ time_range],
+            [auconvert(u"K", reference_temp) for (t, time) ∈ time_range],
+            label=first_plot ? "Reference Temperature" : nothing,
             color=2,
             linestyle=:dash,
             lw=2
@@ -53,16 +52,15 @@ function plot_energy(result::MolecularDynamicsResult, stride::Integer)
         ylab="Energy",
         legend=:right
     ) 
-    plot_energy!(p, result, stride)
+    plot_energy!(p, result, stride, true)
 end
 
-function plot_energy!(p::Plot, result::MolecularDynamicsResult, stride::Integer)
-    time_range = [auconvert(u"ps", t) for (i, t) ∈ enumerate(get_time_range(result)) if (i - 1) % stride == 0]
-    firstPlot = austrip(time_range[1]) == 0
-    if (!firstPlot)
+function plot_energy!(p::Plot, result::MolecularDynamicsResult, stride::Integer, first_plot::Bool=false)
+    time_range = [(t, auconvert(u"ps", time)) for (t, time) ∈ enumerate(get_time_range(result)) if (t - 1) % stride == 0]
+    if (!first_plot)
         vline!(
             p,
-            [time_range[1]],
+            [time_range[1][2]],
             label=false,
             color=:black,
             linestyle=:dot,
@@ -71,23 +69,23 @@ function plot_energy!(p::Plot, result::MolecularDynamicsResult, stride::Integer)
     end
     plot!(
         p,
-        time_range,
-        t -> kinetic_energy(result, austrip(t))u"hartree",
-        label=firstPlot ? "Kinetic Energy" : nothing,
+        [time for (t, time) ∈ time_range],
+        [kinetic_energy(result, austrip(t))u"hartree" for (t, time) ∈ time_range],
+        label=first_plot ? "Kinetic Energy" : nothing,
         color=2
     )
     plot!(
         p,
-        time_range,
-        t -> potential_energy(result, austrip(t))u"hartree",
-        label=firstPlot ? "Potential Energy" : nothing,
+        [time for (t, time) ∈ time_range],
+        [potential_energy(result, austrip(t))u"hartree" for (t, time) ∈ time_range],
+        label=first_plot ? "Potential Energy" : nothing,
         color=1
     )
     plot!(
         p,
-        time_range,
-        t -> total_energy(result, austrip(t))u"hartree",
-label=firstPlot ? "Total Energy" : nothing,
+        [time for (t, time) ∈ time_range],
+        [total_energy(result, austrip(t))u"hartree" for (t, time) ∈ time_range],
+        label=first_plot ? "Total Energy" : nothing,
         color=3
     )
 end
