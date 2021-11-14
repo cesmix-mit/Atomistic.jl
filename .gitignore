@@ -2,17 +2,16 @@
 *.jl.cov
 *.jl.mem
 
-docs/Manifest.toml
-test/Manifest.toml
+Manifest.toml
 
 # generated docs
 docs/build
 
-# asedftk artifacts
-*dftk.json
-*dftk.log
-*dftk.checkpoint.jld2
-*dftk.scfres.jld2
+# dftk artifacts
+dftk.json
+dftk.log
+dftk.checkpoint.jld2
+dftk.scfres.jld2
 
 # Directory used for storing artifacts from examples
 artifacts/
