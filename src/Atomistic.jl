@@ -12,18 +12,18 @@ using Unitful
 using UnitfulAtomic
 using UnitfulRecipes
 
-import Base:@kwdef, RefValue
-import InteratomicPotentials:ArbitraryPotential
-import DFTK:Mixing, Element
-import NBodySimulator:Body, NullThermostat, SimulationResult, Thermostat
-import Plots:Plot
+import Base: @kwdef, RefValue
+import InteratomicPotentials: ArbitraryPotential
+import DFTK: Mixing, Element
+import NBodySimulator: Body, NullThermostat, SimulationResult, Thermostat
+import Plots: Plot
 
 include("exceptions.jl")
 
 export MolecularDynamicsResult, get_system, get_time_range, rdf
-include("abstractions/md_result.jl")
+include("interfaces/md_result.jl")
 export MolecularDynamicsSimulator, simulate
-include("abstractions/md_simulator.jl")
+include("interfaces/md_simulator.jl")
 
 export DynamicAtom, DynamicSystem
 include("integrations/ab_integration.jl")
