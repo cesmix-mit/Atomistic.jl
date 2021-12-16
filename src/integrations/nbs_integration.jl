@@ -84,6 +84,33 @@ function NBodySimulator.get_accelerating_function(parameters::InteratomicPotenti
     end
 end
 
+@kwdef struct LJPotential
+    ϵ::Real
+    σ::Real
+    R::Real
+end
+function LJPotential(ϵ::Unitful.Energy, σ::Unitful.Length, R::Unitful.Length)
+    LJPotential(austrip(ϵ), austrip(σ), austrip(R))
+end
+
+"""
+    NBSimulator <: MolecularDynamicsSimulator
+
+A wrapper around NBodySimulator to implement the Atomistic API.
+
+**Field descriptions**
+- `Δt::Real` the time between timesteps, assumed to be in atomic units
+- `steps::Integer` the number of timesteps for the simulation
+- `t₀::Real` the starting time of the simulation, assumed to be in atomic units;
+    defaults to 0
+- `thermostat::Thermostat` the thermostat for the simulation;
+    many options are defined by `NBodySimulator`, but a user could also define a custom thermostat;
+    defaults to the `NullThermostat`
+- `simulator::OrdinaryDiffEqAlgorithm` the algorithm to be used for the ODE;
+    defaults to VelocityVerlet
+- `potentials::Dict{Symbol,PotentialParameters}` dictionary of potentials;
+    shouldn't be manipulated directly by the user
+"""
 @kwdef struct NBSimulator <: MolecularDynamicsSimulator
     Δt::Real
     steps::Integer
@@ -105,27 +132,24 @@ function simulate(system::AbstractSystem, simulator::NBSimulator, potential::Arb
     simulator.potentials[:custom] = InteratomicPotentialParameters(potential = potential)
     simulate(system, simulator)
 end
-
+function simulate(system::AbstractSystem, simulator::NBSimulator, potential::LJPotential)
+    simulator.potentials[:lennard_jones] = LennardJonesParameters(potential.ϵ, potential.σ, potential.R)
+    simulate(system, simulator)
+end
 function simulate(system::AbstractSystem, simulator::NBSimulator)
     nb_system = PotentialNBodySystem{ElementMassBody}(bodies(system), simulator.potentials)
     simulation = NBodySimulation(nb_system, (simulator.t₀, simulator.t₀ + simulator.steps * simulator.Δt), nbody_boundary_conditions(system), simulator.thermostat, 1.0)
     NBSResult(run_simulation(simulation, simulator.simulator, dt = simulator.Δt))
 end
 
-@kwdef struct LJPotential
-    ϵ::Real
-    σ::Real
-    R::Real
-end
-function LJPotential(ϵ::Unitful.Energy, σ::Unitful.Length, R::Unitful.Length)
-    LJPotential(austrip(ϵ), austrip(σ), austrip(R))
-end
+"""
+    NBSResult <: MolecularDynamicsResult
 
-function simulate(system::AbstractSystem, simulator::NBSimulator, potential::LJPotential)
-    simulator.potentials[:lennard_jones] = LennardJonesParameters(potential.ϵ, potential.σ, potential.R)
-    simulate(system, simulator)
-end
+The result generating from running a `MolecularDynamicsSimulator`.
 
+**Field descriptions**
+- `result::SimulationResult` the standard simulation result from `NBodySimulator`
+"""
 struct NBSResult <: MolecularDynamicsResult
     result::SimulationResult
 end

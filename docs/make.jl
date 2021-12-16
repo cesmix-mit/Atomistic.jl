@@ -18,7 +18,7 @@ makedocs(;
         "Home" => "index.md",
         "Implementing the Atomistic API" => "extension.md",
         "Using Atomistic-Compatible Packages" => "usage.md",
-        "API Reference" => "api.md",
+        "Full API Reference" => "api.md",
     ],
     doctest = true,
     linkcheck = true,

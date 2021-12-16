@@ -46,7 +46,9 @@ If there is no thermostat with a reference temperature in this simulation, retur
 An implementer of this API should implement a method of this function for their custom result type if it supports thermostats.
 If not implmented, the default implemenation just returns missing.
 """
-reference_temperature(result::MolecularDynamicsResult)::Union{Real,Missing} = missing
+function reference_temperature(result::MolecularDynamicsResult)::Union{Real,Missing}
+    missing
+end
 
 """
     kinetic_energy(result::MolecularDynamicsResult, t::Integer = 0)::Real

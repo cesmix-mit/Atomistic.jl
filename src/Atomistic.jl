@@ -21,14 +21,14 @@ import Plots: Plot
 
 include("exceptions.jl")
 
-export MolecularDynamicsResult, get_system, get_time_range, rdf
+export MolecularDynamicsResult, get_system, get_time_range, temperature, kinetic_energy, potential_energy, total_energy, rdf
 include("interfaces/md_result.jl")
 export MolecularDynamicsSimulator, simulate
 include("interfaces/md_simulator.jl")
 
 export DynamicAtom, DynamicSystem
 include("integrations/ab_integration.jl")
-export NBSimulator, LJPotential, NBSResult
+export LJPotential, NBSimulator, NBSResult
 include("integrations/nbs_integration.jl")
 export DFTKPotential, analyze_convergence
 include("integrations/dftk_integration.jl")

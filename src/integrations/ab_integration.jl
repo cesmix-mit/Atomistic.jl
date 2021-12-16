@@ -7,10 +7,12 @@ abstract type AbstractAtom end
 
 An atom representation based on the StaticAtom but with a velocity.
 
-*Type parameters*
+**Type parameters**
 - `D`: the dimension of the coordinate space
 - `L`: the type for the position components
 - `V`: the type for the velocity components
+
+Fields should not be accessed directly. Use the provided accessors instead.
 """
 struct DynamicAtom{D,L<:Unitful.Length,V<:Unitful.Velocity} <: AbstractAtom
     position::SVector{D,L}
@@ -38,11 +40,13 @@ AtomsBase.atomic_property(a::DynamicAtom, property::Symbol) = getproperty(a.elem
 
 A representation of a system of dynamic atoms which is similar to the FlexibleSystem but with a time field.
 
-*Type parameters*
+**Type parameters**
 - `D`: the dimension of the coordinate space
 - `A`: the type for the atoms that make up the system
 - `L`: the type for the bounding box components
 - `T`: the type for time field
+
+Fields should not be accessed directly. Use the provided accessors instead.
 """
 struct DynamicSystem{D,A<:AbstractAtom,L<:Unitful.Length,T<:Unitful.Time} <: AbstractAtomicSystem{D}
     box::SVector{D,SVector{D,L}}
@@ -65,8 +69,8 @@ function DynamicSystem(particles::Vector{<:AbstractAtom}, box_size::Unitful.Leng
     DynamicSystem(box, boundary_conditions, particles, time)
 end
 
-bounding_box(sys::DynamicSystem) = sys.box
-boundary_conditions(sys::DynamicSystem) = sys.boundary_conditions
+AtomsBase.bounding_box(sys::DynamicSystem) = sys.box
+AtomsBase.boundary_conditions(sys::DynamicSystem) = sys.boundary_conditions
 
 Base.size(sys::DynamicSystem) = size(sys.particles)
 Base.length(sys::DynamicSystem) = length(sys.particles)

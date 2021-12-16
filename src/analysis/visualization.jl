@@ -1,9 +1,21 @@
 # functions for exporting results to visualization tools
 
+"""
+    write_nbs_animation(result::NBSResult, filename::String)
+
+Animate an `NBSResult` and store the result in a .gif file.
+"""
 function write_nbs_animation(result::NBSResult, filename::String)
     animate(result.result, filename)
 end
 
+"""
+    write_ase_trajectory(result::MolecularDynamicsResult, element::DFTK.Element, lattice, filename::String)
+
+Write the trajectory of a `MolecularDynamicsResult` to a .traj file.
+
+The file can be visualized by running `ase gui <filename>` on the command line.
+"""
 function write_ase_trajectory(result::MolecularDynamicsResult, element::DFTK.Element, lattice, filename::String)
     ase = pyimport_e("ase")
     if ispynull(ase)
