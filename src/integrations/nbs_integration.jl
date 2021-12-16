@@ -10,12 +10,12 @@ function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.
     ElementMassBody{Float64,Float64}(austrip.(r), austrip.(v), austrip(e.atomic_mass), Symbol(e.symbol))
 end
 
-function NBodySimulator.generate_bodies_in_cell_nodes(n::Integer, symbol::Union{Integer,AbstractString,Symbol,AbstractVector}, L::Unitful.Length, reference_temp::Unitful.Temperature; rng = MersenneTwister(n))
+function NBodySimulator.generate_bodies_in_cell_nodes(n::Integer, symbol::Union{Integer,AbstractString,Symbol}, L::Unitful.Length, reference_temp::Unitful.Temperature; rng = MersenneTwister(n))
     e = elements[symbol]
     average_velocity = √(u"k" * reference_temp / e.atomic_mass)
     generate_bodies_in_cell_nodes(n, symbol, average_velocity, L, rng = rng)
 end
-function NBodySimulator.generate_bodies_in_cell_nodes(n::Integer, symbol::Union{Integer,AbstractString,Symbol,AbstractVector}, average_velocity::Unitful.Velocity, L::Unitful.Length; rng = MersenneTwister(n))
+function NBodySimulator.generate_bodies_in_cell_nodes(n::Integer, symbol::Union{Integer,AbstractString,Symbol}, average_velocity::Unitful.Velocity, L::Unitful.Length; rng = MersenneTwister(n))
     velocities = average_velocity * randn(rng, Float64, (3, n))
     e = elements[symbol]
     bodies = ElementMassBody[]

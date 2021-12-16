@@ -22,7 +22,7 @@ end
 function DynamicAtom(position, velocity, element)
     DynamicAtom{length(position),eltype(position),eltype(velocity)}(position, velocity, element)
 end
-function DynamicAtom(position, velocity, symbol::Union{Integer,AbstractString,Symbol,AbstractVector})
+function DynamicAtom(position, velocity, symbol::Union{Integer,AbstractString,Symbol})
     DynamicAtom(position, velocity, elements(symbol))
 end
 
