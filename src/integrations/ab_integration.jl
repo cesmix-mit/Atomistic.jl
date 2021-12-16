@@ -1,40 +1,64 @@
 # Integrations with AtomsBase.jl
 
-struct DynamicAtom{D,L <: Unitful.Length,V <: Unitful.Velocity} <: AbstractAtom
+abstract type AbstractAtom end
+
+"""
+    DynamicAtom{D,L<:Unitful.Length,V<:Unitful.Velocity} <: AbstractAtom
+
+An atom representation based on the StaticAtom but with a velocity.
+
+*Type parameters*
+- `D`: the dimension of the coordinate space
+- `L`: the type for the position components
+- `V`: the type for the velocity components
+"""
+struct DynamicAtom{D,L<:Unitful.Length,V<:Unitful.Velocity} <: AbstractAtom
     position::SVector{D,L}
     velocity::SVector{D,V}
-    element::ChemicalElement
+    element::Element
 end
 function DynamicAtom(position, velocity, element)
     DynamicAtom{length(position),eltype(position),eltype(velocity)}(position, velocity, element)
 end
 function DynamicAtom(position, velocity, symbol::Union{Integer,AbstractString,Symbol,AbstractVector})
-    DynamicAtom(position, velocity, ChemicalElement(symbol))
+    DynamicAtom(position, velocity, elements(symbol))
 end
 
 AtomsBase.position(atom::DynamicAtom) = atom.position
 AtomsBase.velocity(atom::DynamicAtom) = atom.velocity
-AtomsBase.element(atom::DynamicAtom) = atom.element
-mass(atom::DynamicAtom) = atomic_mass(atom.element)
+AtomsBase.species(atom::DynamicAtom) = atom.element
 
-struct DynamicSystem{D,ET <: AbstractElement,AT <: AbstractParticle{ET},T <: Unitful.Length,TT <: Unitful.Time} <: AbstractSystem{D,ET,AT}
-    box::SVector{D,SVector{D,T}}
+AtomsBase.atomic_symbol(a::DynamicAtom) = a.element.symbol
+AtomsBase.atomic_mass(a::DynamicAtom) = a.element.atomic_mass
+AtomsBase.atomic_number(a::DynamicAtom) = a.element.number
+AtomsBase.atomic_property(a::DynamicAtom, property::Symbol) = getproperty(a.element, property)
+
+"""
+    DynamicSystem{D,AT<:AbstractAtom,L<:Unitful.Length,TT<:Unitful.Time} <: AbstractAtomicSystem{D}
+
+A representation of a system of dynamic atoms which is similar to the FlexibleSystem but with a time field.
+
+*Type parameters*
+- `D`: the dimension of the coordinate space
+- `A`: the type for the atoms that make up the system
+- `L`: the type for the bounding box components
+- `T`: the type for time field
+"""
+struct DynamicSystem{D,A<:AbstractAtom,L<:Unitful.Length,T<:Unitful.Time} <: AbstractAtomicSystem{D}
+    box::SVector{D,SVector{D,L}}
     boundary_conditions::SVector{D,BoundaryCondition}
-    particles::Vector{AT}
-    time::TT
+    particles::Vector{A}
+    time::T
 end
-
 function DynamicSystem(box, boundary_conditions, particles, time)
     D = length(box)
-    ET = typeof(element(first(particles)))
-    AT = eltype(particles)
-    T = eltype(first(box))
-    TT = typeof(time)
+    A = eltype(particles)
+    L = eltype(eltype(box))
+    T = typeof(time)
 
-    DynamicSystem{D,ET,AT,T,TT}(box, boundary_conditions, particles, time)
+    DynamicSystem{D,A,L,T}(box, boundary_conditions, particles, time)
 end
-
-function DynamicSystem(particles::Vector{<:AbstractAtom}, box_size::Unitful.Length, time::Unitful.Time=0.0u"s")
+function DynamicSystem(particles::Vector{<:AbstractAtom}, box_size::Unitful.Length, time::Unitful.Time = 0.0u"s")
     z = zero(typeof(box_size))
     box = SVector(SVector(box_size, z, z), SVector(z, box_size, z), SVector(z, z, box_size))
     boundary_conditions = SVector(Periodic(), Periodic(), Periodic())

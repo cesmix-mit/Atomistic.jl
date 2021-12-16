@@ -4,7 +4,7 @@ function write_nbs_animation(result::NBSResult, filename::String)
     animate(result.result, filename)
 end
 
-function write_ase_trajectory(result::MolecularDynamicsResult, element::Element, lattice, filename::String)
+function write_ase_trajectory(result::MolecularDynamicsResult, element::DFTK.Element, lattice, filename::String)
     ase = pyimport_e("ase")
     if ispynull(ase)
         @warn "ASE is not installed, skipping write_trajectory"

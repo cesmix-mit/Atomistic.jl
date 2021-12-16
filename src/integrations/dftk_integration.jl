@@ -1,7 +1,7 @@
 # Integrations with DFTK.jl
 # This integration should ultimately live within the DFTK package itself
 
-function dftk_atoms(system::AbstractSystem, element::Element)
+function dftk_atoms(system::AbstractSystem, element::DFTK.Element)
     L = nbody_boundary_conditions(system).L * u"bohr"
     # TODO: support multiple species
     [element => [AtomsBase.position(a) ./ L for a ∈ system]]
@@ -19,16 +19,18 @@ end
     previous_scfres::RefValue{Any} = Ref{Any}()
     potential_energy_cache::Dict{Float64,Float64} = Dict{Float64,Float64}()
 end
-function DFTKPotential(psp::ElementPsp,
-                       lattice,
-                       Ecut::Unitful.Energy,
-                       kgrid::AbstractVector{<:Integer},
-                       n_bands::Union{Integer,Nothing}=nothing,
-                       tol::Union{AbstractFloat,Nothing}=nothing,
-                       damping::Union{AbstractFloat,Nothing}=nothing,
-                       mixing::Union{Mixing,Nothing}=nothing,
-                       previous_scfres::RefValue{Any}=Ref{Any}(),
-                       potential_energy_cache::Dict{Float64,Float64}=Dict{Float64,Float64}())
+function DFTKPotential(
+    psp::ElementPsp,
+    lattice,
+    Ecut::Unitful.Energy,
+    kgrid::AbstractVector{<:Integer},
+    n_bands::Union{Integer,Nothing} = nothing,
+    tol::Union{AbstractFloat,Nothing} = nothing,
+    damping::Union{AbstractFloat,Nothing} = nothing,
+    mixing::Union{Mixing,Nothing} = nothing,
+    previous_scfres::RefValue{Any} = Ref{Any}(),
+    potential_energy_cache::Dict{Float64,Float64} = Dict{Float64,Float64}()
+)
     DFTKPotential(psp, austrip.(lattice), austrip(Ecut), kgrid, n_bands, tol, damping, mixing, previous_scfres, potential_energy_cache)
 end
 
@@ -56,9 +58,9 @@ end
 
 function calculate_scf(system::AbstractSystem, potential::DFTKPotential)
     model = model_LDA(potential.lattice, dftk_atoms(system, potential.psp))
-    basis = PlaneWaveBasis(model; Ecut=potential.Ecut, kgrid=potential.kgrid)
+    basis = PlaneWaveBasis(model; Ecut = potential.Ecut, kgrid = potential.kgrid)
 
-    extra_args = isassigned(potential.previous_scfres) ? (ψ = potential.previous_scfres[].ψ, ρ = potential.previous_scfres[].ρ) : (; )
+    extra_args = isassigned(potential.previous_scfres) ? (ψ = potential.previous_scfres[].ψ, ρ = potential.previous_scfres[].ρ) : (;)
     scfres = self_consistent_field(basis; extra_args..., (f => getfield(potential, f) for f ∈ (:n_bands, :tol, :damping, :mixing) if getfield(potential, f) !== nothing)...)
     potential.previous_scfres[] = scfres
 end
@@ -66,24 +68,26 @@ end
 function analyze_convergence(system::AbstractSystem, potential::DFTKPotential, cutoffs::Vector{<:Unitful.Energy})
     energies = Vector{Float64}()
     for Ecut ∈ cutoffs
-        parameters = DFTKPotential(psp=potential.psp,
-                                   lattice=potential.lattice,
-                                   Ecut=Ecut,
-                                   kgrid=potential.kgrid,
-                                   n_bands=potential.n_bands,
-                                   tol=potential.tol,
-                                   damping=potential.damping,
-                                   mixing=potential.mixing)
+        parameters = DFTKPotential(
+            psp = potential.psp,
+            lattice = potential.lattice,
+            Ecut = Ecut,
+            kgrid = potential.kgrid,
+            n_bands = potential.n_bands,
+            tol = potential.tol,
+            damping = potential.damping,
+            mixing = potential.mixing
+        )
         @info "Ecut: $(Ecut)"
         scfres = calculate_scf(system, parameters)
         push!(energies, scfres.energies.total)
     end
-    
+
     plot(
-        title="DFTK Analysis",
-        xlab="Ecut",
-        ylab="Total Energy",
-        legend=false,
+        title = "DFTK Analysis",
+        xlab = "Ecut",
+        ylab = "Total Energy",
+        legend = false,
         cutoffs,
         energies * u"hartree"
     )

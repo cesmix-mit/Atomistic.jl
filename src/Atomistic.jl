@@ -4,6 +4,7 @@ using AtomsBase
 using InteratomicPotentials
 using DFTK
 using NBodySimulator
+using PeriodicTable
 using Plots
 using PyCall
 using Random
@@ -14,7 +15,7 @@ using UnitfulRecipes
 
 import Base: @kwdef, RefValue
 import InteratomicPotentials: ArbitraryPotential
-import DFTK: Mixing, Element
+import DFTK: Mixing
 import NBodySimulator: Body, NullThermostat, SimulationResult, Thermostat
 import Plots: Plot
 
