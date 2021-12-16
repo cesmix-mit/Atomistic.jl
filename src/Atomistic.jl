@@ -21,7 +21,7 @@ import Plots: Plot
 
 include("exceptions.jl")
 
-export MolecularDynamicsResult, get_system, get_time_range, temperature, kinetic_energy, potential_energy, total_energy, rdf
+export MolecularDynamicsResult, get_system, get_time_range, temperature, reference_temperature, kinetic_energy, potential_energy, total_energy, rdf
 include("interfaces/md_result.jl")
 export MolecularDynamicsSimulator, simulate
 include("interfaces/md_simulator.jl")
