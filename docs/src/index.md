@@ -10,4 +10,4 @@ The unit convention throught the package and other packages in the CESMIX Julia 
 
 ## Next Steps
 
-If you want to integrate an existing MD code with the Atomistic API, see [Implementing the Atomistic API](@ref). If you want to use a code that is already integrated with Atomistic to run MD simulations see [Using Atomistic-Compatible Packages](@ref).
+If you want to integrate an existing MD code with the Atomistic API, see [Implementing the Atomistic API](@ref). If you want to use a code that is already integrated with Atomistic to run MD simulations, see [Using Atomistic-Compatible Packages](@ref). If you want to see the full API reference (for Atomistic API and other types and functions exported by the package), see [API Reference](@ref).
