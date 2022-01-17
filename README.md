@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square")](https://mit-license.org)
 [![Build Status](https://github.com/cesmix-mit/Atomistic.jl/workflows/CI/badge.svg)](https://github.com/cesmix-mit/Atomistic.jl/actions)
-[![Coverage](https://codecov.io/gh/cesmix-mit/Atomistic.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/cesmix-mit/Atomistic.jl)
+[![codecov](https://codecov.io/gh/cesmix-mit/Atomistic.jl/branch/main/graph/badge.svg?token=deFwHZ5wNt)](https://codecov.io/gh/cesmix-mit/Atomistic.jl)
 [![Docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://cesmix-mit.github.io/Atomistic.jl/stable)
 [![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://cesmix-mit.github.io/Atomistic.jl/dev)
 
