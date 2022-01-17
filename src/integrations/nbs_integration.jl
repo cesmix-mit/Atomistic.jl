@@ -52,12 +52,12 @@ function bodies(system::AbstractSystem)
 end
 # Convert Vector of NBodySimulator bodies to AtomsBase FlexibleSystem
 function AtomsBase.FlexibleSystem(bodies::AbstractVector{<:ElementMassBody}, boundary_conditions::BoundaryConditions)
-    particles = [Atom(b, boundary_conditions) for b ∈ bodies]
+    particles = Fix2(Atom, boundary_conditions).(bodies)
     FlexibleSystem(particles, ab_bounding_box(boundary_conditions), ab_boundary_conditions(boundary_conditions))
 end
 # Convert Vector of NBodySimulator bodies to AtomsBase FastSystem
 function AtomsBase.FastSystem(bodies::AbstractVector{<:ElementMassBody}, boundary_conditions::BoundaryConditions)
-    particles = [Atom(b, boundary_conditions) for b ∈ bodies]
+    particles = Fix2(Atom, boundary_conditions).(bodies)
     FastSystem(particles, ab_bounding_box(boundary_conditions), ab_boundary_conditions(boundary_conditions))
 end
 

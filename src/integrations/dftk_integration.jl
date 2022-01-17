@@ -13,8 +13,7 @@ end
 
 # TODO: support multiple species using atom data
 function dftk_atoms(system::AbstractSystem{3}, element::DFTK.Element)
-    box = bounding_box(system)
-    [element => [fractional_position(pos, box) for pos ∈ position(system)]]
+    [element => Fix2(fractional_position, bounding_box(system)).(position(system))]
 end
 
 # -----------------------------------------------------------------------------
