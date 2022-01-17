@@ -1,6 +1,8 @@
 # Tests for Atomistic.jl
 
 using Atomistic
+using AtomsBase
+using InteratomicPotentials
 using PeriodicTable
 using Test
 using Unitful

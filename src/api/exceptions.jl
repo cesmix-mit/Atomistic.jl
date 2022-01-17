@@ -4,10 +4,9 @@
     UnimplementedError
 Exception thrown in default implementation of API to indicate that an implementator did not provide an implementation of a particular API function.
 """
-struct UnimplementedError <: Exception
+struct UnimplementedError{T} <: Exception
     func::Symbol
-    type::Type
-    UnimplementedError(func::Symbol, any) = new(func, typeof(any))
 end
+UnimplementedError(func::Symbol, obj) = UnimplementedError{typeof(obj)}(func)
 
-Base.showerror(io::IO, e::UnimplementedError) = print(io, e.type, " doesn't implement ", e.func)
+Base.showerror(io::IO, e::UnimplementedError{T}) where {T} = print(io, T, " doesn't implement ", e.func)

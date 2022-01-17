@@ -27,7 +27,7 @@ Eight total functions must be implemented for subtypes of `MolecularDynamicsResu
 There are two simulation configuration function for `MolecularDynamicsResult`s:
 
 ```julia
-get_time_range(result::MolecularDynamicsResult)::AbstractVector{<:Unitful.Time}
+get_time_range(result::MolecularDynamicsResult)::AbstractVector{Unitful.Time}
 ```
 
 This function should return a unit-anotated vector-like object containing the time value for each step of the simulation which can be iterated for plotting, animation, or other analysis.
@@ -77,7 +77,7 @@ This function should return a unit-anotated total energy for the system at a par
 The only analysis function required by the Atmostic interface is the [Radial Distribution Function](https://en.wikipedia.org/wiki/Radial_distribution_function).
 
 ```julia
-rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{AbstractVector{<:Real},AbstractVector{<:Real}}
+rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{AbstractVector{Real},AbstractVector{Real}}
 ```
 
 This function should calculate a tuple of vectors which represent the interparticle radial distances (in bohr) and the density of each distance respectively. The densities should be averaged across a trailing fraction of timesteps. Note that this detail is still the subject of further scrutiny and might be modified in a future release.
