@@ -64,7 +64,7 @@ This function should return a unit-anotated kinetic energy for the system at a p
 potential_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 ```
 
-This function should return a unit-anotated potential energy for the system at a particular timestep in the simulation. The relevant function from the [InteratomicPotentials.jl](<(https://github.com/cesmix-mit/InteratomicPotentials.jl)>) interface is `potential_energy(a::AbstractSystem, p::ArbitraryPotential)::Real`.
+This function should return a unit-anotated potential energy for the system at a particular timestep in the simulation. The relevant function from the [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl) interface is `potential_energy(a::AbstractSystem, p::ArbitraryPotential)::Real`.
 
 ```julia
 total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
