@@ -17,13 +17,13 @@ function get_system(result::MolecularDynamicsResult, t::Integer = 0)::AbstractSy
     throw(UnimplementedError(:get_system, result))
 end
 """
-    get_time_range(result::MolecularDynamicsResult)::Vector{<:Unitful.Time}
+    get_time_range(result::MolecularDynamicsResult)::AbstractVector{<:Unitful.Time}
 
 Extract the time range from the simulation result in atomic units.
 
 An implementer of this API should implement a method of this function for their custom result type.
 """
-function get_time_range(result::MolecularDynamicsResult)::Vector{<:Unitful.Time}
+function get_time_range(result::MolecularDynamicsResult)::AbstractVector{<:Unitful.Time}
     throw(UnimplementedError(:get_time_range, result))
 end
 
@@ -83,13 +83,13 @@ function total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.
 end
 
 """
-    rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{Vector{<:Real},Vector{<:Real}}
+    rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{AbstractVector{<:Real},AbstractVector{<:Real}}
 
 Calculate the radial distribution function from the simulation result.
 
 To include only a trailing portion of the timesteps for reduced noise and faster computation, set sample_fraction to be less than 1.0.
-The result is a tuple of vectors which represent the radial distances (in atomic units) and the value of the rdf at each distance respectively.
+The result is a tuple of vectors which represent the interparticle radial distances (in bohr) and the density of each distance respectively.
 """
-function rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{Vector{<:Real},Vector{<:Real}}
+function rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{AbstractVector{<:Real},AbstractVector{<:Real}}
     throw(UnimplementedError(:rdf, result))
 end
