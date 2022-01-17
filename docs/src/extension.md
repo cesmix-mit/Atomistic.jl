@@ -1,20 +1,20 @@
 # Implementing the Atomistic API
 
-There are two main parts to the Atomistic API. An implementer must provide a concrete simulator type subtying the abstract type `MolecularDynamicsSimulator` and a concrete result type subtyping the abstract type `MolecularDynamicsResult`. A summary of the required functionality for each component follows.
+There are two main parts to the Atomistic API. An implementer must provide a concrete simulator type subtyping `MolecularDynamicsSimulator` and a concrete result type subtyping `MolecularDynamicsResult`. A summary of the required functionality for each component follows.
 
 # Molecular Dynamics Simulators
 
-The only function that must be implemented for subtypes of `MolecularDynamicsSimulator` is a method of `simulate`. The signature for this function is the following
+The only function that must be implemented for subtypes of `MolecularDynamicsSimulator` is a method of `simulate`.
 
 ```julia
 simulate(system::AbstractSystem, simulator::MolecularDynamicsSimulator, potential::ArbitraryPotential)::MolecularDynamicsResult
 ```
 
-The first parameter is an instance of an implementation of the `AbstractSystem` interface defined by [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl). It is important that the implementer only rely on this API rather than any particular implementation details because the user could provide any system implementation. The species, position, and velocity of each body as well as the boundary shape and conditions are stored in this data structure. An implementer should take special care to handle units appropriately when converting from this representation to the internal representation of the underlying simulator package.
+The first parameter is an instance of an implementation of the `AbstractSystem` interface defined by [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl). It is important that the implementer rely only on the general API rather than any specific implementation details because the user could provide any system implementation; if there are performance-sensitive decisions based on the system type, this should be achieved through multiple dispatch. The species, position, and velocity of each body as well as the boundary shape and conditions are stored in this data structure. An implementer should take special care to handle units appropriately when converting from this representation to the internal representation of the underlying simulator package.
 
-The second parameter is the user-defined simulator. This could specify information such as the duration of the simulation, numerical details such as discretization parameters and integration methods, or domain specific options such as thermostats and barostats.
+The second parameter is the custom simulator. This could specify information such as the duration of the simulation, numerical details such as discretization parameters and integration methods, or domain specific options such as thermostats and barostats.
 
-The third parameter is an instance of an implementation of the `ArbitraryPotential` interface defined by [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl). The main function from this interface that is useful in simulation context is `force(s::AbstractSystem, p::ArbitraryPotential)::AbstractVector{StaticVector{3, <:Real}}`.
+The third parameter is an instance of an implementation of the `ArbitraryPotential` interface defined by [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl). The main function from this interface that is useful in the dynamics context is `force(s::AbstractSystem, p::ArbitraryPotential)::AbstractVector{StaticVector{3, <:Real}}`.
 
 The `simulate` method should return the corresponding implementation of the `MolecularDynamicsResult` interface as described below.
 
@@ -36,17 +36,17 @@ This function should return a unit-anotated vector-like object containing the ti
 reference_temperature(result::MolecularDynamicsResult)::Union{Unitful.Temperature,Missing}
 ```
 
-This function should return a unit-anotated temperature that describes the thermostat used in the simulation. If there is no reference temperature for the particular simulation, the function should return missing, which is the default implementation.
+This function should return a unit-anotated temperature that describes the temperature maintained by the thermostat used in the simulation. If there is no reference temperature for the particular simulation, the function should return missing, which is the default implementation.
 
 ## Time-Series Measureable Quantities
 
-There are 5 functions in the `MolecularDynamicsResult` API which return measured quantities from a particular timestep.
+There are 5 functions in the `MolecularDynamicsResult` API which return measured quantities at a particular timestep.
 
 ```julia
 get_system(result::MolecularDynamicsResult, t::Integer = 0)::AbstractSystem
 ```
 
-This function should return an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl) `AbstractSystem` which describes the system at a particular timestep in the simulation. An implementer should take special care that any unit transformations in this stage are done appropriately.
+This function should return an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl) `AbstractSystem` which captures the system at a particular timestep in the simulation. An implementer should take special care that any unit transformations in this stage are done appropriately.
 
 ```julia
 temperature(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Temperature

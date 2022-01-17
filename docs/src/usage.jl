@@ -12,7 +12,7 @@ using NBodySimulator
 using Unitful
 using UnitfulAtomic
 
-# ## Step 1a: Configuring the System
+# ## Step 1A: Configuring the System
 # First, we must create an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl)-style system.
 # Here we will create a small Argon cluster with periodic boundary conditions.
 # We could use the AtomsBase constructors directly, but in this case we will use NBodySimulator helper functions to initialize the system.
@@ -25,7 +25,7 @@ reference_temp = 94.4u"K"
 initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
 initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(austrip(box_size)))
 
-# ## Step 1b: Configuring the Simulator
+# ## Step 1B: Configuring the Simulator
 # Second, we initialize our simulator. In this case we are using an AndersenThermostat which is provided by NBodySimulator.
 
 Δt = 1e-2u"ps"
@@ -33,7 +33,7 @@ steps = 2000
 thermostat = AndersenThermostat(austrip(reference_temp), 0.1 / austrip(Δt))
 simulator = NBSimulator(Δt, steps, thermostat = thermostat)
 
-# ## Step 1c: Configuring the Potential
+# ## Step 1C: Configuring the Potential
 # Lastly, we specify the interatomic potential that we will use for the simulation, Lennard-Jones in this case.
 
 potential = LJPotential(1.657e-21u"J", 0.34u"nm", 0.765u"nm")

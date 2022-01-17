@@ -27,8 +27,8 @@ end
     plot_temperature!(p::Plot, result::MolecularDynamicsResult, stride::Integer, first_plot::Bool = false)::Plot
 
 Plot the temperature of a `MolecularDynamicsResult` against time, sampling every `stride` points.
-Add the new line to an existing plot and update the legend only if it is the first plot.
-If it is not the first plot, add a vertical line to differentiate the segments of the simulation in the plot.
+Adds the new line to an existing plot and update the legend only if it is the first plot.
+If it is not the first plot, adds a vertical line to differentiate the segments of the simulation in the plot.
 """
 function plot_temperature!(p::Plot, result::MolecularDynamicsResult, stride::Integer, first_plot::Bool = false)
     time_range = plotting_time_range(result, stride)

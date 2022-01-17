@@ -83,13 +83,13 @@ function total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.
 end
 
 """
-    rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{AbstractVector{<:Real},AbstractVector{<:Real}}
+    rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{<:AbstractVector{<:Real},<:AbstractVector{<:Real}}
 
 Calculate the radial distribution function from the simulation result.
 
 To include only a trailing portion of the timesteps for reduced noise and faster computation, set sample_fraction to be less than 1.0.
 The result is a tuple of vectors which represent the interparticle radial distances (in bohr) and the density of each distance respectively.
 """
-function rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{AbstractVector{<:Real},AbstractVector{<:Real}}
+function rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{<:AbstractVector{<:Real},<:AbstractVector{<:Real}}
     throw(UnimplementedError(:rdf, result))
 end
