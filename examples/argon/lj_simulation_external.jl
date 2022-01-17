@@ -16,30 +16,22 @@ thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
 initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
-initial_system = DynamicSystem(initial_bodies, box_size)
-eq_simulator = NBSimulator(
-    Δt = Δt,
-    steps = 2000,
-    t₀ = 0.0u"s",
-    thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
-)
-potential = LennardJones(
-    austrip(1.657e-21u"J"),
-    austrip(0.34u"nm")
-)
+initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(austrip(box_size)))
+
+eq_steps = 2000
+eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
+eq_simulator = NBSimulator(Δt, eq_steps, thermostat = eq_thermostat)
+potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"))
+
 eq_result = @time simulate(initial_system, eq_simulator, potential)
 
 temp = @time plot_temperature(eq_result, 10)
 energy = @time plot_energy(eq_result, 10)
 
-prod_simulator = NBSimulator(
-    Δt = Δt,
-    steps = 5000,
-    t₀ = eq_simulator.steps * Δt
-)
-prod_result = @time simulate(get_system(eq_result), prod_simulator, potential)
+prod_steps = 5000
+prod_simulator = NBSimulator(Δt, prod_steps, t₀ = get_time_range(eq_result)[end])
 
-prod_stride = 10
+prod_result = @time simulate(get_system(eq_result), prod_simulator, potential)
 
 display(@time plot_temperature!(temp, prod_result, 10))
 display(@time plot_energy!(energy, prod_result, 10))

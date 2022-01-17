@@ -1,77 +1,29 @@
 # Integrations with AtomsBase.jl
 
-abstract type AbstractAtom end
-
 """
-    DynamicAtom{D,L<:Unitful.Length,V<:Unitful.Velocity} <: AbstractAtom
+    DynamicSystem{S<:AbstractSystem{D},T<:Unitful.Time} <: AbstractSystem{D}
 
-An atom representation based on the StaticAtom but with a velocity.
+Wraps any AbstractSystem with a time field to be able to cache expensive results.
 
 **Type parameters**
 - `D`: the dimension of the coordinate space
-- `L`: the type for the position components
-- `V`: the type for the velocity components
-
-Fields should not be accessed directly. Use the provided accessors instead.
-"""
-struct DynamicAtom{D,L<:Unitful.Length,V<:Unitful.Velocity} <: AbstractAtom
-    position::SVector{D,L}
-    velocity::SVector{D,V}
-    element::Element
-end
-function DynamicAtom(position, velocity, element)
-    DynamicAtom{length(position),eltype(position),eltype(velocity)}(position, velocity, element)
-end
-function DynamicAtom(position, velocity, symbol::Union{Integer,AbstractString,Symbol})
-    DynamicAtom(position, velocity, elements(symbol))
-end
-
-AtomsBase.position(atom::DynamicAtom) = atom.position
-AtomsBase.velocity(atom::DynamicAtom) = atom.velocity
-AtomsBase.species(atom::DynamicAtom) = atom.element
-
-AtomsBase.atomic_symbol(a::DynamicAtom) = a.element.symbol
-AtomsBase.atomic_mass(a::DynamicAtom) = a.element.atomic_mass
-AtomsBase.atomic_number(a::DynamicAtom) = a.element.number
-AtomsBase.atomic_property(a::DynamicAtom, property::Symbol) = getproperty(a.element, property)
-
-"""
-    DynamicSystem{D,AT<:AbstractAtom,L<:Unitful.Length,TT<:Unitful.Time} <: AbstractAtomicSystem{D}
-
-A representation of a system of dynamic atoms which is similar to the FlexibleSystem but with a time field.
-
-**Type parameters**
-- `D`: the dimension of the coordinate space
-- `A`: the type for the atoms that make up the system
-- `L`: the type for the bounding box components
+- `S`: the type of the wrapped system
 - `T`: the type for time field
-
-Fields should not be accessed directly. Use the provided accessors instead.
 """
-struct DynamicSystem{D,A<:AbstractAtom,L<:Unitful.Length,T<:Unitful.Time} <: AbstractAtomicSystem{D}
-    box::SVector{D,SVector{D,L}}
-    boundary_conditions::SVector{D,BoundaryCondition}
-    particles::Vector{A}
+struct DynamicSystem{D,S<:AbstractSystem{D},T<:Unitful.Time} <: AbstractSystem{D}
+    system::S
     time::T
 end
-function DynamicSystem(box, boundary_conditions, particles, time)
-    D = length(box)
-    A = eltype(particles)
-    L = eltype(eltype(box))
-    T = typeof(time)
 
-    DynamicSystem{D,A,L,T}(box, boundary_conditions, particles, time)
-end
-function DynamicSystem(particles::Vector{<:AbstractAtom}, box_size::Unitful.Length, time::Unitful.Time = 0.0u"s")
-    z = zero(typeof(box_size))
-    box = SVector(SVector(box_size, z, z), SVector(z, box_size, z), SVector(z, z, box_size))
-    boundary_conditions = SVector(Periodic(), Periodic(), Periodic())
-    DynamicSystem(box, boundary_conditions, particles, time)
-end
+AtomsBase.bounding_box(s::DynamicSystem) = bounding_box(s.system)
+AtomsBase.boundary_conditions(s::DynamicSystem) = boundary_conditions(s.system)
+AtomsBase.species_type(s::DynamicSystem) = species_type(s.system)
 
-AtomsBase.bounding_box(sys::DynamicSystem) = sys.box
-AtomsBase.boundary_conditions(sys::DynamicSystem) = sys.boundary_conditions
+Base.length(s::DynamicSystem) = length(s.system)
+Base.getindex(s::DynamicSystem, i::Integer) = getindex(s.system, i)
 
-Base.size(sys::DynamicSystem) = size(sys.particles)
-Base.length(sys::DynamicSystem) = length(sys.particles)
-Base.getindex(sys::DynamicSystem, i::Int) = getindex(sys.particles, i)
+AtomsBase.position(s::DynamicSystem, i) = position(s.system, i)
+AtomsBase.velocity(s::DynamicSystem, i) = velocity(s.system, i)
+AtomsBase.atomic_mass(s::DynamicSystem, i) = atomic_mass(s.system, i)
+AtomsBase.atomic_symbol(s::DynamicSystem, i) = AtomsBase.atomic_symbol(s.system, i)
+AtomsBase.atomic_number(s::DynamicSystem, i) = atomic_number(s.system, i)

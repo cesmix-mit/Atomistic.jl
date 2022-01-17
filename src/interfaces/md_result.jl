@@ -17,28 +17,28 @@ function get_system(result::MolecularDynamicsResult, t::Integer = 0)::AbstractSy
     throw(UnimplementedError(:get_system, result))
 end
 """
-    get_time_range(result::MolecularDynamicsResult)::Vector{<:Real}
+    get_time_range(result::MolecularDynamicsResult)::Vector{<:Unitful.Time}
 
 Extract the time range from the simulation result in atomic units.
 
 An implementer of this API should implement a method of this function for their custom result type.
 """
-function get_time_range(result::MolecularDynamicsResult)::Vector{<:Real}
+function get_time_range(result::MolecularDynamicsResult)::Vector{<:Unitful.Time}
     throw(UnimplementedError(:get_time_range, result))
 end
 
 """
-    temperature(result::MolecularDynamicsResult, t::Integer = 0)::Real
+    temperature(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Temperature
 
 Extract the temperature of the simulation at a particular timestep from the simulation result in atomic units.
 
 An implementer of this API should implement a method of this function for their custom result type.
 """
-function temperature(result::MolecularDynamicsResult, t::Integer = 0)::Real
+function temperature(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Temperature
     throw(UnimplementedError(:temperature, result))
 end
 """
-    reference_temperature(result::MolecularDynamicsResult)::Union{Real,Missing}
+    reference_temperature(result::MolecularDynamicsResult)::Union{Unitful.Temperature,Missing}
 
 Extract the reference temperature of the simulation from the simulation result.
 If there is no thermostat with a reference temperature in this simulation, return missing.
@@ -46,39 +46,39 @@ If there is no thermostat with a reference temperature in this simulation, retur
 An implementer of this API should implement a method of this function for their custom result type if it supports thermostats.
 If not implmented, the default implemenation just returns missing.
 """
-function reference_temperature(result::MolecularDynamicsResult)::Union{Real,Missing}
+function reference_temperature(result::MolecularDynamicsResult)::Union{Unitful.Temperature,Missing}
     missing
 end
 
 """
-    kinetic_energy(result::MolecularDynamicsResult, t::Integer = 0)::Real
+    kinetic_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 
 Extract the kinetic energy of the simulation at a particular timestep from the simulation result in atomic units.
 
 An implementer of this API should implement a method of this function for their custom result type.
 """
-function kinetic_energy(result::MolecularDynamicsResult, t::Integer = 0)::Real
+function kinetic_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
     throw(UnimplementedError(:kinetic_energy, result))
 end
 """
-    potential_energy(result::MolecularDynamicsResult, t::Integer = 0)::Real
+    potential_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 
 Extract the potential energy of the simulation at a particular timestep from the simulation result in atomic units.
 
 An implementer of this API should implement a method of this function for their custom result type.
 """
-function potential_energy(result::MolecularDynamicsResult, t::Integer = 0)::Real
+function potential_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
     throw(UnimplementedError(:potential_energy, result))
 end
 """
-    total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Real
+    total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 
 Extract the total energy of the simulation at a particular timestep from the simulation result in atomic units.
 
 The default implementation simply sums the kinetic and potential energy at the timestep.
 An implementer of this API could implement a method of this function for their custom result type if it supports a more efficient way to calculate this quantity.
 """
-function total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Real
+function total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
     kinetic_energy(result, t) + potential_energy(result, t)
 end
 

@@ -1,4 +1,4 @@
-# functions for exporting results to visualization tools
+# Functions for exporting molecular dynamics simulation results to visualization tools
 
 """
     write_nbs_animation(result::NBSResult, filename::String)
@@ -16,6 +16,7 @@ Write the trajectory of a `MolecularDynamicsResult` to a .traj file.
 
 The file can be visualized by running `ase gui <filename>` on the command line.
 """
+# TODO: support multiple species using atom data
 function write_ase_trajectory(result::MolecularDynamicsResult, element::DFTK.Element, lattice, filename::String)
     ase = pyimport_e("ase")
     if ispynull(ase)

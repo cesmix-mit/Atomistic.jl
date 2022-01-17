@@ -1,11 +1,25 @@
 # Integrations with DFTK.jl
 # This integration should ultimately live within the DFTK package itself
 
-function dftk_atoms(system::AbstractSystem, element::DFTK.Element)
-    L = nbody_boundary_conditions(system).L * u"bohr"
-    # TODO: support multiple species
-    [element => [AtomsBase.position(a) ./ L for a ∈ system]]
+# -----------------------------------------------------------------------------
+# Integration with AtomsBase 
+# -----------------------------------------------------------------------------
+
+# TODO: should a version of this be integrated into AtomsBase?
+# ? Is this logic even correct?
+function fractional_position(pos::SVector{3,<:Unitful.Length}, box::SVector{3,<:SVector{3,<:Unitful.Length}})
+    [pos[i] / box[i][i] for i ∈ 1:3]
 end
+
+# TODO: support multiple species using atom data
+function dftk_atoms(system::AbstractSystem{3}, element::DFTK.Element)
+    box = bounding_box(system)
+    [element => [fractional_position(pos, box) for pos ∈ position(system)]]
+end
+
+# -----------------------------------------------------------------------------
+# Integration with InteratomicPotentials
+# -----------------------------------------------------------------------------
 
 @kwdef struct DFTKPotential <: ArbitraryPotential
     psp::ElementPsp
@@ -65,7 +79,11 @@ function calculate_scf(system::AbstractSystem, potential::DFTKPotential)
     potential.previous_scfres[] = scfres
 end
 
-function analyze_convergence(system::AbstractSystem, potential::DFTKPotential, cutoffs::Vector{<:Unitful.Energy})
+# -----------------------------------------------------------------------------
+# Miscelaneous functions
+# -----------------------------------------------------------------------------
+
+function analyze_convergence(system::AbstractSystem, potential::DFTKPotential, cutoffs::AbstractVector{<:Unitful.Energy})
     energies = Vector{Float64}()
     for Ecut ∈ cutoffs
         parameters = DFTKPotential(
@@ -89,6 +107,6 @@ function analyze_convergence(system::AbstractSystem, potential::DFTKPotential, c
         ylab = "Total Energy",
         legend = false,
         cutoffs,
-        energies * u"hartree"
+        energies * ENERGY_UNIT
     )
 end

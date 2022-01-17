@@ -17,18 +17,13 @@ thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
 initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
-initial_system = DynamicSystem(initial_bodies, box_size)
-eq_simulator = NBSimulator(
-    Δt = Δt,
-    steps = 20000,
-    t₀ = 0.0u"s",
-    thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
-)
-potential = LJPotential(
-    ϵ = 1.657e-21u"J",
-    σ = 0.34u"nm",
-    R = 0.765u"nm"
-)
+initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(austrip(box_size)))
+
+eq_steps = 20000
+eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
+eq_simulator = NBSimulator(Δt, eq_steps, thermostat = eq_thermostat)
+potential = LJPotential(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
+
 eq_result = @time simulate(initial_system, eq_simulator, potential)
 
 display(@time plot_rdf(eq_result, potential.σ, 0.5))
@@ -42,6 +37,6 @@ dftk_potential = DFTKPotential(
     mixing = LdosMixing()
 )
 
-display(@time analyze_convergence(get_system(eq_result), dftk_potential, (5:2.5:25) .* u"hartree"))
+display(@time analyze_convergence(get_system(eq_result), dftk_potential, (5:2.5:25)u"hartree"))
 
 ;

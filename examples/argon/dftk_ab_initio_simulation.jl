@@ -19,29 +19,21 @@ thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
 initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
-initial_system = DynamicSystem(initial_bodies, box_size)
-eq_simulator = NBSimulator(
-    Δt = Δt,
-    steps = 20000,
-    t₀ = 0.0u"s",
-    thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
-)
-potential = LJPotential(
-    ϵ = 1.657e-21u"J",
-    σ = 0.34u"nm",
-    R = 0.765u"nm"
-)
+initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(austrip(box_size)))
+
+eq_steps = 20000
+eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
+eq_simulator = NBSimulator(Δt, eq_steps, thermostat = eq_thermostat)
+potential = LJPotential(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
+
 eq_result = @time simulate(initial_system, eq_simulator, potential)
 
 display(@time plot_temperature(eq_result, eq_simulator.steps ÷ 200))
 display(@time plot_energy(eq_result, eq_simulator.steps ÷ 200))
 display(@time plot_rdf(eq_result, potential.σ, 0.5))
 
-ab_initio_simulator = NBSimulator(
-    Δt = Δt,
-    steps = 200,
-    t₀ = eq_simulator.steps * Δt
-)
+ab_initio_steps = 200
+ab_initio_simulator = NBSimulator(Δt, ab_initio_steps, t₀ = get_time_range(eq_result)[end])
 dftk_potential = DFTKPotential(
     psp = ElementPsp(:Ar, psp = load_psp(list_psp(:Ar, functional = "lda")[1].identifier)),
     lattice = box_size * [[1.0 0 0]; [0 1.0 0]; [0 0 1.0]],
@@ -50,6 +42,7 @@ dftk_potential = DFTKPotential(
     damping = 0.7,
     mixing = LdosMixing()
 )
+
 ab_initio_result = @time simulate(get_system(eq_result), ab_initio_simulator, dftk_potential)
 
 # Plotting on separate plots because the timespan is so much smaller than in the first phase

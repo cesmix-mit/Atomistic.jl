@@ -16,17 +16,18 @@ using UnitfulRecipes
 import Base: @kwdef, RefValue
 import InteratomicPotentials: ArbitraryPotential
 import DFTK: Mixing
-import NBodySimulator: Body, NullThermostat, SimulationResult, Thermostat
+import NBodySimulator: Body, BoundaryConditions, NullThermostat, SimulationResult, Thermostat
 import Plots: Plot
 
-include("exceptions.jl")
+include("unit_convention.jl")
 
+include("interfaces/exceptions.jl")
 export MolecularDynamicsResult, get_system, get_time_range, temperature, reference_temperature, kinetic_energy, potential_energy, total_energy, rdf
 include("interfaces/md_result.jl")
 export MolecularDynamicsSimulator, simulate
 include("interfaces/md_simulator.jl")
 
-export DynamicAtom, DynamicSystem
+export DynamicSystem
 include("integrations/ab_integration.jl")
 export LJPotential, NBSimulator, NBSResult
 include("integrations/nbs_integration.jl")

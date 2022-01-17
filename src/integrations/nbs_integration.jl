@@ -1,14 +1,74 @@
 # Integrations with NBodySimulator.jl
 
+# -----------------------------------------------------------------------------
+# Integration with AtomsBase 
+# -----------------------------------------------------------------------------
+
+# Internal type used to represent a MassBody and retain the element metadata
 struct ElementMassBody{cType<:Real,mType<:Real} <: Body
-    r::SVector{3,cType}
-    v::SVector{3,cType}
-    m::mType
+    r::SVector{3,cType} # in LENGTH_UNIT
+    v::SVector{3,cType} # in VELOCITY_UNIT
+    m::mType            # in MASS_UNIT
     s::Symbol
+    n::Int
 end
 function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}, e::Element)
-    ElementMassBody{Float64,Float64}(austrip.(r), austrip.(v), austrip(e.atomic_mass), Symbol(e.symbol))
+    ElementMassBody{Float64,Float64}(austrip.(r), austrip.(v), austrip(e.atomic_mass), Symbol(e.symbol), e.number)
 end
+
+# Convert AtomsBase Atom to NBodySimulator body
+function ElementMassBody(atom::Atom)
+    ElementMassBody{Float64,Float64}(austrip.(position(atom)), austrip.(velocity(atom)), austrip(atomic_mass(atom)), AtomsBase.atomic_symbol(atom), atomic_number(atom))
+end
+# Convert NBodySimulator body to AtomsBase Atom
+# TODO: support more boundary conditions
+function AtomsBase.Atom(b::ElementMassBody, boundary_conditions::CubicPeriodicBoundaryConditions)
+    Atom(b.s, mod.(b.r, boundary_conditions.L) .* LENGTH_UNIT, b.v .* VELOCITY_UNIT)
+end
+
+# Convert AtomsBase boundary conditions to NBodySimulator boundary conditions
+function nbs_boundary_conditions(system::AbstractSystem)
+    # TODO: support more boundary conditions
+    box = bounding_box(system)
+    @assert box[1][1] == box[2][2] == box[3][3]
+    @assert boundary_conditions(system) == [Periodic(), Periodic(), Periodic()]
+    CubicPeriodicBoundaryConditions(austrip(box[1][1]))
+end
+# Convert NBodySimulator boundary conditions to AtomsBase boundary conditions
+# TODO: support more boundary conditions
+ab_boundary_conditions(::CubicPeriodicBoundaryConditions) = [Periodic(), Periodic(), Periodic()]
+
+# Convert NBodySimulator boundary conditions to AtomsBase bounding box
+# TODO: support more boundary conditions
+function ab_bounding_box(boundary_conditions::CubicPeriodicBoundaryConditions)
+    box_size = boundary_conditions.L * LENGTH_UNIT
+    z = zero(typeof(box_size))
+    [[box_size, z, z], [z, box_size, z], [z, z, box_size]]
+end
+
+# Convert AtomsBase AbstractSystem to Vector of NBodySimulator bodies
+function bodies(system::AbstractSystem)
+    ElementMassBody.(system)
+end
+# Convert Vector of NBodySimulator bodies to AtomsBase FlexibleSystem
+function AtomsBase.FlexibleSystem(bodies::AbstractVector{<:ElementMassBody}, boundary_conditions::BoundaryConditions)
+    particles = [Atom(b, boundary_conditions) for b ∈ bodies]
+    FlexibleSystem(particles, ab_bounding_box(boundary_conditions), ab_boundary_conditions(boundary_conditions))
+end
+# Convert Vector of NBodySimulator bodies to AtomsBase FastSystem
+function AtomsBase.FastSystem(bodies::AbstractVector{<:ElementMassBody}, boundary_conditions::BoundaryConditions)
+    particles = [Atom(b, boundary_conditions) for b ∈ bodies]
+    FastSystem(particles, ab_bounding_box(boundary_conditions), ab_boundary_conditions(boundary_conditions))
+end
+
+# Extract the atomic symbol of each body in the system
+get_atomic_symbols(system::PotentialNBodySystem{ElementMassBody}) = [b.s for b ∈ system.bodies]
+# Extract the atomic number of each body in the system
+get_atomic_numbers(system::PotentialNBodySystem{ElementMassBody}) = [b.n for b ∈ system.bodies]
+
+# -----------------------------------------------------------------------------
+# Convenience methods for generating starting configurations with element data
+# -----------------------------------------------------------------------------
 
 function NBodySimulator.generate_bodies_in_cell_nodes(n::Integer, symbol::Union{Integer,AbstractString,Symbol}, L::Unitful.Length, reference_temp::Unitful.Temperature; rng = MersenneTwister(n))
     e = elements[symbol]
@@ -32,66 +92,48 @@ function NBodySimulator.generate_bodies_in_cell_nodes(n::Integer, symbol::Union{
     return bodies
 end
 
-function get_symbols(system::PotentialNBodySystem{ElementMassBody})
-    [system.bodies[i].s for i ∈ 1:length(system.bodies)]
-end
+# -----------------------------------------------------------------------------
+# Integration with InteratomicPotentials
+# -----------------------------------------------------------------------------
 
-function bodies(system::AbstractSystem)
-    [ElementMassBody(position(a), velocity(a), species(a)) for a ∈ system]
-end
-
-function nbody_boundary_conditions(system::AbstractSystem)
-    # TODO: support more boundary conditions
-    box = bounding_box(system)
-    @assert box[1][1] == box[2][2] == box[3][3]
-    @assert boundary_conditions(system) == [Periodic(), Periodic(), Periodic()]
-    CubicPeriodicBoundaryConditions(austrip(box[1][1]))
-end
-
-# TODO: support more boundary conditions
-function DynamicAtom(b::ElementMassBody, boundary_conditions::CubicPeriodicBoundaryConditions)
-    DynamicAtom(b, boundary_conditions.L * u"bohr")
-end
-function DynamicAtom(b::ElementMassBody, box_size::Unitful.Length)
-    DynamicAtom(mod.(b.r .* u"bohr", box_size), b.v .* u"bohr * hartree / ħ_au", elements[b.s])
-end
-
-# TODO: support more boundary conditions
-function DynamicSystem(bodies::Vector{<:ElementMassBody}, boundary_conditions::CubicPeriodicBoundaryConditions, time::Real = 0.0)
-    DynamicSystem(bodies, boundary_conditions.L * u"bohr", time * u"ħ_au / hartree")
-end
-function DynamicSystem(bodies::Vector{<:ElementMassBody}, box_size::Unitful.Length, time::Unitful.Time = 0.0u"s")
-    DynamicSystem(DynamicAtom.(bodies, box_size), box_size, time)
-end
-
-@kwdef struct InteratomicPotentialParameters <: PotentialParameters
+# Internal struct that represents a potential in the format accepted by NBodySimulator
+# Wraps the underlying InteratomicPotential with a cache of the forces for the current timestep
+struct InteratomicPotentialParameters <: PotentialParameters
     potential::ArbitraryPotential
-    timestep_cache::RefValue{Real} = Ref{Real}()
-    force_cache::RefValue{Vector{SVector{3,Real}}} = Ref{Vector{SVector{3,Real}}}()
+    timestep_cache::RefValue{Real}
+    force_cache::RefValue{Vector{SVector{3,Real}}}
+    InteratomicPotentialParameters(potential::ArbitraryPotential) = new(potential, Ref{Real}(), Ref{Vector{SVector{3,Real}}}())
 end
 
 function NBodySimulator.get_accelerating_function(parameters::InteratomicPotentialParameters, simulation::NBodySimulation)
+    bounding_box = ab_bounding_box(simulation.boundary_conditions)
+    boundary_conditions = ab_boundary_conditions(simulation.boundary_conditions)
+    symbols = get_atomic_symbols(simulation.system)
+    numbers = get_atomic_numbers(simulation.system)
     masses = get_masses(simulation.system)
-    symbols = get_symbols(simulation.system)
     (dv, u, v, t, i) -> begin
         if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
-            particles = [ElementMassBody(SVector{3}(u[:, j]), SVector{3}(v[:, j]), masses[j], symbols[j]) for j ∈ 1:length(symbols)]
-            system = DynamicSystem(particles, simulation.boundary_conditions, t)
+            positions = [u[:, j] for j ∈ 1:size(u, 2)] * LENGTH_UNIT
+            system = FastSystem(bounding_box, boundary_conditions, positions, symbols, numbers, masses * MASS_UNIT)
+            wrapped_system = DynamicSystem(system, t * TIME_UNIT)
             parameters.timestep_cache[] = t
-            parameters.force_cache[] = force(system, parameters.potential)
+            parameters.force_cache[] = force(wrapped_system, parameters.potential)
         end
         dv .+= parameters.force_cache[][i] / masses[i]
     end
 end
 
-@kwdef struct LJPotential
-    ϵ::Real
-    σ::Real
-    R::Real
+# Struct to specify use of internal NBodySimulator version of Lennard Jones instead of the InteratomicPotentials version
+struct LJPotential
+    ϵ::Real # in ENERGY_UNIT
+    σ::Real # in LENGTH_UNIT
+    R::Real # in LENGTH_UNIT
 end
-function LJPotential(ϵ::Unitful.Energy, σ::Unitful.Length, R::Unitful.Length)
-    LJPotential(austrip(ϵ), austrip(σ), austrip(R))
-end
+LJPotential(ϵ::Unitful.Energy, σ::Unitful.Length, R::Unitful.Length) = LJPotential(austrip(ϵ), austrip(σ), austrip(R))
+
+# -----------------------------------------------------------------------------
+# Implementation of Atomistic API
+# -----------------------------------------------------------------------------
 
 """
     NBSimulator <: MolecularDynamicsSimulator
@@ -112,24 +154,29 @@ A wrapper around NBodySimulator to implement the Atomistic API.
     shouldn't be manipulated directly by the user
 """
 @kwdef struct NBSimulator <: MolecularDynamicsSimulator
-    Δt::Real
+    Δt::Real       # in TIME_UNIT
     steps::Integer
-    t₀::Real = 0.0
+    t₀::Real = 0.0 # in TIME_UNIT
     thermostat::Thermostat = NullThermostat()
     simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet()
     potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
 end
-function NBSimulator(Δt::Unitful.Time,
-    steps::Integer,
-    t₀::Unitful.Time = 0.0u"s",
+function NBSimulator(
+    Δt::Unitful.Time,
+    steps::Integer;
+    t₀::Unitful.Time = 0.0 * TIME_UNIT,
     thermostat::Thermostat = NullThermostat(),
     simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet(),
-    potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}())
+    potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
+)
     NBSimulator(austrip(Δt), steps, austrip(t₀), thermostat, simulator, potentials)
 end
 
+# Extract the tuple of start_time, end_time from the simulator
+time_range(simulator::NBSimulator) = (simulator.t₀, simulator.t₀ + simulator.steps * simulator.Δt)
+
 function simulate(system::AbstractSystem, simulator::NBSimulator, potential::ArbitraryPotential)
-    simulator.potentials[:custom] = InteratomicPotentialParameters(potential = potential)
+    simulator.potentials[:custom] = InteratomicPotentialParameters(potential)
     simulate(system, simulator)
 end
 function simulate(system::AbstractSystem, simulator::NBSimulator, potential::LJPotential)
@@ -138,14 +185,14 @@ function simulate(system::AbstractSystem, simulator::NBSimulator, potential::LJP
 end
 function simulate(system::AbstractSystem, simulator::NBSimulator)
     nb_system = PotentialNBodySystem{ElementMassBody}(bodies(system), simulator.potentials)
-    simulation = NBodySimulation(nb_system, (simulator.t₀, simulator.t₀ + simulator.steps * simulator.Δt), nbody_boundary_conditions(system), simulator.thermostat, 1.0)
+    simulation = NBodySimulation(nb_system, time_range(simulator), nbs_boundary_conditions(system), simulator.thermostat, austrip(u"k"))
     NBSResult(run_simulation(simulation, simulator.simulator, dt = simulator.Δt))
 end
 
 """
     NBSResult <: MolecularDynamicsResult
 
-The result generating from running a `MolecularDynamicsSimulator`.
+The result generated from running an `NBSimulator`.
 
 **Field descriptions**
 - `result::SimulationResult` the standard simulation result from `NBodySimulator`
@@ -156,41 +203,45 @@ end
 
 function get_system(result::NBSResult, t::Integer = 0)
     sr = result.result
-    time = get_time_range(result)[t > 0 ? t : end]
+    simulation = sr.simulation
+    system = simulation.system
+    time = sr.solution.t[t > 0 ? t : end]
     positions = get_position(sr, time)
     velocities = get_velocity(sr, time)
-    masses = get_masses(sr.simulation.system)
-    symbols = get_symbols(sr.simulation.system)
-    particles = [ElementMassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i], symbols[i]) for i ∈ 1:length(symbols)]
-    DynamicSystem(particles, sr.simulation.boundary_conditions, time)
+    masses = get_masses(system)
+    symbols = get_atomic_symbols(system)
+    numbers = get_atomic_numbers(system)
+    particles = [ElementMassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i], symbols[i], numbers[i]) for i ∈ 1:length(system.bodies)]
+    DynamicSystem(FlexibleSystem(particles, simulation.boundary_conditions), time * TIME_UNIT)
 end
 
 function get_time_range(result::NBSResult)
-    result.result.solution.t
+    result.result.solution.t * TIME_UNIT
 end
 
 function temperature(result::NBSResult, t::Integer = 0)
-    time = get_time_range(result)[t > 0 ? t : end]
-    NBodySimulator.temperature(result.result, time)
+    time = result.result.solution.t[t > 0 ? t : end]
+    NBodySimulator.temperature(result.result, time) * TEMPERATURE_UNIT
 end
 
 function reference_temperature(result::NBSResult)
-    result.result.simulation.thermostat isa NullThermostat ? missing : result.result.simulation.thermostat.T
+    thermostat = result.result.simulation.thermostat
+    thermostat isa NullThermostat ? missing : thermostat.T * TEMPERATURE_UNIT
 end
 
 function kinetic_energy(result::NBSResult, t::Integer = 0)
-    time = get_time_range(result)[t > 0 ? t : end]
-    NBodySimulator.kinetic_energy(result.result, time)
+    time = result.result.solution.t[t > 0 ? t : end]
+    NBodySimulator.kinetic_energy(result.result, time) * ENERGY_UNIT
 end
 
 function potential_energy(result::NBSResult, t::Integer = 0)
     potentials = result.result.simulation.system.potentials
     # https://github.com/SciML/NBodySimulator.jl/issues/44
     if :custom ∈ keys(potentials)
-        return InteratomicPotentials.potential_energy(get_system(result, t), potentials[:custom].potential)
+        return InteratomicPotentials.potential_energy(get_system(result, t), potentials[:custom].potential) * ENERGY_UNIT
     end
-    time = get_time_range(result)[t > 0 ? t : end]
-    NBodySimulator.potential_energy(result.result, time)
+    time = result.result.solution.t[t > 0 ? t : end]
+    NBodySimulator.potential_energy(result.result, time) * ENERGY_UNIT
 end
 
 function rdf(result::NBSResult, sample_fraction::Float64 = 1.0)
@@ -198,7 +249,7 @@ function rdf(result::NBSResult, sample_fraction::Float64 = 1.0)
     sr = result.result
     n = length(sr.simulation.system.bodies)
     pbc = sr.simulation.boundary_conditions
-    trange = get_time_range(result)[end-floor(Int, length(sr.solution.t) * sample_fraction)+1:end]
+    trange = sr.solution.t[end-floor(Int, length(sr.solution.t) * sample_fraction)+1:end]
 
     maxbin = 1000
     dr = pbc.L / 2 / maxbin
@@ -209,6 +260,7 @@ function rdf(result::NBSResult, sample_fraction::Float64 = 1.0)
             ri = SVector{3}(cc[:, i])
             for j ∈ i+1:n
                 rj = SVector{3}(cc[:, j])
+                # TODO: potential for major performance improvements here
                 (rij, r, r2) = NBodySimulator.get_interparticle_distance(ri, rj, pbc)
                 if r2 < (0.5 * pbc.L)^2
                     bin = ceil(Int, r / dr)

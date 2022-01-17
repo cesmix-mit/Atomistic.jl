@@ -1,5 +1,9 @@
 # Exceptions
 
+"""
+    UnimplementedError
+Exception thrown in default implementation of API to indicate that an implementator did not provide an implementation of a particular API function.
+"""
 struct UnimplementedError <: Exception
     func::Symbol
     type::Type
