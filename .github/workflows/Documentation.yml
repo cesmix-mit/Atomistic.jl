@@ -9,7 +9,8 @@ jobs:
     name: Documentation
     runs-on: ubuntu-latest
     env:
-      PYTHON: "" # Force using Conda in PyCall (required for DFTK on ubuntu)
+      PYTHON: "" # Force use of Conda in PyCall (required for DFTK on ubuntu)
+      GKSwstype: "100" # Set GR backend to operate in headless mode (required for using Plots with Literate)
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1

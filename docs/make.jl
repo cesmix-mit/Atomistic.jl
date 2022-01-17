@@ -6,7 +6,7 @@ using Literate
 
 DocMeta.setdocmeta!(Atomistic, :DocTestSetup, :(using Atomistic); recursive = true)
 
-Literate.markdown(joinpath(@__DIR__, "src", "usage.jl"), joinpath(@__DIR__, "src"); documenter = true)
+Literate.markdown(joinpath(@__DIR__, "src", "usage.jl"), joinpath(@__DIR__, "src"))
 
 makedocs(;
     modules = [Atomistic],
