@@ -21,19 +21,24 @@ import Plots: Plot
 
 include("unit_convention.jl")
 
-include("interfaces/exceptions.jl")
+# API
+include("api/exceptions.jl")
 export MolecularDynamicsResult, get_system, get_time_range, temperature, reference_temperature, kinetic_energy, potential_energy, total_energy, rdf
-include("interfaces/md_result.jl")
+include("api/md_result.jl")
 export MolecularDynamicsSimulator, simulate
-include("interfaces/md_simulator.jl")
+include("api/md_simulator.jl")
 
+# Integrations
 export DynamicSystem
-include("integrations/ab_integration.jl")
-export LJPotential, NBSimulator, NBSResult
-include("integrations/nbs_integration.jl")
+include("integrations/atomsbase_integration.jl")
 export DFTKPotential, analyze_convergence
 include("integrations/dftk_integration.jl")
 
+# Implementations
+export NBSimulator, NBSResult
+include("implementations/nbodysimulator.jl")
+
+# Analysis
 export plot_temperature, plot_temperature!, plot_energy, plot_energy!, plot_rdf
 include("analysis/plotting.jl")
 export write_nbs_animation, write_ase_trajectory

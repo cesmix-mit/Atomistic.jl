@@ -4,7 +4,7 @@
 # This simple toy example will walk you through each step using [NBodySimulator.jl](https://github.com/SciML/NBodySimulator.jl) for the dynamics.
 # Some of the values from this example were taken from [this guide](https://ase.tufts.edu/chemistry/lin/images/FortranMD_TeachersGuide.pdf).
 
-# ## Step 0: Install Dependencies
+# ## Step 0: Load Dependencies
 
 using Atomistic
 using AtomsBase
@@ -36,7 +36,7 @@ simulator = NBSimulator(Δt, steps, thermostat = thermostat)
 # ## Step 1C: Configuring the Potential
 # Lastly, we specify the interatomic potential that we will use for the simulation, Lennard-Jones in this case.
 
-potential = LJPotential(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
+potential = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
 
 # ## Step 2: Running the Simulation
 
