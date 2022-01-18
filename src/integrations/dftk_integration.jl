@@ -65,20 +65,14 @@ end
     tol::Union{AbstractFloat,Nothing} = nothing
     damping::Union{AbstractFloat,Nothing} = nothing
     mixing::Union{Mixing,Nothing} = nothing
-    previous_scfres::RefValue{Any} = Ref{Any}()
+    previous_scfres::Ref{Any} = Ref{Any}()
     potential_energy_cache::Dict{Float64,Float64} = Dict{Float64,Float64}()
 end
-function DFTKPotential(
-    Ecut::Unitful.Energy,
-    kgrid::AbstractVector{<:Integer},
-    n_bands::Union{Integer,Nothing} = nothing,
-    tol::Union{AbstractFloat,Nothing} = nothing,
-    damping::Union{AbstractFloat,Nothing} = nothing,
-    mixing::Union{Mixing,Nothing} = nothing,
-    previous_scfres::RefValue{Any} = Ref{Any}(),
-    potential_energy_cache::Dict{Float64,Float64} = Dict{Float64,Float64}()
-)
-    DFTKPotential(austrip(Ecut), kgrid, n_bands, tol, damping, mixing, previous_scfres, potential_energy_cache)
+function DFTKPotential(Ecut::Real, kgrid::AbstractVector{<:Integer}; kwargs...)
+    DFTKPotential(; Ecut = Ecut, kgrid = kgrid, kwargs...)
+end
+function DFTKPotential(Ecut::Unitful.Energy, kgrid::AbstractVector{<:Integer}; kwargs...)
+    DFTKPotential(; Ecut = austrip(Ecut), kgrid = kgrid, kwargs...)
 end
 
 function calculate_scf(system::AbstractSystem, potential::DFTKPotential)
@@ -97,7 +91,7 @@ end
 
 function InteratomicPotentials.potential_energy(system::DynamicSystem, potential::DFTKPotential)
     get!(potential.potential_energy_cache, austrip(system.time)) do
-        calculate_scf(system, potential).energies.total
+        InteratomicPotentials.potential_energy(system.system, potential)
     end
 end
 

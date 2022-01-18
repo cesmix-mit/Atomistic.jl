@@ -28,15 +28,11 @@ A wrapper around NBodySimulator to implement the Atomistic API.
     simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet()
     potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
 end
-function NBSimulator(
-    Δt::Unitful.Time,
-    steps::Integer;
-    t₀::Unitful.Time = 0.0 * TIME_UNIT,
-    thermostat::Thermostat = NullThermostat(),
-    simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet(),
-    potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
-)
-    NBSimulator(austrip(Δt), steps, austrip(t₀), thermostat, simulator, potentials)
+function NBSimulator(Δt::Real, steps::Integer; kwargs...)
+    NBSimulator(; Δt = Δt, steps = steps, kwargs...)
+end
+function NBSimulator(Δt::Unitful.Time, steps::Integer; t₀::Unitful.Time = 0.0 * TIME_UNIT, kwargs...)
+    NBSimulator(; Δt = austrip(Δt), steps = steps, t₀ = austrip(t₀), kwargs...)
 end
 
 # Extract the tuple of start_time, end_time from the simulator
@@ -64,8 +60,8 @@ end
 # Wraps the underlying InteratomicPotential with a cache of the forces for the current timestep
 struct InteratomicPotentialParameters <: PotentialParameters
     potential::ArbitraryPotential
-    timestep_cache::RefValue{Real}
-    force_cache::RefValue{Vector{SVector{3,Real}}}
+    timestep_cache::Ref{Real}
+    force_cache::Ref{Vector{SVector{3,Real}}}
     InteratomicPotentialParameters(potential::ArbitraryPotential) = new(potential, Ref{Real}(), Ref{Vector{SVector{3,Real}}}())
 end
 

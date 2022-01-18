@@ -13,7 +13,7 @@ using Unitful
 using UnitfulAtomic
 using UnitfulRecipes
 
-import Base: @kwdef, Fix2, RefValue
+import Base: @kwdef, Fix2
 import InteratomicPotentials: ArbitraryPotential
 import DFTK: Mixing
 import NBodySimulator: Body, BoundaryConditions, NullThermostat, SimulationResult, Thermostat

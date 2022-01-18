@@ -1,5 +1,5 @@
-# Unit tests for analysis/visualization.jl.jl
+# Unit tests for analysis/visualization.jl
 
-@testset "analysis/visualization.jl.jl" begin
-    # TODO
+@testset "analysis/visualization.jl" begin
+
 end

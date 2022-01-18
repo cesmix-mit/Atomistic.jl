@@ -38,12 +38,7 @@ display(@time plot_rdf(eq_result, potential.σ, 0.5))
 
 ab_initio_steps = 200
 ab_initio_simulator = NBSimulator(Δt, ab_initio_steps, t₀ = get_time_range(eq_result)[end])
-dftk_potential = DFTKPotential(
-    Ecut = 5u"hartree", # very non-physical but fast for demonstration purposes
-    kgrid = [1, 1, 1],
-    damping = 0.7,
-    mixing = LdosMixing()
-)
+dftk_potential = DFTKPotential(5u"hartree", [1, 1, 1]; damping = 0.7) # very non-physical but fast for demonstration purposes
 
 ab_initio_result = @time simulate(get_system(eq_result), ab_initio_simulator, dftk_potential)
 

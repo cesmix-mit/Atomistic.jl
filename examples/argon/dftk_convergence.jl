@@ -32,12 +32,7 @@ eq_result = @time simulate(initial_system, eq_simulator, potential)
 
 display(@time plot_rdf(eq_result, potential.σ, 0.5))
 
-dftk_potential = DFTKPotential(
-    Ecut = 5u"hartree",
-    kgrid = [1, 1, 1],
-    damping = 0.7,
-    mixing = LdosMixing()
-)
+dftk_potential = DFTKPotential(5u"hartree", [1, 1, 1]; damping = 0.7)
 
 display(@time analyze_convergence(get_system(eq_result), dftk_potential, (5:2.5:25)u"hartree"))
 
