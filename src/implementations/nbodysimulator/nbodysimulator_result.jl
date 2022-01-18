@@ -16,16 +16,13 @@ end
 
 function get_system(result::NBSResult, t::Integer = 0)
     sr = result.result
-    simulation = sr.simulation
-    system = simulation.system
+    bodies = sr.simulation.system.bodies
+    boundary_conditions = sr.simulation.boundary_conditions
     time = sr.solution.t[t > 0 ? t : end]
     positions = get_position(sr, time)
     velocities = get_velocity(sr, time)
-    masses = get_masses(system)
-    symbols = get_atomic_symbols(system)
-    numbers = get_atomic_numbers(system)
-    particles = [ElementMassBody(SVector{3}(positions[:, i]), SVector{3}(velocities[:, i]), masses[i], symbols[i], numbers[i]) for i ∈ 1:length(system.bodies)]
-    DynamicSystem(FlexibleSystem(particles, simulation.boundary_conditions), time * TIME_UNIT)
+    particles = [ElementMassBody(bodies[i], SVector{3}(positions[:, i]), SVector{3}(velocities[:, i])) for i ∈ 1:length(bodies)]
+    DynamicSystem(FlexibleSystem(particles, boundary_conditions), time * TIME_UNIT)
 end
 
 function get_time_range(result::NBSResult)

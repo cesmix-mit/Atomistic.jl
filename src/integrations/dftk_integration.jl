@@ -1,28 +1,64 @@
 # Integrations with DFTK.jl
-# This integration should ultimately live within the DFTK package itself
 
 # -----------------------------------------------------------------------------
 # Integration with AtomsBase 
 # -----------------------------------------------------------------------------
 
-# TODO: should a version of this be integrated into AtomsBase?
-# ? Is this logic even correct?
-function fractional_position(pos::SVector{3,<:Unitful.Length}, box::SVector{3,<:SVector{3,<:Unitful.Length}})
-    [pos[i] / box[i][i] for i ∈ 1:3]
-end
+# ! all functions in this section are copied directly from experimental DFTK code
+# ! this code will be deleted once it is live in DFTK
 
-# TODO: support multiple species using atom data
-function dftk_atoms(system::AbstractSystem{3}, element::DFTK.Element)
-    [element => Fix2(fractional_position, bounding_box(system)).(position(system))]
+function parse_system(system::AbstractSystem{D}) where {D}
+    if !all(periodicity(system))
+        error("DFTK only supports calculations with periodic boundary conditions.")
+    end
+
+    # Parse abstract system and return data required to construct model
+    mtx = austrip.(hcat(bounding_box(system)...))
+    T = eltype(mtx)
+    lattice = zeros(T, 3, 3)
+    lattice[1:D, 1:D] .= mtx
+
+    # Cache for instantiated pseudopotentials
+    # (such that the respective objects are indistinguishable)
+    cached_pseudos = Dict{String,Any}()
+    atoms = map(system) do atom
+        if hasproperty(atom, :potential)
+            potential = atom.potential
+        elseif hasproperty(atom, :pseudopotential)
+            pspkey = atom.pseudopotential
+            potential = get!(cached_pseudos, pspkey) do
+                ElementPsp(AtomsBase.atomic_symbol(atom); psp = load_psp(pspkey))
+            end
+        else
+            potential = ElementCoulomb(AtomsBase.atomic_symbol(atom))
+        end
+
+        coordinate = zeros(T, 3)
+        coordinate[1:D] = inv(lattice[1:D, 1:D]) * T.(austrip.(position(atom)))
+        potential => Vec3{T}(coordinate)
+    end
+
+    oldatoms = oldatoms_from_new(atoms)
+
+    (; lattice, atoms = oldatoms)
+end
+function oldatoms_from_new(atomic_potentials)
+    potentials = first.(atomic_potentials)
+    potential_groups = [findall(Ref(pot) .== potentials) for pot in Set(potentials)]
+    [first(atomic_potentials[first(group)]) => last.(atomic_potentials[group]) for group in potential_groups]
+end
+function DFTK.model_LDA(system::AbstractSystem; kwargs...)
+    parsed = parse_system(system)
+    model_LDA(parsed.lattice, parsed.atoms; kwargs...)
 end
 
 # -----------------------------------------------------------------------------
 # Integration with InteratomicPotentials
 # -----------------------------------------------------------------------------
 
+# ! This integration should ultimately move to the DFTK package itself
+
 @kwdef struct DFTKPotential <: ArbitraryPotential
-    psp::ElementPsp
-    lattice
     Ecut::Real
     kgrid::AbstractVector{<:Integer}
     n_bands::Union{Integer,Nothing} = nothing
@@ -33,8 +69,6 @@ end
     potential_energy_cache::Dict{Float64,Float64} = Dict{Float64,Float64}()
 end
 function DFTKPotential(
-    psp::ElementPsp,
-    lattice,
     Ecut::Unitful.Energy,
     kgrid::AbstractVector{<:Integer},
     n_bands::Union{Integer,Nothing} = nothing,
@@ -44,7 +78,17 @@ function DFTKPotential(
     previous_scfres::RefValue{Any} = Ref{Any}(),
     potential_energy_cache::Dict{Float64,Float64} = Dict{Float64,Float64}()
 )
-    DFTKPotential(psp, austrip.(lattice), austrip(Ecut), kgrid, n_bands, tol, damping, mixing, previous_scfres, potential_energy_cache)
+    DFTKPotential(austrip(Ecut), kgrid, n_bands, tol, damping, mixing, previous_scfres, potential_energy_cache)
+end
+
+function calculate_scf(system::AbstractSystem, potential::DFTKPotential)
+    model = model_LDA(system)
+    basis = PlaneWaveBasis(model; Ecut = potential.Ecut, kgrid = potential.kgrid)
+
+    args = (f => getfield(potential, f) for f ∈ (:n_bands, :tol, :damping, :mixing) if !isnothing(getfield(potential, f)))
+    extra_args = isassigned(potential.previous_scfres) ? (ψ = potential.previous_scfres[].ψ, ρ = potential.previous_scfres[].ρ) : (;)
+    scfres = self_consistent_field(basis; args..., extra_args...)
+    potential.previous_scfres[] = scfres
 end
 
 function InteratomicPotentials.potential_energy(system::AbstractSystem, potential::DFTKPotential)
@@ -69,35 +113,25 @@ function InteratomicPotentials.force(system::DynamicSystem, potential::DFTKPoten
     compute_forces_cart(scf)[1]
 end
 
-function calculate_scf(system::AbstractSystem, potential::DFTKPotential)
-    model = model_LDA(potential.lattice, dftk_atoms(system, potential.psp))
-    basis = PlaneWaveBasis(model; Ecut = potential.Ecut, kgrid = potential.kgrid)
-
-    extra_args = isassigned(potential.previous_scfres) ? (ψ = potential.previous_scfres[].ψ, ρ = potential.previous_scfres[].ρ) : (;)
-    scfres = self_consistent_field(basis; extra_args..., (f => getfield(potential, f) for f ∈ (:n_bands, :tol, :damping, :mixing) if getfield(potential, f) !== nothing)...)
-    potential.previous_scfres[] = scfres
-end
-
 # -----------------------------------------------------------------------------
-# Miscelaneous functions
+# Experimental functions
 # -----------------------------------------------------------------------------
+
+# ! This function is experimental and will eventually be removed
 
 function analyze_convergence(system::AbstractSystem, potential::DFTKPotential, cutoffs::AbstractVector{<:Unitful.Energy})
-    energies = Vector{Float64}()
-    for Ecut ∈ cutoffs
+    energies = zeros(Float64, length(cutoffs))
+    for i ∈ 1:length(cutoffs)
         parameters = DFTKPotential(
-            psp = potential.psp,
-            lattice = potential.lattice,
-            Ecut = Ecut,
+            Ecut = cutoffs[i],
             kgrid = potential.kgrid,
             n_bands = potential.n_bands,
             tol = potential.tol,
             damping = potential.damping,
             mixing = potential.mixing
         )
-        @info "Ecut: $(Ecut)"
-        scfres = calculate_scf(system, parameters)
-        push!(energies, scfres.energies.total)
+        @info "Ecut: $(cutoffs[i])"
+        energies[i] = InteratomicPotentials.potential_energy(system, parameters)
     end
 
     plot(

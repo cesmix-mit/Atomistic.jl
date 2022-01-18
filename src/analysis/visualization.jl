@@ -16,8 +16,7 @@ Write the trajectory of a `MolecularDynamicsResult` to a .traj file.
 
 The file can be visualized by running `ase gui <filename>` on the command line.
 """
-# TODO: support multiple species using atom data
-function write_ase_trajectory(result::MolecularDynamicsResult, element::DFTK.Element, lattice, filename::String)
+function write_ase_trajectory(result::MolecularDynamicsResult, filename::String)
     ase = pyimport_e("ase")
     if ispynull(ase)
         @warn "ASE is not installed, skipping write_trajectory"
@@ -31,7 +30,8 @@ function write_ase_trajectory(result::MolecularDynamicsResult, element::DFTK.Ele
         end
         traj = pyimport("ase.io.trajectory").Trajectory(filename, "a")
         for t ∈ 1:length(get_time_range(result))
-            traj.write(ase_atoms(lattice, dftk_atoms(get_system(result, t), element)))
+            lattice, atoms = parse_system(get_system(result, t))
+            traj.write(ase_atoms(lattice, atoms))
         end
         traj.close()
     end

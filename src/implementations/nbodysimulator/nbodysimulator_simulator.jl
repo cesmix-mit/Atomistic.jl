@@ -70,20 +70,16 @@ struct InteratomicPotentialParameters <: PotentialParameters
 end
 
 function NBodySimulator.get_accelerating_function(parameters::InteratomicPotentialParameters, simulation::NBodySimulation)
-    bounding_box = ab_bounding_box(simulation.boundary_conditions)
-    boundary_conditions = ab_boundary_conditions(simulation.boundary_conditions)
-    symbols = get_atomic_symbols(simulation.system)
-    numbers = get_atomic_numbers(simulation.system)
-    masses = get_masses(simulation.system)
+    bodies = simulation.system.bodies
+    boundary_conditions = simulation.boundary_conditions
     (dv, u, v, t, i) -> begin
         if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
-            positions = [u[:, j] for j ∈ 1:size(u, 2)] * LENGTH_UNIT
-            system = FastSystem(bounding_box, boundary_conditions, positions, symbols, numbers, masses * MASS_UNIT)
-            wrapped_system = DynamicSystem(system, t * TIME_UNIT)
+            particles = [ElementMassBody(bodies[i], SVector{3}(u[:, j]), SVector{3}(v[:, j])) for j ∈ 1:length(bodies)]
+            system = DynamicSystem(FlexibleSystem(particles, boundary_conditions), t * TIME_UNIT)
             parameters.timestep_cache[] = t
-            parameters.force_cache[] = force(wrapped_system, parameters.potential)
+            parameters.force_cache[] = force(system, parameters.potential)
         end
-        dv .+= parameters.force_cache[][i] / masses[i]
+        dv .+= parameters.force_cache[][i] / bodies[i].m
     end
 end
 

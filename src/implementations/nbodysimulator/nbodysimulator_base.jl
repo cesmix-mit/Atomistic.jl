@@ -7,27 +7,39 @@ struct ElementMassBody{cType<:Real,mType<:Real} <: Body
     r::SVector{3,cType} # in LENGTH_UNIT
     v::SVector{3,cType} # in VELOCITY_UNIT
     m::mType            # in MASS_UNIT
-    s::Symbol
-    n::Int
+    symbol::Symbol
+    number::Int
+    data::Dict{Symbol,Any}
 end
-function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}, e::Element)
-    ElementMassBody{Float64,Float64}(austrip.(r), austrip.(v), austrip(e.atomic_mass), Symbol(e.symbol), e.number)
+function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}, e::Element; data...)
+    ElementMassBody{Float64,Float64}(austrip.(r), austrip.(v), austrip(e.atomic_mass), Symbol(e.symbol), e.number, Dict(data...))
+end
+function ElementMassBody(body::ElementMassBody{cType,mType}, r::SVector{3,cType}, v::SVector{3,cType}) where {cType<:Real,mType<:Real}
+    ElementMassBody{cType,mType}(r, v, body.m, body.symbol, body.number, body.data)
 end
 
 # Convert AtomsBase Atom to NBodySimulator body
 function ElementMassBody(atom::Atom)
-    ElementMassBody{Float64,Float64}(austrip.(position(atom)), austrip.(velocity(atom)), austrip(atomic_mass(atom)), AtomsBase.atomic_symbol(atom), atomic_number(atom))
+    ElementMassBody{Float64,Float64}(
+        austrip.(position(atom)),
+        austrip.(velocity(atom)),
+        austrip(atomic_mass(atom)),
+        AtomsBase.atomic_symbol(atom),
+        atomic_number(atom),
+        atom.data
+    )
 end
 # Convert NBodySimulator body to AtomsBase Atom
 # TODO: support more boundary conditions
 function AtomsBase.Atom(b::ElementMassBody, boundary_conditions::CubicPeriodicBoundaryConditions)
-    Atom(b.s, mod.(b.r, boundary_conditions.L) .* LENGTH_UNIT, b.v .* VELOCITY_UNIT)
+    Atom(b.symbol, mod.(b.r, boundary_conditions.L) .* LENGTH_UNIT, b.v .* VELOCITY_UNIT; b.data...)
 end
 
 # Convert AtomsBase boundary conditions to NBodySimulator boundary conditions
-function nbs_boundary_conditions(system::AbstractSystem)
+function nbs_boundary_conditions(system::AbstractSystem{3})
     # TODO: support more boundary conditions
     box = bounding_box(system)
+    @assert all(ustrip(box[i][j]) == 0 for i ∈ 1:3 for j ∈ 1:3 if i != j)
     @assert box[1][1] == box[2][2] == box[3][3]
     @assert boundary_conditions(system) == [Periodic(), Periodic(), Periodic()]
     CubicPeriodicBoundaryConditions(austrip(box[1][1]))
@@ -45,9 +57,7 @@ function ab_bounding_box(boundary_conditions::CubicPeriodicBoundaryConditions)
 end
 
 # Convert AtomsBase AbstractSystem to Vector of NBodySimulator bodies
-function bodies(system::AbstractSystem)
-    ElementMassBody.(system)
-end
+bodies(system::AbstractSystem{3}) = ElementMassBody.(system)
 # Convert Vector of NBodySimulator bodies to AtomsBase FlexibleSystem
 function AtomsBase.FlexibleSystem(bodies::AbstractVector{<:ElementMassBody}, boundary_conditions::BoundaryConditions)
     particles = Fix2(Atom, boundary_conditions).(bodies)
@@ -58,11 +68,6 @@ function AtomsBase.FastSystem(bodies::AbstractVector{<:ElementMassBody}, boundar
     particles = Fix2(Atom, boundary_conditions).(bodies)
     FastSystem(particles, ab_bounding_box(boundary_conditions), ab_boundary_conditions(boundary_conditions))
 end
-
-# Extract the atomic symbol of each body in the system
-get_atomic_symbols(system::PotentialNBodySystem{ElementMassBody}) = [b.s for b ∈ system.bodies]
-# Extract the atomic number of each body in the system
-get_atomic_numbers(system::PotentialNBodySystem{ElementMassBody}) = [b.n for b ∈ system.bodies]
 
 # -----------------------------------------------------------------------------
 # Convenience methods for generating starting configurations with element data

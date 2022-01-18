@@ -18,7 +18,11 @@ reference_temp = 94.4u"K"
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
+pspkey = list_psp(:Ar, functional = "lda")[1].identifier
 initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
+for body ∈ initial_bodies
+    body.data[:pseudopotential] = pspkey
+end
 initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(austrip(box_size)))
 
 eq_steps = 20000
@@ -35,8 +39,6 @@ display(@time plot_rdf(eq_result, potential.σ, 0.5))
 ab_initio_steps = 200
 ab_initio_simulator = NBSimulator(Δt, ab_initio_steps, t₀ = get_time_range(eq_result)[end])
 dftk_potential = DFTKPotential(
-    psp = ElementPsp(:Ar, psp = load_psp(list_psp(:Ar, functional = "lda")[1].identifier)),
-    lattice = box_size * [[1.0 0 0]; [0 1.0 0]; [0 0 1.0]],
     Ecut = 5u"hartree", # very non-physical but fast for demonstration purposes
     kgrid = [1, 1, 1],
     damping = 0.7,
@@ -51,6 +53,6 @@ display(plot_energy(ab_initio_result, 1))
 display(@time plot_rdf(ab_initio_result, potential.σ))
 
 write_nbs_animation(ab_initio_result, "artifacts/argon_ab_initio.gif")
-write_ase_trajectory(ab_initio_result, dftk_potential.psp, dftk_potential.lattice, "artifacts/argon_ab_initio.traj")
+write_ase_trajectory(ab_initio_result, "artifacts/argon_ab_initio.traj")
 
 ;

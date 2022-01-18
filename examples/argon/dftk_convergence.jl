@@ -16,7 +16,11 @@ reference_temp = 94.4u"K"
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
+pspkey = list_psp(:Ar, functional = "lda")[1].identifier
 initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
+for body ∈ initial_bodies
+    body.data[:pseudopotential] = pspkey
+end
 initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(austrip(box_size)))
 
 eq_steps = 20000
@@ -29,8 +33,6 @@ eq_result = @time simulate(initial_system, eq_simulator, potential)
 display(@time plot_rdf(eq_result, potential.σ, 0.5))
 
 dftk_potential = DFTKPotential(
-    psp = ElementPsp(:Ar, psp = load_psp(list_psp(:Ar, functional = "lda")[1].identifier)),
-    lattice = box_size * [[1.0 0 0]; [0 1.0 0]; [0 0 1.0]],
     Ecut = 5u"hartree",
     kgrid = [1, 1, 1],
     damping = 0.7,
