@@ -2,8 +2,10 @@
 
 using Atomistic
 using AtomsBase
+using DFTK
 using InteratomicPotentials
 using PeriodicTable
+using StaticArrays
 using Test
 using Unitful
 using UnitfulAtomic

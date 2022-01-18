@@ -1,11 +1,11 @@
 # Unit tests for api/md_result.jl
 
-struct MockResult1 <: MolecularDynamicsResult end
-struct MockResult2 <: MolecularDynamicsResult end
-Atomistic.kinetic_energy(::MockResult2, t::Integer = 0) = t * u"bohr"
-Atomistic.potential_energy(::MockResult2, t::Integer = 0) = -2t * u"bohr"
-
 @testset "api/md_result.jl" begin
+    struct MockResult1 <: MolecularDynamicsResult end
+    struct MockResult2 <: MolecularDynamicsResult end
+    Atomistic.kinetic_energy(::MockResult2, t::Integer = 0) = t * u"bohr"
+    Atomistic.potential_energy(::MockResult2, t::Integer = 0) = -2t * u"bohr"
+
     target1 = MockResult1()
     target2 = MockResult2()
 

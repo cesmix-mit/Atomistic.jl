@@ -22,6 +22,12 @@ AtomsBase.species_type(s::DynamicSystem) = species_type(s.system)
 Base.length(s::DynamicSystem) = length(s.system)
 Base.getindex(s::DynamicSystem, i::Integer) = getindex(s.system, i)
 
+AtomsBase.position(s::DynamicSystem) = position(s.system)
+AtomsBase.velocity(s::DynamicSystem) = velocity(s.system)
+AtomsBase.atomic_mass(s::DynamicSystem) = atomic_mass(s.system)
+AtomsBase.atomic_symbol(s::DynamicSystem) = AtomsBase.atomic_symbol(s.system)
+AtomsBase.atomic_number(s::DynamicSystem) = atomic_number(s.system)
+
 AtomsBase.position(s::DynamicSystem, i) = position(s.system, i)
 AtomsBase.velocity(s::DynamicSystem, i) = velocity(s.system, i)
 AtomsBase.atomic_mass(s::DynamicSystem, i) = atomic_mass(s.system, i)
