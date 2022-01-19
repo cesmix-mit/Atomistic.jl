@@ -10,7 +10,7 @@
     potential1 = DFTKPotential(5, [1, 1, 1]; damping = 0.7, tol = 1e-4)
     potential2 = DFTKPotential(136.05693123044495u"eV", [1, 1, 1]; damping = 0.7, tol = 1e-4)
 
-    @test potential1.Ecut == potential2.Ecut
+    @test potential1.Ecut ≈ potential2.Ecut
 
     @test Atomistic.calculate_scf(system1, potential1) == potential1.previous_scfres[]
     @test InteratomicPotentials.potential_energy(system1, potential1) isa Float64
