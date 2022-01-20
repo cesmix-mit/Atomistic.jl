@@ -62,7 +62,8 @@ function rdf(result::NBSResult, sample_fraction::Float64 = 1.0)
     trange = sr.solution.t[end-floor(Int, length(sr.solution.t) * sample_fraction)+1:end]
 
     maxbin = 1000
-    dr = pbc.L / 2 / maxbin
+    radius = 0.5 * pbc.L
+    dr = radius / maxbin
     hist = zeros(maxbin)
     for t ∈ trange
         cc = get_position(sr, t)
@@ -70,13 +71,10 @@ function rdf(result::NBSResult, sample_fraction::Float64 = 1.0)
             ri = SVector{3}(cc[:, i])
             for j ∈ i+1:n
                 rj = SVector{3}(cc[:, j])
-                # TODO: potential for major performance improvements here
                 (rij, r, r2) = NBodySimulator.get_interparticle_distance(ri, rj, pbc)
-                if r2 < (0.5 * pbc.L)^2
+                if r < radius
                     bin = ceil(Int, r / dr)
-                    if bin > 1 && bin <= maxbin
-                        hist[bin] += 2
-                    end
+                    hist[bin] += 2
                 end
             end
         end

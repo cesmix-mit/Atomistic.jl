@@ -21,7 +21,7 @@ initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(
 eq_steps = 2000
 eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 eq_simulator = NBSimulator(Δt, eq_steps, thermostat = eq_thermostat)
-potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"))
+potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"))
 
 eq_result = @time simulate(initial_system, eq_simulator, potential)
 
@@ -36,8 +36,8 @@ prod_result = @time simulate(get_system(eq_result), prod_simulator, potential)
 display(@time plot_temperature!(temp, prod_result, 10))
 display(@time plot_energy!(energy, prod_result, 10))
 
-# rdf = @time plot_rdf(prod_result, potential.σ, 0.05)
-# display(rdf)
-# savefig(rdf, "artifacts/argon_lj_rdf.svg")
+rdf = @time plot_rdf(prod_result, potential.σ, 0.05)
+display(rdf)
+savefig(rdf, "artifacts/argon_lj_rdf.svg")
 
 ;

@@ -34,7 +34,7 @@ function parse_system(system::AbstractSystem{D}) where {D}
         end
 
         coordinate = zeros(T, 3)
-        coordinate[1:D] = inv(lattice[1:D, 1:D]) * T.(austrip.(position(atom)))
+        coordinate[1:D] = lattice[1:D, 1:D] \ T.(austrip.(position(atom)))
         potential => Vec3{T}(coordinate)
     end
 
