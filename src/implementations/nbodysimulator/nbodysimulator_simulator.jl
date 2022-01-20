@@ -20,10 +20,10 @@ A wrapper around NBodySimulator to implement the Atomistic API.
 - `potentials::Dict{Symbol,PotentialParameters}` dictionary of potentials;
     shouldn't be manipulated directly by the user
 """
-@kwdef struct NBSimulator <: MolecularDynamicsSimulator
-    Δt::Real       # in TIME_UNIT
-    steps::Integer
-    t₀::Real = 0.0 # in TIME_UNIT
+@kwdef struct NBSimulator{T<:AbstractFloat} <: MolecularDynamicsSimulator
+    Δt::T     # in TIME_UNIT
+    steps::Int
+    t₀::T = 0.0 # in TIME_UNIT
     thermostat::Thermostat = NullThermostat()
     simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet()
     potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()

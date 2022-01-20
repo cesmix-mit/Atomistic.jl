@@ -4,6 +4,7 @@ using Atomistic
 using AtomsBase
 using DFTK
 using InteratomicPotentials
+using NBodySimulator
 using PeriodicTable
 using StaticArrays
 using Test

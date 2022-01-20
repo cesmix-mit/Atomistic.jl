@@ -12,15 +12,15 @@
     @test_throws Atomistic.UnimplementedError{MockResult1} get_system(target1)
     @test_throws Atomistic.UnimplementedError{MockResult1} get_system(target1, 1)
     @test_throws Atomistic.UnimplementedError{MockResult1} get_time_range(target1)
-    @test_throws Atomistic.UnimplementedError{MockResult1} temperature(target1)
-    @test_throws Atomistic.UnimplementedError{MockResult1} temperature(target1, 1)
+    @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.temperature(target1)
+    @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.temperature(target1, 1)
     @test ismissing(reference_temperature(target1))
-    @test_throws Atomistic.UnimplementedError{MockResult1} kinetic_energy(target1)
-    @test_throws Atomistic.UnimplementedError{MockResult1} kinetic_energy(target1, 1)
+    @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.kinetic_energy(target1)
+    @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.kinetic_energy(target1, 1)
     @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.potential_energy(target1)
     @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.potential_energy(target1, 1)
-    @test total_energy(target2) == 0u"bohr"
-    @test total_energy(target2, 1) == -1u"bohr"
-    @test_throws Atomistic.UnimplementedError{MockResult1} rdf(target1)
-    @test_throws Atomistic.UnimplementedError{MockResult1} rdf(target1, 0.5)
+    @test Atomistic.total_energy(target2) == 0u"bohr"
+    @test Atomistic.total_energy(target2, 1) == -1u"bohr"
+    @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.rdf(target1)
+    @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.rdf(target1, 0.5)
 end

@@ -46,31 +46,31 @@ There are 5 functions in the `MolecularDynamicsResult` API which return measured
 get_system(result::MolecularDynamicsResult, t::Integer = 0)::AbstractSystem
 ```
 
-This function should return an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl) `AbstractSystem` which captures the system at a particular timestep in the simulation. An implementer should take special care that any unit transformations in this stage are done appropriately.
+This function should return an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl) `AbstractSystem` which captures the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation. An implementer should take special care that any unit transformations in this stage are done appropriately.
 
 ```julia
 temperature(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Temperature
 ```
 
-This function should return a unit-anotated temperature for the system at a particular timestep in the simulation.
+This function should return a unit-anotated temperature for the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation.
 
 ```julia
 kinetic_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 ```
 
-This function should return a unit-anotated kinetic energy for the system at a particular timestep in the simulation.
+This function should return a unit-anotated kinetic energy for the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation.
 
 ```julia
 potential_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 ```
 
-This function should return a unit-anotated potential energy for the system at a particular timestep in the simulation. The relevant function from the [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl) interface is `potential_energy(a::AbstractSystem, p::ArbitraryPotential)::Real`.
+This function should return a unit-anotated potential energy for the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation. The relevant function from the [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl) interface is `potential_energy(a::AbstractSystem, p::ArbitraryPotential)::Real`.
 
 ```julia
 total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 ```
 
-This function should return a unit-anotated total energy for the system at a particular timestep in the simulation. The default implementation simply sums the kinetic and potential energy functions, but an implemention might provide a custom implementation if there is a more direct means of calculation provided by the underlying simulator.
+This function should return a unit-anotated total energy for the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation. The default implementation simply sums the kinetic and potential energy functions, but an implemention might provide a custom implementation if there is a more direct means of calculation provided by the underlying simulator.
 
 ## Simulation Analysis
 

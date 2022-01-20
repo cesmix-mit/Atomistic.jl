@@ -19,7 +19,7 @@ end
 """
     get_time_range(result::MolecularDynamicsResult)::AbstractVector{Unitful.Time}
 
-Extract the time range from the simulation result in atomic units.
+Extract the unit-anotated time range from the simulation result.
 
 An implementer of this API should implement a method of this function for their custom result type.
 """
@@ -30,7 +30,8 @@ end
 """
     temperature(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Temperature
 
-Extract the temperature of the simulation at a particular timestep from the simulation result in atomic units.
+Extract the unit-anotated temperature of the simulation at a particular timestep from the simulation result.
+The default sentinel value of `t = 0` indicates the _end_ of the simulation.
 
 An implementer of this API should implement a method of this function for their custom result type.
 """
@@ -40,7 +41,7 @@ end
 """
     reference_temperature(result::MolecularDynamicsResult)::Union{Unitful.Temperature,Missing}
 
-Extract the reference temperature of the simulation from the simulation result.
+Extract the unit-anotated reference temperature of the simulation from the simulation result.
 If there is no thermostat with a reference temperature in this simulation, return missing.
 
 An implementer of this API should implement a method of this function for their custom result type if it supports thermostats.
@@ -53,7 +54,8 @@ end
 """
     kinetic_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 
-Extract the kinetic energy of the simulation at a particular timestep from the simulation result in atomic units.
+Extract the unit-anotated kinetic energy of the simulation at a particular timestep from the simulation result.
+The default sentinel value of `t = 0` indicates the _end_ of the simulation.
 
 An implementer of this API should implement a method of this function for their custom result type.
 """
@@ -63,7 +65,8 @@ end
 """
     potential_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 
-Extract the potential energy of the simulation at a particular timestep from the simulation result in atomic units.
+Extract the unit-anotated potential energy of the simulation at a particular timestep from the simulation result.
+The default sentinel value of `t = 0` indicates the _end_ of the simulation.
 
 An implementer of this API should implement a method of this function for their custom result type.
 """
@@ -73,7 +76,8 @@ end
 """
     total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
 
-Extract the total energy of the simulation at a particular timestep from the simulation result in atomic units.
+Extract the unit-anotated total energy of the simulation at a particular timestep from the simulation result.
+The default sentinel value of `t = 0` indicates the _end_ of the simulation.
 
 The default implementation simply sums the kinetic and potential energy at the timestep.
 An implementer of this API could implement a method of this function for their custom result type if it supports a more efficient way to calculate this quantity.
@@ -87,7 +91,7 @@ end
 
 Calculate the radial distribution function from the simulation result.
 
-To include only a trailing portion of the timesteps for reduced noise and faster computation, set sample_fraction to be less than 1.0.
+To include only a trailing portion of the timesteps for reduced noise and faster computation, set `sample_fraction` to be less than 1.0; `sample_fraction` must be in the range (0.0, 1.0].
 The result is a tuple of vectors which represent the interparticle radial distances (in bohr) and the density of each distance respectively.
 """
 function rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)

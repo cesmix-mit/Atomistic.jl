@@ -12,22 +12,18 @@ struct ElementMassBody{cType<:Real,mType<:Real} <: Body
     data::Dict{Symbol,Any}
 end
 function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}, e::Element; data...)
-    ElementMassBody{Float64,Float64}(austrip.(r), austrip.(v), austrip(e.atomic_mass), Symbol(e.symbol), e.number, Dict(data...))
+    r, v = promote(austrip.(r), austrip.(v))
+    ElementMassBody(r, v, austrip(e.atomic_mass), Symbol(e.symbol), e.number, Dict{Symbol,Any}(data...))
 end
-function ElementMassBody(body::ElementMassBody{cType,mType}, r::SVector{3,cType}, v::SVector{3,cType}) where {cType<:Real,mType<:Real}
-    ElementMassBody{cType,mType}(r, v, body.m, body.symbol, body.number, body.data)
+function ElementMassBody(body::ElementMassBody, r::SVector{3,<:Real}, v::SVector{3,<:Real})
+    r, v = promote(r, v)
+    ElementMassBody(r, v, body.m, body.symbol, body.number, body.data)
 end
 
 # Convert AtomsBase Atom to NBodySimulator body
 function ElementMassBody(atom::Atom)
-    ElementMassBody{Float64,Float64}(
-        austrip.(position(atom)),
-        austrip.(velocity(atom)),
-        austrip(atomic_mass(atom)),
-        AtomsBase.atomic_symbol(atom),
-        atomic_number(atom),
-        atom.data
-    )
+    r, v = promote(austrip.(position(atom)), austrip.(velocity(atom)))
+    ElementMassBody(r, v, austrip(atomic_mass(atom)), AtomsBase.atomic_symbol(atom), atomic_number(atom), atom.data)
 end
 # Convert NBodySimulator body to AtomsBase Atom
 # TODO: support more boundary conditions
