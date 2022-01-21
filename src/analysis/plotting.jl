@@ -132,7 +132,7 @@ Use σ (from Lennard Jones) as a normalization factor for the radius.
 function plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, sample_fraction::Float64 = 1.0)
     @assert 0 < sample_fraction ≤ 1
     N = length(get_system(result))
-    T = length(get_time_range(result)) - 1
+    T = length(result) - 1
     rs, grf = rdf(result, sample_fraction)
     @assert length(rs) == length(grf)
     plot(

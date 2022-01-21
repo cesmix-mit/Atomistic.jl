@@ -35,9 +35,4 @@ using UnitfulAtomic
             include("unit/analysis/visualization.jl")
         end
     end
-    @testset "Integration Tests" begin
-        include("integration/atomsbase_nbodysimulator.jl")
-        include("integration/atomsbase_nbodysimulator_interatomicpotentials.jl")
-        include("integration/atomsbase_nbodysimulator_dftk.jl")
-    end
 end

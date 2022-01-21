@@ -116,14 +116,7 @@ end
 function analyze_convergence(system::AbstractSystem, potential::DFTKPotential, cutoffs::AbstractVector{<:Unitful.Energy})
     energies = zeros(Float64, length(cutoffs))
     for i ∈ 1:length(cutoffs)
-        parameters = DFTKPotential(
-            Ecut = cutoffs[i],
-            kgrid = potential.kgrid,
-            n_bands = potential.n_bands,
-            tol = potential.tol,
-            damping = potential.damping,
-            mixing = potential.mixing
-        )
+        parameters = DFTKPotential(cutoffs[i], potential.kgrid; n_bands = potential.n_bands, tol = potential.tol, damping = potential.damping, mixing = potential.mixing)
         @info "Ecut: $(cutoffs[i])"
         energies[i] = InteratomicPotentials.potential_energy(system, parameters)
     end

@@ -21,18 +21,25 @@ import Plots: Plot
 
 include("unit_convention.jl")
 
-# API
-include("api/exceptions.jl")
-export MolecularDynamicsResult, get_system, get_time_range, temperature, reference_temperature, kinetic_energy, potential_energy, total_energy, rdf
-include("api/md_result.jl")
-export MolecularDynamicsSimulator, simulate
-include("api/md_simulator.jl")
-
-# Integrations
+# AtomsBase Integrations
 export DynamicSystem
 include("integrations/atomsbase_integration.jl")
-export DFTKPotential, analyze_convergence
+
+# DFTK Integrations
+export DFTKPotential
+export analyze_convergence
 include("integrations/dftk_integration.jl")
+
+# API
+include("api/exceptions.jl")
+export MolecularDynamicsResult
+export get_time_range, get_bounding_box, get_boundary_conditions, reference_temperature
+export get_time, get_positions, get_velocities, get_particles, get_system
+export temperature, kinetic_energy, potential_energy, total_energy, rdf
+include("api/md_result.jl")
+export MolecularDynamicsSimulator
+export simulate
+include("api/md_simulator.jl")
 
 # Implementations
 export NBSimulator, NBSResult

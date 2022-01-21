@@ -29,7 +29,7 @@ function write_ase_trajectory(result::MolecularDynamicsResult, filename::String)
             @info "writing trajectory to" filename
         end
         traj = pyimport("ase.io.trajectory").Trajectory(filename, "a")
-        for t ∈ 1:length(get_time_range(result))
+        for t ∈ 1:length(result)
             lattice, atoms = parse_system(get_system(result, t))
             traj.write(ase_atoms(lattice, atoms))
         end

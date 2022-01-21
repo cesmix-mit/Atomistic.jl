@@ -26,10 +26,13 @@ function ElementMassBody(atom::Atom)
     ElementMassBody(r, v, austrip(atomic_mass(atom)), AtomsBase.atomic_symbol(atom), atomic_number(atom), atom.data)
 end
 # Convert NBodySimulator body to AtomsBase Atom
-# TODO: support more boundary conditions
 function AtomsBase.Atom(b::ElementMassBody, boundary_conditions::CubicPeriodicBoundaryConditions)
-    Atom(b.symbol, mod.(b.r, boundary_conditions.L) .* LENGTH_UNIT, b.v .* VELOCITY_UNIT; b.data...)
+    Atom(b.symbol, bound_position(b.r, boundary_conditions) .* LENGTH_UNIT, b.v .* VELOCITY_UNIT; b.data...)
 end
+
+# Bound a position according to the boundary conditions
+# TODO: support more boundary conditions
+bound_position(r::SVector{3,<:Real}, boundary_conditions::CubicPeriodicBoundaryConditions) = mod.(r, boundary_conditions.L)
 
 # Convert AtomsBase boundary conditions to NBodySimulator boundary conditions
 function nbs_boundary_conditions(system::AbstractSystem{3})
@@ -42,11 +45,11 @@ function nbs_boundary_conditions(system::AbstractSystem{3})
 end
 # Convert NBodySimulator boundary conditions to AtomsBase boundary conditions
 # TODO: support more boundary conditions
-ab_boundary_conditions(::CubicPeriodicBoundaryConditions) = [Periodic(), Periodic(), Periodic()]
+get_boundary_conditions(::CubicPeriodicBoundaryConditions) = [Periodic(), Periodic(), Periodic()]
 
 # Convert NBodySimulator boundary conditions to AtomsBase bounding box
 # TODO: support more boundary conditions
-function ab_bounding_box(boundary_conditions::CubicPeriodicBoundaryConditions)
+function get_bounding_box(boundary_conditions::CubicPeriodicBoundaryConditions)
     box_size = boundary_conditions.L * LENGTH_UNIT
     z = zero(typeof(box_size))
     [[box_size, z, z], [z, box_size, z], [z, z, box_size]]
@@ -57,12 +60,12 @@ bodies(system::AbstractSystem{3}) = ElementMassBody.(system)
 # Convert Vector of NBodySimulator bodies to AtomsBase FlexibleSystem
 function AtomsBase.FlexibleSystem(bodies::AbstractVector{<:ElementMassBody}, boundary_conditions::BoundaryConditions)
     particles = Fix2(Atom, boundary_conditions).(bodies)
-    FlexibleSystem(particles, ab_bounding_box(boundary_conditions), ab_boundary_conditions(boundary_conditions))
+    FlexibleSystem(particles, get_bounding_box(boundary_conditions), get_boundary_conditions(boundary_conditions))
 end
 # Convert Vector of NBodySimulator bodies to AtomsBase FastSystem
 function AtomsBase.FastSystem(bodies::AbstractVector{<:ElementMassBody}, boundary_conditions::BoundaryConditions)
     particles = Fix2(Atom, boundary_conditions).(bodies)
-    FastSystem(particles, ab_bounding_box(boundary_conditions), ab_boundary_conditions(boundary_conditions))
+    FastSystem(particles, get_bounding_box(boundary_conditions), get_boundary_conditions(boundary_conditions))
 end
 
 # -----------------------------------------------------------------------------

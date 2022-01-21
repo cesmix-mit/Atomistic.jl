@@ -38,15 +38,15 @@ end
 # Extract the tuple of start_time, end_time from the simulator
 time_range(simulator::NBSimulator) = (simulator.t₀, simulator.t₀ + simulator.steps * simulator.Δt)
 
-function simulate(system::AbstractSystem, simulator::NBSimulator, potential::ArbitraryPotential)
+function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::ArbitraryPotential)
     simulator.potentials[:custom] = InteratomicPotentialParameters(potential)
     simulate(system, simulator)
 end
-function simulate(system::AbstractSystem, simulator::NBSimulator, potential::LennardJonesParameters)
+function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::LennardJonesParameters)
     simulator.potentials[:lennard_jones] = potential
     simulate(system, simulator)
 end
-function simulate(system::AbstractSystem, simulator::NBSimulator)
+function simulate(system::AbstractSystem{3}, simulator::NBSimulator)
     nb_system = PotentialNBodySystem{ElementMassBody}(bodies(system), simulator.potentials)
     simulation = NBodySimulation(nb_system, time_range(simulator), nbs_boundary_conditions(system), simulator.thermostat, austrip(u"k"))
     NBSResult(run_simulation(simulation, simulator.simulator, dt = simulator.Δt))

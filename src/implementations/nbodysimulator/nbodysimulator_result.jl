@@ -14,44 +14,36 @@ struct NBSResult <: MolecularDynamicsResult
     result::SimulationResult
 end
 
-function get_system(result::NBSResult, t::Integer = 0)
-    sr = result.result
-    bodies = sr.simulation.system.bodies
-    boundary_conditions = sr.simulation.boundary_conditions
-    time = sr.solution.t[t > 0 ? t : end]
-    positions = get_position(sr, time)
-    velocities = get_velocity(sr, time)
-    particles = [ElementMassBody(bodies[i], SVector{3}(positions[:, i]), SVector{3}(velocities[:, i])) for i ∈ 1:length(bodies)]
-    DynamicSystem(FlexibleSystem(particles, boundary_conditions), time * TIME_UNIT)
+get_time_range(result::NBSResult) = result.result.solution.t * TIME_UNIT
+get_bounding_box(result::NBSResult) = get_bounding_box(result.result.simulation.boundary_conditions)
+get_boundary_conditions(result::NBSResult) = get_boundary_conditions(result.result.simulation.boundary_conditions)
+
+reference_temperature(result::NBSResult) = reference_temperature(result.result.simulation.thermostat)
+reference_temperature(thermostat::Thermostat) = thermostat.T * TEMPERATURE_UNIT
+reference_temperature(::NullThermostat) = missing
+
+function get_positions(result::NBSResult, t::Integer)
+    positions = get_position(result.result, result.result.solution.t[t])
+    [bound_position(SVector{3}(p), result.result.simulation.boundary_conditions) for p ∈ eachcol(positions)] * LENGTH_UNIT
+end
+function get_velocities(result::NBSResult, t::Integer)
+    velocities = get_velocity(result.result, result.result.solution.t[t])
+    [SVector{3}(v) for v ∈ eachcol(velocities)] * VELOCITY_UNIT
+end
+function get_particles(result::NBSResult, t::Integer)
+    [Atom(b.symbol, p, v; b.data...) for (b, p, v) ∈ zip(result.result.simulation.system.bodies, get_positions(result, t), get_velocities(result, t))]
 end
 
-function get_time_range(result::NBSResult)
-    result.result.solution.t * TIME_UNIT
-end
-
-function temperature(result::NBSResult, t::Integer = 0)
-    time = result.result.solution.t[t > 0 ? t : end]
-    NBodySimulator.temperature(result.result, time) * TEMPERATURE_UNIT
-end
-
-function reference_temperature(result::NBSResult)
-    thermostat = result.result.simulation.thermostat
-    thermostat isa NullThermostat ? missing : thermostat.T * TEMPERATURE_UNIT
-end
-
-function kinetic_energy(result::NBSResult, t::Integer = 0)
-    time = result.result.solution.t[t > 0 ? t : end]
-    NBodySimulator.kinetic_energy(result.result, time) * ENERGY_UNIT
-end
-
-function potential_energy(result::NBSResult, t::Integer = 0)
+temperature(result::NBSResult, t::Integer) = NBodySimulator.temperature(result.result, result.result.solution.t[t]) * TEMPERATURE_UNIT
+kinetic_energy(result::NBSResult, t::Integer) = NBodySimulator.kinetic_energy(result.result, result.result.solution.t[t]) * ENERGY_UNIT
+function potential_energy(result::NBSResult, t::Integer)
     potentials = result.result.simulation.system.potentials
     # https://github.com/SciML/NBodySimulator.jl/issues/44
     if :custom ∈ keys(potentials)
-        return InteratomicPotentials.potential_energy(get_system(result, t), potentials[:custom].potential) * ENERGY_UNIT
+        InteratomicPotentials.potential_energy(get_system(result, t), potentials[:custom].potential) * ENERGY_UNIT
+    else
+        NBodySimulator.potential_energy(result.result, result.result.solution.t[t]) * ENERGY_UNIT
     end
-    time = result.result.solution.t[t > 0 ? t : end]
-    NBodySimulator.potential_energy(result.result, time) * ENERGY_UNIT
 end
 
 function rdf(result::NBSResult, sample_fraction::Float64 = 1.0)

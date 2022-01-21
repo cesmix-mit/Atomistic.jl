@@ -20,17 +20,29 @@ The `simulate` method should return the corresponding implementation of the `Mol
 
 # [Molecular Dynamics Results](@id MolecularDynamicsResult_Specification)
 
-Eight total functions must be implemented for subtypes of `MolecularDynamicsResult`, two of which have default implementations. The functions allow users to access simulation data from three categories: simulation configuration, time-series measurable quantities, and simulation analysis.
+Fourteen total functions must be implemented for subtypes of `MolecularDynamicsResult`, four of which have default implementations. The functions allow users to access simulation data from three categories: simulation configuration, time-dependent system data, and simulation analysis.
 
 ## Simulation Configuration Functions
 
-There are two simulation configuration function for `MolecularDynamicsResult`s:
+There are four functions in the `MolecularDynamicsResult` API which return time-independent simulation configuration information:
 
 ```julia
 get_time_range(result::MolecularDynamicsResult)::AbstractVector{Unitful.Time}
 ```
 
-This function should return a unit-anotated vector-like object containing the time value for each step of the simulation which can be iterated for plotting, animation, or other analysis.
+This function should return a unit-anotated vector containing the time value for each step of the simulation which can be iterated for plotting, animation, or other analysis.
+
+```julia
+get_bounding_box(result::MolecularDynamicsResult)::SVector{3, SVector{3, Unitful.Length}}
+```
+
+This function should return the [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl)-style bounding box of the system used in the simulation.
+
+```julia
+get_boundary_conditions(result::MolecularDynamicsResult)::SVector{3, BoundaryCondition}
+```
+
+This function should return the [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl)-style boundary conditions of the system used in the simulation.
 
 ```julia
 reference_temperature(result::MolecularDynamicsResult)::Union{Unitful.Temperature,Missing}
@@ -38,46 +50,72 @@ reference_temperature(result::MolecularDynamicsResult)::Union{Unitful.Temperatur
 
 This function should return a unit-anotated temperature that describes the temperature maintained by the thermostat used in the simulation. If there is no reference temperature for the particular simulation, the function should return missing, which is the default implementation.
 
-## Time-Series Measureable Quantities
+## Time-Dependent System Data
 
-There are 5 functions in the `MolecularDynamicsResult` API which return measured quantities at a particular timestep.
-
-```julia
-get_system(result::MolecularDynamicsResult, t::Integer = 0)::AbstractSystem
-```
-
-This function should return an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl) `AbstractSystem` which captures the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation. An implementer should take special care that any unit transformations in this stage are done appropriately.
+There are five functions in the `MolecularDynamicsResult` API which return system data at a particular timestep, two of which have default implementations.
 
 ```julia
-temperature(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Temperature
+get_time(result::MolecularDynamicsResult, t::Integer)::Unitful.Time
 ```
 
-This function should return a unit-anotated temperature for the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation.
+This convenience function converts a timestep to the unit-annotated time of the timestep using the provided `get_time_range` implementation. The timestep defaults to the end of the simulation when `t` is not passed. Most implementers will not need to write a custom implementation.
 
 ```julia
-kinetic_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
+get_positions(result::MolecularDynamicsResult, t::Integer)::AbstractVector{SVector{3, Unitful.Length}}
 ```
 
-This function should return a unit-anotated kinetic energy for the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation.
+This function should return the unit-annotated position of each particle in the system at a particular timestep from the simulation result. The returned positions should be normalized such that they lie within the bounding box of the system, even if the system is periodic. The timestep defaults to the end of the simulation when `t` is not passed.
 
 ```julia
-potential_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
+get_velocities(result::MolecularDynamicsResult, t::Integer)::AbstractVector{SVector{3, Unitful.Velocity}}
 ```
 
-This function should return a unit-anotated potential energy for the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation. The relevant function from the [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl) interface is `potential_energy(a::AbstractSystem, p::ArbitraryPotential)::Real`.
+This function should return the unit-annotated velocities of each particle in the system at a particular timestep from the simulation result. The timestep defaults to the end of the simulation when `t` is not passed.
 
 ```julia
-total_energy(result::MolecularDynamicsResult, t::Integer = 0)::Unitful.Energy
+get_particles(result::MolecularDynamicsResult, t::Integer)::AbstractVector{Atom}
 ```
 
-This function should return a unit-anotated total energy for the system at a particular timestep in the simulation. The default sentinel value of `t = 0` indicates the _end_ of the simulation. The default implementation simply sums the kinetic and potential energy functions, but an implemention might provide a custom implementation if there is a more direct means of calculation provided by the underlying simulator.
+This function should return the particles in the system at a particular timestep from the simulation result. The timestep defaults to the end of the simulation when `t` is not passed. It is important for any `Atom` metadata passed in on the input system be preserved when reproducing the particles as some interatomic potential implementations may depend on this data for correctness or performance.
+
+```julia
+get_system(result::MolecularDynamicsResult, t::Integer)::AbstractSystem
+```
+
+This function should return an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl) `AbstractSystem` which captures the system at a particular timestep in the simulation. The timestep defaults to the end of the simulation when `t` is not passed.
+
+The default implementation creates a `FlexibleSystem` by combining the provided implementations of `get_particles`, `get_bounding_box`, and `get_boundary_conditions`. This simulation is then wrapped in a `DynamicSystem` with time provided from the `get_time` implementation.
 
 ## Simulation Analysis
 
-The only analysis function required by the Atmostic interface is the [Radial Distribution Function](https://en.wikipedia.org/wiki/Radial_distribution_function).
+```julia
+temperature(result::MolecularDynamicsResult, t::Integer)::Unitful.Temperature
+```
+
+This function should return a unit-anotated temperature for the system at a particular timestep in the simulation. The timestep defaults to the end of the simulation when `t` is not passed.
+
+```julia
+kinetic_energy(result::MolecularDynamicsResult, t::Integer)::Unitful.Energy
+```
+
+This function should return a unit-anotated kinetic energy for the system at a particular timestep in the simulation. The timestep defaults to the end of the simulation when `t` is not passed.
+
+```julia
+potential_energy(result::MolecularDynamicsResult, t::Integer)::Unitful.Energy
+```
+
+This function should return a unit-anotated potential energy for the system at a particular timestep in the simulation. The timestep defaults to the end of the simulation when `t` is not passed. The relevant function from the [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl) interface is `potential_energy(a::AbstractSystem, p::ArbitraryPotential)::Real`.
+
+```julia
+total_energy(result::MolecularDynamicsResult, t::Integer)::Unitful.Energy
+```
+
+This function should return a unit-anotated total energy for the system at a particular timestep in the simulation. The timestep defaults to the end of the simulation when `t` is not passed.
+
+The default implementation simply sums the kinetic and potential energy functions, but an implemention might provide a custom implementation if there is a more direct means of calculation provided by the underlying simulator.
 
 ```julia
 rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{AbstractVector{Real},AbstractVector{Real}}
 ```
 
-This function should calculate a tuple of vectors which represent the interparticle radial distances (in bohr) and the density of each distance respectively. The densities should be averaged across a trailing fraction of timesteps. Note that this detail is still the subject of further scrutiny and might be modified in a future release.
+This function should calculate the [radial distribution function](https://en.wikipedia.org/wiki/Radial_distribution_function) of the system averaged across a trailing fraction of timesteps. It should return a tuple of vectors which represent the interparticle radial distances (in bohr) and the density of each distance respectively. Note that the inclusion of the sample_fraction is still the subject of further scrutiny and might be modified in a future release.

@@ -29,7 +29,7 @@ temp = @time plot_temperature(eq_result, 10)
 energy = @time plot_energy(eq_result, 10)
 
 prod_steps = 5000
-prod_simulator = NBSimulator(Δt, prod_steps, t₀ = get_time_range(eq_result)[end])
+prod_simulator = NBSimulator(Δt, prod_steps, t₀ = get_time(eq_result))
 
 prod_result = @time simulate(get_system(eq_result), prod_simulator, potential)
 
