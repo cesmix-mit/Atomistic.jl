@@ -3,6 +3,7 @@ module Atomistic
 using AtomsBase
 using InteratomicPotentials
 using DFTK
+using LinearAlgebra
 using NBodySimulator
 using PeriodicTable
 using Plots

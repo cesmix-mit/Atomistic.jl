@@ -20,10 +20,10 @@ A wrapper around NBodySimulator to implement the Atomistic API.
 - `potentials::Dict{Symbol,PotentialParameters}` dictionary of potentials;
     shouldn't be manipulated directly by the user
 """
-@kwdef struct NBSimulator{T<:AbstractFloat} <: MolecularDynamicsSimulator
-    Δt::T     # in TIME_UNIT
+@kwdef struct NBSimulator <: MolecularDynamicsSimulator
+    Δt::AbstractFloat       # in TIME_UNIT
     steps::Int
-    t₀::T = 0.0 # in TIME_UNIT
+    t₀::AbstractFloat = 0.0 # in TIME_UNIT
     thermostat::Thermostat = NullThermostat()
     simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet()
     potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
@@ -47,7 +47,7 @@ function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::
     simulate(system, simulator)
 end
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator)
-    nb_system = PotentialNBodySystem{ElementMassBody}(bodies(system), simulator.potentials)
+    nb_system = PotentialNBodySystem{ElementMassBody}(get_bodies(system), simulator.potentials)
     simulation = NBodySimulation(nb_system, time_range(simulator), nbs_boundary_conditions(system), simulator.thermostat, austrip(u"k"))
     NBSResult(run_simulation(simulation, simulator.simulator, dt = simulator.Δt))
 end
