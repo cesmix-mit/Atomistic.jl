@@ -1,7 +1,7 @@
 name = "Atomistic"
 uuid = "3e762ff9-b8d8-45cf-a902-edcbc7124e71"
 authors = ["Jeremiah DeGreeff <degreeff@mit.edu>"]
-version = "0.2.2"
+version = "0.3.0"
 
 [deps]
 AtomsBase = "a963bdd2-2df7-4f54-a1ee-49d51e6be12a"
