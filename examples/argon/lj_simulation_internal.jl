@@ -35,7 +35,7 @@ prod_result = @time simulate(get_system(eq_result), prod_simulator, potential)
 display(@time plot_temperature!(temp, prod_result, 10))
 display(@time plot_energy!(energy, prod_result, 10))
 
-rdf = @time plot_rdf(prod_result, potential.σ, 0.05)
+rdf = @time plot_rdf(prod_result, potential.σ, Int(0.95 * prod_steps))
 display(rdf)
 savefig(rdf, "artifacts/argon_lj_rdf.svg")
 

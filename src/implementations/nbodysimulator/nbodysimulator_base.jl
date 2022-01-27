@@ -41,10 +41,9 @@ end
 # Convert AtomsBase boundary conditions to NBodySimulator boundary conditions
 function nbs_boundary_conditions(system::AbstractSystem{3})
     # TODO: support more boundary conditions
-    box = bounding_box(system)
-    @assert hcat(box...) == Matrix(I * box[1][1], 3, 3)
+    @assert hcat(bounding_box(system)...) == Matrix(I * bounding_box(system)[1][1], 3, 3)
     @assert all(periodicity(system))
-    CubicPeriodicBoundaryConditions(austrip(box[1][1]))
+    CubicPeriodicBoundaryConditions(austrip(bounding_box(system)[1][1]))
 end
 # Convert NBodySimulator boundary conditions to AtomsBase boundary conditions
 # TODO: support more boundary conditions

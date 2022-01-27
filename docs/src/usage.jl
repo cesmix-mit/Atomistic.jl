@@ -54,4 +54,4 @@ plot_temperature(result, simulator.steps ÷ 200)
 plot_energy(result, simulator.steps ÷ 200)
 
 # ### Radial Distribution Function (RDF)
-plot_rdf(result, potential.σ, 0.5)
+plot_rdf(result, potential.σ, Int(0.95 * prod_steps))

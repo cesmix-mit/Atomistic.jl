@@ -21,11 +21,12 @@
     potential1 = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
     potential2 = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"))
 
-    result = @time simulate(system, simulator1, potential1)
-    result1 = @time simulate(system, simulator2, potential1)
-    result2 = @time simulate(system, simulator2, potential2)
+    result = simulate(system, simulator1, potential1)
+    result1 = simulate(system, simulator2, potential1)
+    result2 = simulate(system, simulator2, potential2)
 
     @test get_time_range(result) == (1000:400:5000)u"ħ_au / hartree"
+    @test get_num_bodies(result) == 8
     @test get_bounding_box(result) == box
     @test get_boundary_conditions(result) == boundary_conditions
 
@@ -43,6 +44,6 @@
     @test Atomistic.kinetic_energy(result) isa Unitful.Energy
     @test Atomistic.potential_energy(result) isa Unitful.Energy
 
-    @test all(isapprox(Atomistic.total_energy(result1, t), Atomistic.total_energy(result1), rtol = 1e-2) for t ∈ 1:10)
-    @test all(isapprox(Atomistic.total_energy(result2, t), Atomistic.total_energy(result2), rtol = 1e-2) for t ∈ 1:10)
+    @test all(isapprox(Atomistic.total_energy(result1, t), Atomistic.total_energy(result1), rtol = 0.1) for t ∈ 1:10)
+    @test all(isapprox(Atomistic.total_energy(result2, t), Atomistic.total_energy(result2), rtol = 0.1) for t ∈ 1:10)
 end

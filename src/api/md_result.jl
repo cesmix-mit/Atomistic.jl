@@ -21,6 +21,15 @@ get_time_range(result::MolecularDynamicsResult) = throw(UnimplementedError(:get_
 Base.length(result::MolecularDynamicsResult) = length(get_time_range(result::MolecularDynamicsResult))
 
 """
+    get_num_bodies(result::MolecularDynamicsResult)::Integer
+
+Extract the number of bodies in the simulation from the simulation result.
+
+An implementer of this API should implement a method of this function for their custom result type.
+"""
+get_num_bodies(result::MolecularDynamicsResult) = throw(UnimplementedError(:get_num_bodies, result))
+
+"""
     get_bounding_box(result::MolecularDynamicsResult)::SVector{3, SVector{3, Unitful.Length}}
 
 Extract the unit-anotated bounding box of the simulation from the simulation result in an `AtomBase`-compatible format.
@@ -160,11 +169,60 @@ total_energy(result::MolecularDynamicsResult, t::Integer) = kinetic_energy(resul
 total_energy(result::MolecularDynamicsResult) = total_energy(result, length(result))
 
 """
-    rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{AbstractVector{Real},AbstractVector{Real}}
+    rdf(result::MolecularDynamicsResult, start::Integer, stop::Integer)::Tuple{AbstractVector{Unitful.Length},AbstractVector{Real}}
 
 Calculate the radial distribution function from the simulation result.
 
-To include only a trailing portion of the timesteps for reduced noise and faster computation, set `sample_fraction` to be less than 1.0; `sample_fraction` must be in the range (0.0, 1.0].
-The result is a tuple of vectors which represent the interparticle radial distances (in bohr) and the density of each distance respectively.
+To include only a portion of the timesteps for faster computation, increase the start parameter or decrease the stop parameter; by default, the full time range will be iterated over.
+The result is a named tuple of vectors:
+    - r: unit-annotated interparticle radial distance bins
+    - g: distribution value of each bin
+
+The default implementation provided uses the provided implementations of `get_num_bodies`, `get_bounding_box`, `get_boundary_conditions`, and `get_positions`.
+An implementor of the API could use a built in implementation if one that fits this spec is available.
 """
-rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0) = throw(UnimplementedError(:rdf, result))
+function rdf(result::MolecularDynamicsResult, start::Integer, stop::Integer)
+    n = get_num_bodies(result)
+    box = get_bounding_box(result)
+    boundary_conditions = get_boundary_conditions(result)
+
+    # TODO: support more boundary conditions
+    @assert hcat(box...) == Matrix(I * box[1][1], 3, 3)
+    @assert all(b isa Periodic for b ∈ boundary_conditions)
+
+    d = Distances.PeriodicEuclidean([box[i][i] for i ∈ 1:3])
+
+    maxbin = 1000
+    L = box[1][1]
+    radius = 0.5 * L
+    dr = radius / maxbin
+    hist = zeros(maxbin)
+    for t ∈ start:stop
+        pos = get_positions(result, t)
+        for i ∈ 1:n
+            for j ∈ i+1:n
+                r = evaluate(d, pos[i], pos[j])
+                if zero(typeof(dr)) < r < radius
+                    bin = ceil(Int, r / dr)
+                    hist[bin] += 2
+                end
+            end
+        end
+    end
+
+    c = 4 / 3 * π * n / L^3
+    r = zeros(typeof(dr), maxbin)
+    g = zeros(maxbin)
+    tlen = length(start:stop)
+    for bin ∈ 1:maxbin
+        rlower = (bin - 1) * dr
+        rupper = rlower + dr
+        nideal = c * (rupper^3 - rlower^3)
+        r[bin] = rlower + dr / 2
+        g[bin] = (hist[bin] / (tlen * n)) / nideal
+    end
+
+    (; r, g)
+end
+rdf(result::MolecularDynamicsResult, start::Integer) = rdf(result, start, length(result))
+rdf(result::MolecularDynamicsResult) = rdf(result, 1, length(result))

@@ -34,7 +34,7 @@ eq_result = @time simulate(initial_system, eq_simulator, potential)
 
 display(@time plot_temperature(eq_result, eq_simulator.steps ÷ 200))
 display(@time plot_energy(eq_result, eq_simulator.steps ÷ 200))
-display(@time plot_rdf(eq_result, potential.σ, 0.5))
+display(@time plot_rdf(eq_result, potential.σ))
 
 ab_initio_steps = 200
 ab_initio_simulator = NBSimulator(Δt, ab_initio_steps, t₀ = get_time(eq_result))

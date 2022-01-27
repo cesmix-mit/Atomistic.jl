@@ -7,6 +7,7 @@
         target = MockResult1()
 
         @test_throws Atomistic.UnimplementedError{MockResult1} get_time_range(target)
+        @test_throws Atomistic.UnimplementedError{MockResult1} get_num_bodies(target)
         @test_throws Atomistic.UnimplementedError{MockResult1} get_bounding_box(target)
         @test_throws Atomistic.UnimplementedError{MockResult1} get_boundary_conditions(target)
 
@@ -21,14 +22,18 @@
         @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.kinetic_energy(target, 1)
         @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.potential_energy(target)
         @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.potential_energy(target, 1)
-        @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.rdf(target)
-        @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.rdf(target, 0.5)
     end
     @testset "Default Implementations" begin
         struct MockResult2 <: MolecularDynamicsResult end
         Atomistic.get_time_range(::MockResult2) = collect(0:2:100)u"ns"
+        Atomistic.get_num_bodies(::MockResult2) = 3
         Atomistic.get_bounding_box(::MockResult2) = (@SVector [(@SVector [100, 0, 0]), (@SVector [0, 100, 0]), (@SVector [0, 0, 100])])u"bohr"
         Atomistic.get_boundary_conditions(::MockResult2) = @SVector [Periodic(), Periodic(), Periodic()]
+        Atomistic.get_positions(::MockResult2, t::Integer) = [
+            (@SVector [0, 0, 0])u"bohr",
+            (@SVector [-t, 0, t])u"bohr",
+            (@SVector [t, 0, -t])u"bohr"
+        ]
         Atomistic.get_particles(::MockResult2, t::Integer) = [
             Atom(:Ar, (@SVector [0, 0, 0])u"bohr", (@SVector [0, 0, 0])u"bohr/ns"),
             Atom(:Ar, (@SVector [-t, 0, t])u"bohr", (@SVector [-2t, 0, 2t])u"bohr/ns"),
@@ -61,5 +66,11 @@
 
         @test Atomistic.total_energy(target) == -51u"bohr"
         @test Atomistic.total_energy(target, 1) == -1u"bohr"
+        rdf1 = Atomistic.rdf(target)
+        rdf2 = Atomistic.rdf(target, 1)
+        rdf3 = Atomistic.rdf(target, 1, 51)
+        @test rdf1 isa NamedTuple{(:r, :g),<:Tuple{<:AbstractVector{<:Unitful.Length},<:AbstractVector{Float64}}}
+        @test rdf1 == rdf2
+        @test rdf1 == rdf3
     end
 end

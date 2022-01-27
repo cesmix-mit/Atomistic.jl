@@ -15,7 +15,7 @@ end
 Plot the temperature of a `MolecularDynamicsResult` against time, sampling every `stride` points.
 """
 function plot_temperature(result::MolecularDynamicsResult, stride::Integer)
-    N = length(get_system(result))
+    N = get_num_bodies(result)
     p = plot(
         title = "Temperature during Simulation [n = $(N)]",
         xlab = "Time",
@@ -70,7 +70,7 @@ end
 Plot the kinetic, potential, and total energy of a `MolecularDynamicsResult` against time, sampling every `stride` points.
 """
 function plot_energy(result::MolecularDynamicsResult, stride::Integer)
-    N = length(get_system(result))
+    N = get_num_bodies(result)
     p = plot(
         title = "Energy during Simulation [n = $(N)]",
         xlab = "Time",
@@ -115,31 +115,30 @@ function plot_energy!(p::Plot, result::MolecularDynamicsResult, stride::Integer,
 end
 
 """
-    plot_rdf(result::MolecularDynamicsResult, σ::Real, sample_fraction::Float64 = 1.0)::Plot
+    plot_rdf(result::MolecularDynamicsResult, σ::Real, start::Integer = 1, stop::Integer = length(result))::Plot
 
-Plot the radial distribution function of a `MolecularDynamicsResult` sampling only the trailing `sample_fraction` of the timesteps.
-Use σ (from Lennard Jones) as a normalization factor for the radius (assumed to be in atomic units).
+Plot the radial distribution function of a `MolecularDynamicsResult` averaging over the timesteps in `start:stop`
+Use `σ` (from Lennard Jones) as a normalization factor for the radius (assumed to be in atomic units).
 """
-function plot_rdf(result::MolecularDynamicsResult, σ::Real, sample_fraction::Float64 = 1.0)
-    plot_rdf(result, σ * LENGTH_UNIT, sample_fraction)
+function plot_rdf(result::MolecularDynamicsResult, σ::Real, start::Integer = 1, stop::Integer = length(result))
+    plot_rdf(result, σ * LENGTH_UNIT, start, stop)
 end
 """
-    plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, sample_fraction::Float64 = 1.0)::Plot
+    plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, start::Integer = 1, stop::Integer = length(result))::Plot
 
-Plot the radial distribution function of a `MolecularDynamicsResult` sampling only the trailing `sample_fraction` of the timesteps.
-Use σ (from Lennard Jones) as a normalization factor for the radius.
+    Plot the radial distribution function of a `MolecularDynamicsResult` averaging over the timesteps in `start:stop`
+        Use `σ` (from Lennard Jones) as a normalization factor for the radius (assumed to be in atomic units).
 """
-function plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, sample_fraction::Float64 = 1.0)
-    @assert 0 < sample_fraction ≤ 1
-    N = length(get_system(result))
+function plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, start::Integer = 1, stop::Integer = length(result))
+    N = get_num_bodies(result)
     T = length(result) - 1
-    rs, grf = rdf(result, sample_fraction)
-    @assert length(rs) == length(grf)
+    r, g = rdf(result, start, stop)
+    @assert length(r) == length(g)
     plot(
         title = "Radial Distribution Function [n = $(N)] [T = $(T)]",
         xlab = "Distance r/σ",
         ylab = "Radial Distribution g(r)",
         legend = false
     )
-    plot!(rs / austrip(σ), grf)
+    plot!(r / austrip(σ), g)
 end

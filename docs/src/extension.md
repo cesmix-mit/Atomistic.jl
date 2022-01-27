@@ -20,17 +20,23 @@ The `simulate` method should return the corresponding implementation of the `Mol
 
 # [Molecular Dynamics Results](@id MolecularDynamicsResult_Specification)
 
-Fourteen total functions must be implemented for subtypes of `MolecularDynamicsResult`, four of which have default implementations. The functions allow users to access simulation data from three categories: simulation configuration, time-dependent system data, and simulation analysis.
+Fifteen total functions must be implemented for subtypes of `MolecularDynamicsResult`, four of which have default implementations. The functions allow users to access simulation data from three categories: simulation configuration, time-dependent system data, and simulation analysis.
 
 ## Simulation Configuration Functions
 
-There are four functions in the `MolecularDynamicsResult` API which return time-independent simulation configuration information:
+There are five functions in the `MolecularDynamicsResult` API which return time-independent simulation configuration information:
 
 ```julia
 get_time_range(result::MolecularDynamicsResult)::AbstractVector{Unitful.Time}
 ```
 
 This function should return a unit-anotated vector containing the time value for each step of the simulation which can be iterated for plotting, animation, or other analysis.
+
+```julia
+get_num_bodies(result::MolecularDynamicsResult)::Integer
+```
+
+This function should return the numebr of bodies in the simulation.
 
 ```julia
 get_bounding_box(result::MolecularDynamicsResult)::SVector{3, SVector{3, Unitful.Length}}
@@ -84,7 +90,7 @@ get_system(result::MolecularDynamicsResult, t::Integer)::AbstractSystem
 
 This function should return an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl) `AbstractSystem` which captures the system at a particular timestep in the simulation. The timestep defaults to the end of the simulation when `t` is not passed.
 
-The default implementation creates a `FlexibleSystem` by combining the provided implementations of `get_particles`, `get_bounding_box`, and `get_boundary_conditions`. This simulation is then wrapped in a `DynamicSystem` with time provided from the `get_time` implementation.
+The default implementation creates a `FlexibleSystem` by combining the provided implementations of `get_particles`, `get_bounding_box`, and `get_boundary_conditions`.
 
 ## Simulation Analysis
 
@@ -112,10 +118,15 @@ total_energy(result::MolecularDynamicsResult, t::Integer)::Unitful.Energy
 
 This function should return a unit-anotated total energy for the system at a particular timestep in the simulation. The timestep defaults to the end of the simulation when `t` is not passed.
 
-The default implementation simply sums the kinetic and potential energy functions, but an implemention might provide a custom implementation if there is a more direct means of calculation provided by the underlying simulator.
+The default implementation simply sums the kinetic and potential energy functions, but an implementor of the API might provide a custom implementation if there is a more direct means of calculation provided by the underlying simulator.
 
 ```julia
-rdf(result::MolecularDynamicsResult, sample_fraction::Float64 = 1.0)::Tuple{AbstractVector{Real},AbstractVector{Real}}
+rdf(result::MolecularDynamicsResult, start::Integer, stop::Integer)::Tuple{AbstractVector{Real},AbstractVector{Real}}
 ```
 
-This function should calculate the [radial distribution function](https://en.wikipedia.org/wiki/Radial_distribution_function) of the system averaged across a trailing fraction of timesteps. It should return a tuple of vectors which represent the interparticle radial distances (in bohr) and the density of each distance respectively. Note that the inclusion of the sample_fraction is still the subject of further scrutiny and might be modified in a future release.
+This function should calculate the [radial distribution function](https://en.wikipedia.org/wiki/Radial_distribution_function) of the system averaged across a range of timesteps. It should return a named tuple of vectors:
+
+- r: unit-annotated interparticle radial distance bins
+- g: distribution value of each bin
+
+The default implementation provided uses the provided implementations of `get_num_bodies`, `get_bounding_box`, `get_boundary_conditions`, and `get_positions`. An implementor of the API could use a built in implementation if one that fits this spec is available.

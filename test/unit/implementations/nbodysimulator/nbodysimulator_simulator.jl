@@ -51,8 +51,8 @@
     @test simulator4.simulator == VelocityVerlet()
     @test Atomistic.time_range(simulator4) == (austrip(1000.0u"ns"), austrip(1000.0u"ns") + 10austrip(400.0u"ns"))
 
-    result1 = @time simulate(system, simulator1, potential1)
-    result2 = @time simulate(system, simulator2, potential2)
+    result1 = simulate(system, simulator1, potential1)
+    result2 = simulate(system, simulator2, potential2)
 
     @test result1 isa NBSResult
     @test result2 isa NBSResult

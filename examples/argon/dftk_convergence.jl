@@ -30,7 +30,7 @@ potential = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
 
 eq_result = @time simulate(initial_system, eq_simulator, potential)
 
-display(@time plot_rdf(eq_result, potential.σ, 0.5))
+display(@time plot_rdf(eq_result, potential.σ))
 
 dftk_potential = DFTKPotential(5u"hartree", [1, 1, 1]; damping = 0.7)
 
