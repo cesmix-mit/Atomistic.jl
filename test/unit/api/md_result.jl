@@ -47,14 +47,12 @@
         @test get_time(target, 1) == 0u"ns"
 
         system = get_system(target)
-        @test system.time == 100u"ns"
         @test bounding_box(system) == (@SVector [(@SVector [100, 0, 0]), (@SVector [0, 100, 0]), (@SVector [0, 0, 100])])u"bohr"
         @test boundary_conditions(system) == @SVector [Periodic(), Periodic(), Periodic()]
         @test atoms_equal(system[1], Atom(:Ar, (@SVector [0, 0, 0])u"bohr", (@SVector [0, 0, 0])u"bohr/ns"))
         @test atoms_equal(system[2], Atom(:Ar, (@SVector [-51, 0, 51])u"bohr", (@SVector [-102, 0, 102])u"bohr/ns"))
         @test atoms_equal(system[3], Atom(:Ar, (@SVector [51, 0, -51])u"bohr", (@SVector [102, 0, -102])u"bohr/ns"))
         system1 = get_system(target, 1)
-        @test system1.time == 0u"ns"
         @test bounding_box(system1) == (@SVector [(@SVector [100, 0, 0]), (@SVector [0, 100, 0]), (@SVector [0, 0, 100])])u"bohr"
         @test boundary_conditions(system1) == @SVector [Periodic(), Periodic(), Periodic()]
         @test atoms_equal(system1[1], Atom(:Ar, (@SVector [0, 0, 0])u"bohr", (@SVector [0, 0, 0])u"bohr/ns"))

@@ -75,7 +75,7 @@ function DFTKPotential(Ecut::Unitful.Energy, kgrid::AbstractVector{<:Integer}; k
     DFTKPotential(; Ecut = austrip(Ecut), kgrid = kgrid, kwargs...)
 end
 
-function calculate_scf(system::AbstractSystem, potential::DFTKPotential)
+function InteratomicPotentials.energy_and_force(system::AbstractSystem, potential::DFTKPotential)
     model = model_LDA(system)
     basis = PlaneWaveBasis(model; Ecut = potential.Ecut, kgrid = potential.kgrid)
 
@@ -83,28 +83,8 @@ function calculate_scf(system::AbstractSystem, potential::DFTKPotential)
     extra_args = isassigned(potential.previous_scfres) ? (ψ = potential.previous_scfres[].ψ, ρ = potential.previous_scfres[].ρ) : (;)
     scfres = self_consistent_field(basis; args..., extra_args...)
     potential.previous_scfres[] = scfres
-end
-
-function InteratomicPotentials.potential_energy(system::AbstractSystem, potential::DFTKPotential)
-    calculate_scf(system, potential).energies.total
-end
-
-function InteratomicPotentials.potential_energy(system::DynamicSystem, potential::DFTKPotential)
-    get!(potential.potential_energy_cache, austrip(system.time)) do
-        InteratomicPotentials.potential_energy(system.system, potential)
-    end
-end
-
-function InteratomicPotentials.force(system::AbstractSystem, potential::DFTKPotential)
     # TODO: support multiple species
-    compute_forces_cart(calculate_scf(system, potential))[1]
-end
-
-function InteratomicPotentials.force(system::DynamicSystem, potential::DFTKPotential)
-    scf = calculate_scf(system, potential)
-    potential.potential_energy_cache[austrip(system.time)] = scf.energies.total
-    # TODO: support multiple species
-    compute_forces_cart(scf)[1]
+    (; e = scfres.energies.total, f = compute_forces_cart(scfres)[1])
 end
 
 # -----------------------------------------------------------------------------

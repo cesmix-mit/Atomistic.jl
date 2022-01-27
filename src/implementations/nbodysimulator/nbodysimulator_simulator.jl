@@ -39,17 +39,20 @@ end
 time_range(simulator::NBSimulator) = (simulator.t₀, simulator.t₀ + simulator.steps * simulator.Δt)
 
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::ArbitraryPotential)
-    simulator.potentials[:custom] = InteratomicPotentialParameters(potential)
-    simulate(system, simulator)
+    wrapper = InteratomicPotentialParameters(potential)
+    simulator.potentials[:custom] = wrapper
+    result = simulate(system, simulator)
+    NBSResult(result, wrapper.energy_cache)
 end
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::LennardJonesParameters)
     simulator.potentials[:lennard_jones] = potential
-    simulate(system, simulator)
+    result = simulate(system, simulator)
+    NBSResult(result, [NBodySimulator.potential_energy(result, t) for t ∈ result.solution.t])
 end
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator)
     nb_system = PotentialNBodySystem{ElementMassBody}(get_bodies(system), simulator.potentials)
     simulation = NBodySimulation(nb_system, time_range(simulator), nbs_boundary_conditions(system), simulator.thermostat, austrip(u"k"))
-    NBSResult(run_simulation(simulation, simulator.simulator, dt = simulator.Δt))
+    run_simulation(simulation, simulator.simulator, dt = simulator.Δt)
 end
 
 # -----------------------------------------------------------------------------
@@ -60,9 +63,10 @@ end
 # Wraps the underlying InteratomicPotential with a cache of the forces for the current timestep
 struct InteratomicPotentialParameters <: PotentialParameters
     potential::ArbitraryPotential
-    timestep_cache::Ref{Real}
-    force_cache::Ref{Vector{SVector{3,Real}}}
-    InteratomicPotentialParameters(potential::ArbitraryPotential) = new(potential, Ref{Real}(), Ref{Vector{SVector{3,Real}}}())
+    timestep_cache::Ref{Float64}
+    force_cache::Ref{Vector{SVector{3,Float64}}}
+    energy_cache::Vector{Float64}
+    InteratomicPotentialParameters(potential::ArbitraryPotential) = new(potential, Ref{Float64}(), Ref{Vector{SVector{3,Float64}}}(), Vector{Float64}())
 end
 
 function NBodySimulator.get_accelerating_function(parameters::InteratomicPotentialParameters, simulation::NBodySimulation)
@@ -71,9 +75,11 @@ function NBodySimulator.get_accelerating_function(parameters::InteratomicPotenti
     (dv, u, v, t, i) -> begin
         if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
             particles = [ElementMassBody(bodies[i], SVector{3}(u[:, j]), SVector{3}(v[:, j])) for j ∈ 1:length(bodies)]
-            system = DynamicSystem(FlexibleSystem(particles, boundary_conditions), t * TIME_UNIT)
+            system = FlexibleSystem(particles, boundary_conditions)
+            eandf = energy_and_force(system, parameters.potential)
             parameters.timestep_cache[] = t
-            parameters.force_cache[] = force(system, parameters.potential)
+            parameters.force_cache[] = eandf.f
+            push!(parameters.energy_cache, eandf.e)
         end
         dv .+= parameters.force_cache[][i] / bodies[i].m
     end

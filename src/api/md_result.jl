@@ -107,10 +107,7 @@ Automatically defaults to the end of the simulation when `t` is not passed.
 The default implementation combines the results of `get_particles`, `get_bounding_box`, `get_boundary_conditions`, and `get_time` at the timestep to create a `FlexibleSystem` wrapped in a `DyanmicSystem`.
 An implementer of this API could implement a method of this function for their custom result type if it supports a more efficient way to extract the system.
 """
-function get_system(result::MolecularDynamicsResult, t::Integer)
-    system = FlexibleSystem(get_particles(result, t), get_bounding_box(result), get_boundary_conditions(result))
-    DynamicSystem(system, get_time(result, t))
-end
+get_system(result::MolecularDynamicsResult, t::Integer) = FlexibleSystem(get_particles(result, t), get_bounding_box(result), get_boundary_conditions(result))
 get_system(result::MolecularDynamicsResult) = get_system(result, length(result))
 
 # -----------------------------------------------------------------------------

@@ -22,10 +22,6 @@ import Plots: Plot
 
 include("unit_convention.jl")
 
-# AtomsBase Integrations
-export DynamicSystem
-include("integrations/atomsbase_integration.jl")
-
 # DFTK Integrations
 export DFTKPotential
 export analyze_convergence

@@ -12,6 +12,7 @@ The result generated from running an `NBSimulator`.
 """
 struct NBSResult <: MolecularDynamicsResult
     result::SimulationResult
+    energy_cache::Vector{Float64}
 end
 
 get_time_range(result::NBSResult) = result.result.solution.t * TIME_UNIT
@@ -36,15 +37,7 @@ end
 
 temperature(result::NBSResult, t::Integer) = NBodySimulator.temperature(result.result, result.result.solution.t[t]) * TEMPERATURE_UNIT
 kinetic_energy(result::NBSResult, t::Integer) = NBodySimulator.kinetic_energy(result.result, result.result.solution.t[t]) * ENERGY_UNIT
-function potential_energy(result::NBSResult, t::Integer)
-    potentials = result.result.simulation.system.potentials
-    # https://github.com/SciML/NBodySimulator.jl/issues/44
-    if :custom ∈ keys(potentials)
-        InteratomicPotentials.potential_energy(get_system(result, t), potentials[:custom].potential) * ENERGY_UNIT
-    else
-        NBodySimulator.potential_energy(result.result, result.result.solution.t[t]) * ENERGY_UNIT
-    end
-end
+potential_energy(result::NBSResult, t::Integer) = result.energy_cache[t] * ENERGY_UNIT
 
 function rdf(result::NBSResult, sample_fraction::Float64 = 1.0)
     @assert 0 < sample_fraction ≤ 1
