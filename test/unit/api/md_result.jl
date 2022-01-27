@@ -15,6 +15,8 @@
         @test_throws Atomistic.UnimplementedError{MockResult1} get_positions(target, 1)
         @test_throws Atomistic.UnimplementedError{MockResult1} get_velocities(target)
         @test_throws Atomistic.UnimplementedError{MockResult1} get_velocities(target, 1)
+        @test_throws Atomistic.UnimplementedError{MockResult1} get_particles(target)
+        @test_throws Atomistic.UnimplementedError{MockResult1} get_particles(target, 1)
 
         @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.temperature(target)
         @test_throws Atomistic.UnimplementedError{MockResult1} Atomistic.temperature(target, 1)
