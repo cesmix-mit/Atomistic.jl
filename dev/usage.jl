@@ -8,6 +8,7 @@
 
 using Atomistic
 using AtomsBase
+using InteratomicPotentials
 using NBodySimulator
 using Unitful
 using UnitfulAtomic
@@ -36,7 +37,7 @@ simulator = NBSimulator(Δt, steps, thermostat = thermostat)
 # ## Step 1C: Configuring the Potential
 # Lastly, we specify the interatomic potential that we will use for the simulation, Lennard-Jones in this case.
 
-potential = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
+potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"))
 
 # ## Step 2: Running the Simulation
 
@@ -54,4 +55,4 @@ plot_temperature(result, simulator.steps ÷ 200)
 plot_energy(result, simulator.steps ÷ 200)
 
 # ### Radial Distribution Function (RDF)
-plot_rdf(result, potential.σ, 0.5)
+plot_rdf(result, potential.σ, Int(0.95 * steps))
