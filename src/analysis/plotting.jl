@@ -118,7 +118,7 @@ end
     plot_rdf(result::MolecularDynamicsResult, σ::Real, start::Integer = 1, stop::Integer = length(result))::Plot
 
 Plot the radial distribution function of a `MolecularDynamicsResult` averaging over the timesteps in `start:stop`
-Use `σ` (from Lennard Jones) as a normalization factor for the radius (assumed to be in atomic units).
+Use `σ` (from Lennard Jones) as a normalization factor for the radius.
 """
 function plot_rdf(result::MolecularDynamicsResult, σ::Real, start::Integer = 1, stop::Integer = length(result))
     plot_rdf(result, σ * LENGTH_UNIT, start, stop)
@@ -127,7 +127,7 @@ end
     plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, start::Integer = 1, stop::Integer = length(result))::Plot
 
     Plot the radial distribution function of a `MolecularDynamicsResult` averaging over the timesteps in `start:stop`
-        Use `σ` (from Lennard Jones) as a normalization factor for the radius (assumed to be in atomic units).
+        Use `σ` (from Lennard Jones) as a normalization factor for the radius.
 """
 function plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, start::Integer = 1, stop::Integer = length(result))
     N = get_num_bodies(result)
@@ -140,5 +140,5 @@ function plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, start::In
         ylab = "Radial Distribution g(r)",
         legend = false
     )
-    plot!(r / austrip(σ), g)
+    plot!(r / σ, g)
 end
