@@ -21,7 +21,7 @@
     simulator4 = NBSimulator(400u"ns", 10, t₀ = 1000u"ns")
 
     potential1 = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
-    potential2 = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"))
+    potential2 = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 
     @test simulator1.Δt == 400.0
     @test simulator1.steps == 10

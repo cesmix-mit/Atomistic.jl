@@ -21,7 +21,7 @@ initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(
 eq_steps = 2000
 eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 eq_simulator = NBSimulator(Δt, eq_steps, thermostat = eq_thermostat)
-potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"))
+potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 
 eq_result = @time simulate(initial_system, eq_simulator, potential)
 

@@ -19,7 +19,7 @@
     simulator2 = NBSimulator(400, 10, t₀ = 1000)
 
     potential1 = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
-    potential2 = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"))
+    potential2 = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 
     result = simulate(system, simulator1, potential1)
     result1 = simulate(system, simulator2, potential1)
