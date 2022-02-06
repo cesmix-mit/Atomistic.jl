@@ -37,7 +37,7 @@ simulator = NBSimulator(Δt, steps, thermostat = thermostat)
 # ## Step 1C: Configuring the Potential
 # Lastly, we specify the interatomic potential that we will use for the simulation, Lennard-Jones in this case.
 
-potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"))
+potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 
 # ## Step 2: Running the Simulation
 
