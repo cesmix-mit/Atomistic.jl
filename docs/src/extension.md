@@ -14,7 +14,7 @@ The first parameter is an instance of an implementation of the `AbstractSystem` 
 
 The second parameter is the custom simulator. This could specify information such as the duration of the simulation, numerical details such as discretization parameters and integration methods, or domain specific options such as thermostats and barostats.
 
-The third parameter is an instance of an implementation of the `ArbitraryPotential` interface defined by [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl). The main function from this interface that is useful in the dynamics context is `force(s::AbstractSystem, p::ArbitraryPotential)::AbstractVector{StaticVector{3, <:Real}}`.
+The third parameter is an instance of an implementation of the `ArbitraryPotential` interface defined by [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl). The main function from this interface that is useful in the dynamics context is `InteratomicPotentials.force(s::AbstractSystem, p::ArbitraryPotential)::AbstractVector{StaticVector{3, Real}}`. However, it is recommended that implementers consider using `InteratomicPotentials.energy_and_force(s::AbstractSystem, p::ArbitraryPotential)::NamedTuple{(:e, :f), Tuple{Real, Vector{SVector{3, Real}}}}` and cache the energy results on the `MolecularDynamicsResult` struct because the additional energy calculation is asymptotically free for most interatomic potential implementations. See the discussion of the `potential_energy` function below.
 
 The `simulate` method should return the corresponding implementation of the `MolecularDynamicsResult` interface as described below.
 
@@ -110,7 +110,7 @@ This function should return a unit-anotated kinetic energy for the system at a p
 potential_energy(result::MolecularDynamicsResult, t::Integer)::Unitful.Energy
 ```
 
-This function should return a unit-anotated potential energy for the system at a particular timestep in the simulation. The timestep defaults to the end of the simulation when `t` is not passed. The relevant function from the [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl) interface is `potential_energy(a::AbstractSystem, p::ArbitraryPotential)::Real`.
+This function should return a unit-anotated potential energy for the system at a particular timestep in the simulation. The timestep defaults to the end of the simulation when `t` is not passed. If potential energy values were not cached at simulation time, the relevant function from the [InteratomicPotentials.jl](https://github.com/cesmix-mit/InteratomicPotentials.jl) interface is `InteratomicPotentials.potential_energy(a::AbstractSystem, p::ArbitraryPotential)::Real`.
 
 ```julia
 total_energy(result::MolecularDynamicsResult, t::Integer)::Unitful.Energy
