@@ -16,15 +16,14 @@ using UnitfulAtomic
 # ## Step 1A: Configuring the System
 # First, we must create an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl)-style system.
 # Here we will create a small Argon cluster with periodic boundary conditions.
-# We could use the AtomsBase constructors directly, but in this case we will use NBodySimulator helper functions to initialize the system.
+# We are using a helper function to initialize the system automatically with a particular temperature.
 
 N = 864
 element = :Ar
 box_size = 3.47786u"nm"
 reference_temp = 94.4u"K"
 
-initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
-initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(austrip(box_size)))
+initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_temp)
 
 # ## Step 1B: Configuring the Simulator
 # Second, we initialize our simulator. In this case we are using an AndersenThermostat which is provided by NBodySimulator.
