@@ -38,15 +38,18 @@ include("api/md_simulator.jl")
 export NBSimulator, NBSResult
 include("implementations/nbodysimulator.jl")
 
-# DFTK Integrations
-export DFTKPotential
-export analyze_convergence
-include("integrations/dftk_integration.jl")
+# Initialization Convenience functions
+export generate_atoms_in_cubic_cell
+include("integrations/initialization.jl")
 
 # Analysis
 export plot_temperature, plot_temperature!, plot_energy, plot_energy!, plot_rdf
 include("analysis/plotting.jl")
 export write_nbs_animation, write_ase_trajectory
 include("analysis/visualization.jl")
+
+# DFTK Integrations
+export DFTKPotential
+include("integrations/dftk_integration.jl")
 
 end

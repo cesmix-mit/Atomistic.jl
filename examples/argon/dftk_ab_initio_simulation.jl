@@ -18,12 +18,11 @@ reference_temp = 94.4u"K"
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
+initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_temp)
 pspkey = list_psp(:Ar, functional = "lda")[1].identifier
-initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
-for body ∈ initial_bodies
-    body.data[:pseudopotential] = pspkey
+for atom ∈ initial_system
+    atom.data[:pseudopotential] = pspkey
 end
-initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(austrip(box_size)))
 
 eq_steps = 20000
 eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))

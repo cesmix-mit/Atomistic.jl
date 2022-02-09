@@ -41,7 +41,7 @@ end
 # Convert AtomsBase boundary conditions to NBodySimulator boundary conditions
 function nbs_boundary_conditions(system::AbstractSystem{3})
     # TODO: support more boundary conditions
-    @assert hcat(bounding_box(system)...) == Matrix(I * bounding_box(system)[1][1], 3, 3)
+    @assert hcat(bounding_box(system)...) == bounding_box(system)[1][1] * I(3)
     @assert all(periodicity(system))
     CubicPeriodicBoundaryConditions(austrip(bounding_box(system)[1][1]))
 end
@@ -51,36 +51,9 @@ get_boundary_conditions(::CubicPeriodicBoundaryConditions) = @SVector [Periodic(
 # Convert NBodySimulator boundary conditions to AtomsBase bounding box
 # TODO: support more boundary conditions
 function get_bounding_box(boundary_conditions::CubicPeriodicBoundaryConditions)
-    SVector{3}(SVector{3}.(eachrow(Matrix(I * (boundary_conditions.L * LENGTH_UNIT), 3, 3))))
+    SVector{3}(SVector{3}.(eachrow(boundary_conditions.L * LENGTH_UNIT * I(3))))
 end
 
 # Bound a position according to the boundary conditions
 # TODO: support more boundary conditions
 bound_position(r::SVector{3,<:Real}, boundary_conditions::CubicPeriodicBoundaryConditions) = mod.(r, boundary_conditions.L)
-
-
-# -----------------------------------------------------------------------------
-# Convenience methods for generating starting configurations with element data
-# -----------------------------------------------------------------------------
-
-function NBodySimulator.generate_bodies_in_cell_nodes(n::Integer, symbol::Union{Integer,AbstractString,Symbol}, L::Unitful.Length, reference_temp::Unitful.Temperature; rng = MersenneTwister(n))
-    e = elements[symbol]
-    average_velocity = √(u"k" * reference_temp / e.atomic_mass)
-    generate_bodies_in_cell_nodes(n, symbol, average_velocity, L, rng = rng)
-end
-function NBodySimulator.generate_bodies_in_cell_nodes(n::Integer, symbol::Union{Integer,AbstractString,Symbol}, average_velocity::Unitful.Velocity, L::Unitful.Length; rng = MersenneTwister(n))
-    velocities = average_velocity * randn(rng, Float64, (3, n))
-    e = elements[symbol]
-    bodies = ElementMassBody[]
-
-    count = 1
-    dL = L / (ceil(n^(1 / 3)))
-    for x ∈ dL/2:dL:L, y ∈ dL/2:dL:L, z ∈ dL/2:dL:L
-        if count > n
-            break
-        end
-        push!(bodies, ElementMassBody(SVector(x, y, z), SVector{3}(velocities[:, count]), e))
-        count += 1
-    end
-    return bodies
-end

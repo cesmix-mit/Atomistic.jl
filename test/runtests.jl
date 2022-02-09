@@ -20,6 +20,7 @@ using UnitfulAtomic
             include("unit/api/md_simulator.jl")
         end
         @testset "Integrations Unit Tests" begin
+            include("unit/integrations/initialization.jl")
             include("unit/integrations/dftk_integration.jl")
         end
         @testset "Implementations Unit Tests" begin

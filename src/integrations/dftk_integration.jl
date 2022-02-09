@@ -86,27 +86,3 @@ function InteratomicPotentials.energy_and_force(system::AbstractSystem, potentia
     # TODO: support multiple species
     (; e = scfres.energies.total, f = compute_forces_cart(scfres)[1])
 end
-
-# -----------------------------------------------------------------------------
-# Experimental functions
-# -----------------------------------------------------------------------------
-
-# ! This function is experimental and will eventually be removed
-
-function analyze_convergence(system::AbstractSystem, potential::DFTKPotential, cutoffs::AbstractVector{<:Unitful.Energy})
-    energies = zeros(Float64, length(cutoffs))
-    for i ∈ 1:length(cutoffs)
-        parameters = DFTKPotential(cutoffs[i], potential.kgrid; n_bands = potential.n_bands, tol = potential.tol, damping = potential.damping, mixing = potential.mixing)
-        @info "Ecut: $(cutoffs[i])"
-        energies[i] = InteratomicPotentials.potential_energy(system, parameters)
-    end
-
-    plot(
-        title = "DFTK Analysis",
-        xlab = "Ecut",
-        ylab = "Total Energy",
-        legend = false,
-        cutoffs,
-        energies * ENERGY_UNIT
-    )
-end

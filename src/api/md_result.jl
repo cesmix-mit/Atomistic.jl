@@ -187,7 +187,7 @@ function rdf(result::MolecularDynamicsResult, start::Integer, stop::Integer)
     boundary_conditions = get_boundary_conditions(result)
 
     # TODO: support more boundary conditions
-    @assert hcat(box...) == Matrix(I * box[1][1], 3, 3)
+    @assert hcat(box...) == box[1][1] * I(3)
     @assert all(b isa Periodic for b ∈ boundary_conditions)
 
     d = Distances.PeriodicEuclidean([box[i][i] for i ∈ 1:3])

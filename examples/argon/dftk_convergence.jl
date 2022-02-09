@@ -3,7 +3,9 @@
 using Atomistic
 using AtomsBase
 using DFTK
+using InteratomicPotentials
 using NBodySimulator
+using Plots
 using Unitful
 using UnitfulAtomic
 
@@ -16,12 +18,11 @@ reference_temp = 94.4u"K"
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
+initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_temp)
 pspkey = list_psp(:Ar, functional = "lda")[1].identifier
-initial_bodies = generate_bodies_in_cell_nodes(N, element, box_size, reference_temp)
-for body ∈ initial_bodies
-    body.data[:pseudopotential] = pspkey
+for atom ∈ initial_system
+    atom.data[:pseudopotential] = pspkey
 end
-initial_system = FlexibleSystem(initial_bodies, CubicPeriodicBoundaryConditions(austrip(box_size)))
 
 eq_steps = 20000
 eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
@@ -32,8 +33,21 @@ eq_result = @time simulate(initial_system, eq_simulator, potential)
 
 display(@time plot_rdf(eq_result, potential.σ))
 
-dftk_potential = DFTKPotential(5u"hartree", [1, 1, 1]; damping = 0.7)
+system = get_system(eq_result)
+cutoffs = (5:2.5:25)u"hartree"
+energies = @time map(cutoffs) do cutoff
+    @info "Ecut: $(cutoff)"
+    dftk_potential = DFTKPotential(cutoff, [1, 1, 1]; damping = 0.7)
+    InteratomicPotentials.potential_energy(system, dftk_potential)
+end
 
-display(@time analyze_convergence(get_system(eq_result), dftk_potential, (5:2.5:25)u"hartree"))
+display(plot(
+    title = "DFTK Convergence Analysis",
+    xlab = "Ecut",
+    ylab = "Total Energy",
+    legend = false,
+    cutoffs,
+    energies * u"hartree"
+))
 
 ;
