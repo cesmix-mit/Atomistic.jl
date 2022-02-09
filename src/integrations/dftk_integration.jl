@@ -7,16 +7,14 @@
 # ! all functions in this section are copied directly from experimental DFTK code
 # ! this code will be deleted once it is live in DFTK
 
-function parse_system(system::AbstractSystem{D}) where {D}
+function parse_system(system::AbstractSystem{3})
     if !all(periodicity(system))
         error("DFTK only supports calculations with periodic boundary conditions.")
     end
 
     # Parse abstract system and return data required to construct model
-    mtx = austrip.(hcat(bounding_box(system)...))
-    T = eltype(mtx)
-    lattice = zeros(T, 3, 3)
-    lattice[1:D, 1:D] .= mtx
+    lattice = austrip.(hcat(bounding_box(system)...))
+    T = eltype(lattice)
 
     # Cache for instantiated pseudopotentials
     # (such that the respective objects are indistinguishable)
@@ -33,9 +31,7 @@ function parse_system(system::AbstractSystem{D}) where {D}
             potential = ElementCoulomb(AtomsBase.atomic_symbol(atom))
         end
 
-        coordinate = zeros(T, 3)
-        coordinate[1:D] = lattice[1:D, 1:D] \ T.(austrip.(position(atom)))
-        potential => Vec3{T}(coordinate)
+        potential => SVector{3,T}(lattice \ T.(austrip.(position(atom))))
     end
 
     oldatoms = oldatoms_from_new(atoms)
