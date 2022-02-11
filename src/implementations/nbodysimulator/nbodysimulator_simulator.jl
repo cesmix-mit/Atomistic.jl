@@ -20,23 +20,25 @@ A wrapper around NBodySimulator to implement the Atomistic API.
 - `potentials::Dict{Symbol,PotentialParameters}` dictionary of potentials;
     shouldn't be manipulated directly by the user
 """
-@kwdef struct NBSimulator <: MolecularDynamicsSimulator
-    Δt::AbstractFloat       # in TIME_UNIT
+@kwdef struct NBSimulator{T<:Unitful.Time} <: MolecularDynamicsSimulator
+    Δt::T
     steps::Int
-    t₀::AbstractFloat = 0.0 # in TIME_UNIT
+    t₀::T = zero(T)
     thermostat::Thermostat = NullThermostat()
-    simulator::OrdinaryDiffEqAlgorithm = VelocityVerlet()
+    simulator::OrdinaryDiffEqAlgorithm = NBodySimulator.VelocityVerlet()
     potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
 end
-function NBSimulator(Δt::Real, steps::Integer; kwargs...)
-    NBSimulator(; Δt = Δt, steps = steps, kwargs...)
+function NBSimulator(Δt::T, steps::Int; t₀::Real = zero(T), kwargs...) where {T<:Real}
+    Δt, t₀ = promote(Δt * TIME_UNIT, t₀ * TIME_UNIT)
+    NBSimulator(; Δt = Δt, steps = steps, t₀ = t₀, kwargs...)
 end
-function NBSimulator(Δt::Unitful.Time, steps::Integer; t₀::Unitful.Time = 0.0 * TIME_UNIT, kwargs...)
-    NBSimulator(; Δt = austrip(Δt), steps = steps, t₀ = austrip(t₀), kwargs...)
+function NBSimulator(Δt::T, steps::Integer; t₀::Unitful.Time = zero(T), kwargs...) where {T<:Unitful.Time}
+    Δt, t₀ = promote(Δt, t₀)
+    NBSimulator(; Δt = Δt, steps = steps, t₀ = t₀, kwargs...)
 end
 
 # Extract the tuple of start_time, end_time from the simulator
-time_range(simulator::NBSimulator) = (simulator.t₀, simulator.t₀ + simulator.steps * simulator.Δt)
+time_range(simulator::NBSimulator) = Float64.(austrip.((simulator.t₀, simulator.t₀ + simulator.steps * simulator.Δt)))
 
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::ArbitraryPotential)
     wrapper = InteratomicPotentialParameters(potential)
@@ -52,7 +54,7 @@ end
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator)
     nb_system = PotentialNBodySystem{ElementMassBody}(get_bodies(system), simulator.potentials)
     simulation = NBodySimulation(nb_system, time_range(simulator), nbs_boundary_conditions(system), simulator.thermostat, austrip(u"k"))
-    run_simulation(simulation, simulator.simulator, dt = simulator.Δt)
+    run_simulation(simulation, simulator.simulator, dt = austrip(simulator.Δt))
 end
 
 # -----------------------------------------------------------------------------

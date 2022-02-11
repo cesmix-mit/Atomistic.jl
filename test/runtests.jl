@@ -4,8 +4,8 @@ using Atomistic
 using AtomsBase
 using DFTK
 using InteratomicPotentials
+using Molly
 using NBodySimulator
-using PeriodicTable
 using StaticArrays
 using Test
 using Unitful
@@ -21,7 +21,7 @@ using UnitfulAtomic
         end
         @testset "Integrations Unit Tests" begin
             include("unit/integrations/initialization.jl")
-            include("unit/integrations/dftk_integration.jl")
+            # include("unit/integrations/dftk_integration.jl")
         end
         @testset "Implementations Unit Tests" begin
             @testset "NBodySimulator Implementation" begin

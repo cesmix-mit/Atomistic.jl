@@ -32,9 +32,7 @@ function get_velocities(result::NBSResult, t::Integer)
     velocities = get_velocity(result.result, result.result.solution.t[t])
     [SVector{3}(v) for v ∈ eachcol(velocities)] * VELOCITY_UNIT
 end
-function get_particles(result::NBSResult, t::Integer)
-    [Atom(b.symbol, p, v; b.data...) for (b, p, v) ∈ zip(result.result.simulation.system.bodies, get_positions(result, t), get_velocities(result, t))]
-end
+get_particles(result::NBSResult, t::Integer) = AtomsBase.Atom.(result.result.simulation.system.bodies, get_positions(result, t), get_velocities(result, t))
 
 temperature(result::NBSResult, t::Integer) = NBodySimulator.temperature(result.result, result.result.solution.t[t]) * TEMPERATURE_UNIT
 kinetic_energy(result::NBSResult, t::Integer) = NBodySimulator.kinetic_energy(result.result, result.result.solution.t[t]) * ENERGY_UNIT

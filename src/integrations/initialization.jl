@@ -2,10 +2,9 @@
 
 # See NBodySimulator.generate_bodies_in_cell_nodes
 function generate_atoms_in_cubic_cell(n::Integer, symbol::Union{Integer,AbstractString,Symbol}, L::Unitful.Length, reference_temp::Unitful.Temperature; rng = MersenneTwister(n))
-    e = elements[symbol]
-    average_velocity = √(u"k" * reference_temp / e.atomic_mass)
+    average_velocity = √(u"k" * reference_temp / elements[symbol].atomic_mass)
     velocities = average_velocity * randn(rng, Float64, (3, n))
-    particles = Vector{Atom}(undef, n)
+    particles = Vector{AtomsBase.Atom}(undef, n)
 
     count = 1
     dL = L / (ceil(n^(1 / 3)))
@@ -13,7 +12,7 @@ function generate_atoms_in_cubic_cell(n::Integer, symbol::Union{Integer,Abstract
         if count > n
             break
         end
-        particles[count] = Atom(symbol, SVector{3}(x, y, z), SVector{3}(velocities[:, count]))
+        particles[count] = AtomsBase.Atom(symbol, SVector{3}(x, y, z), SVector{3}(velocities[:, count]))
         count += 1
     end
 

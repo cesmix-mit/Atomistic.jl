@@ -2,7 +2,7 @@
 
 @testset "integrations/dftk_integration.jl" begin
     pspkey = list_psp(:Ar, functional = "lda")[1].identifier
-    particles = [Atom(:Ar, [i & 1 == 0 ? 7 : 21, i & 2 == 0 ? 7 : 21, i & 4 == 0 ? 7 : 21]u"bohr"; pseudopotential = pspkey) for i ∈ 0:7]
+    particles = [AtomsBase.Atom(:Ar, [i & 1 == 0 ? 7 : 21, i & 2 == 0 ? 7 : 21, i & 4 == 0 ? 7 : 21]u"bohr"; pseudopotential = pspkey) for i ∈ 0:7]
     box = [[28.0, 0, 0], [0, 28.0, 0], [0, 0, 28.0]]u"bohr"
     boundary_conditions = [Periodic(), Periodic(), Periodic()]
     system = FlexibleSystem(particles, box, boundary_conditions)

@@ -2,24 +2,24 @@
 
 @testset "nbodysimulator_result.jl" begin
     particles = [
-        Atom(:Ar, (@SVector [7, 7, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"; meta = :data),
-        Atom(:Ar, (@SVector [7, 7, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"; hello = "world"),
-        Atom(:Ar, (@SVector [7, 21, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        Atom(:Ar, (@SVector [7, 21, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        Atom(:Ar, (@SVector [21, 7, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        Atom(:Ar, (@SVector [21, 7, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        Atom(:Ar, (@SVector [21, 21, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        Atom(:Ar, (@SVector [21, 21, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au")
+        AtomsBase.Atom(:Ar, (@SVector [7, 7, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"; meta = :data),
+        AtomsBase.Atom(:Ar, (@SVector [7, 7, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"; hello = "world"),
+        AtomsBase.Atom(:Ar, (@SVector [7, 21, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [7, 21, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [21, 7, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [21, 7, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [21, 21, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [21, 21, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au")
     ]
     box = (@SVector [(@SVector [28.0, 0.0, 0.0]), (@SVector [0.0, 28.0, 0.0]), (@SVector [0.0, 0.0, 28.0])])u"bohr"
     boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]
     system = FlexibleSystem(particles, box, boundary_conditions)
 
-    simulator1 = NBSimulator(400, 10, t₀ = 1000, thermostat = AndersenThermostat(2e-4, 2e-4))
+    simulator1 = NBSimulator(400, 10, t₀ = 1000, thermostat = NBodySimulator.AndersenThermostat(2e-4, 2e-4))
     simulator2 = NBSimulator(400, 10, t₀ = 1000)
 
     potential1 = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
-    potential2 = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
+    potential2 = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 
     result = simulate(system, simulator1, potential1)
     result1 = simulate(system, simulator2, potential1)
@@ -35,7 +35,7 @@
 
     @test get_positions(result) isa AbstractVector{<:StaticVector{3,<:Unitful.Length}}
     @test get_velocities(result) isa AbstractVector{<:StaticVector{3,<:Unitful.Velocity}}
-    @test get_particles(result) isa AbstractVector{<:Atom}
+    @test get_particles(result) isa AbstractVector{<:AtomsBase.Atom}
 
     @test all(all(all(0.0u"bohr" ≤ c < 28.0u"bohr" for c ∈ p) for p ∈ get_positions(result, t)) for t ∈ 1:11)
     @test all(get_particles(result, t)[1].meta == :data && get_particles(result, t)[2].hello == "world" for t ∈ 1:11)

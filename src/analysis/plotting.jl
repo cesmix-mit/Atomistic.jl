@@ -131,14 +131,15 @@ end
 """
 function plot_rdf(result::MolecularDynamicsResult, σ::Unitful.Length, start::Integer = 1, stop::Integer = length(result))
     N = get_num_bodies(result)
-    T = length(result) - 1
+    T = length(result)
     r, g = rdf(result, start, stop)
     @assert length(r) == length(g)
     plot(
+        austrip.(r / σ),
+        g,
         title = "Radial Distribution Function [n = $(N)] [T = $(T)]",
         xlab = "Distance r/σ",
         ylab = "Radial Distribution g(r)",
         legend = false
     )
-    plot!(r / σ, g)
 end
