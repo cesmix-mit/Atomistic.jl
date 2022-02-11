@@ -3,8 +3,6 @@
 using Atomistic
 using NBodySimulator
 using Plots
-using Unitful
-using UnitfulAtomic
 
 N = 864
 element = :Ar

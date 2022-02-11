@@ -4,8 +4,6 @@ using Atomistic
 using InteratomicPotentials
 using Molly
 using Plots
-using Unitful
-using UnitfulAtomic
 
 N = 864
 element = :Ar

@@ -5,8 +5,6 @@ using DFTK
 using InteratomicPotentials
 using NBodySimulator
 using Plots
-using Unitful
-using UnitfulAtomic
 
 setup_threading(n_blas = 4)
 

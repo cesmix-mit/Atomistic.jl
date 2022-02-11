@@ -1,6 +1,7 @@
 # Tests for Atomistic.jl
 
 using Atomistic
+
 using AtomsBase
 using DFTK
 using InteratomicPotentials
@@ -8,8 +9,6 @@ using Molly
 using NBodySimulator
 using StaticArrays
 using Test
-using Unitful
-using UnitfulAtomic
 
 @testset "Atomistic.jl" begin
     include("unit_convention.jl")

@@ -9,8 +9,6 @@
 using Atomistic
 using InteratomicPotentials
 using NBodySimulator
-using Unitful
-using UnitfulAtomic
 
 # ## Step 1A: Configuring the System
 # First, we must create an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl)-style system.

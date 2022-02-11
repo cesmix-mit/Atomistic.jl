@@ -1,18 +1,20 @@
 module Atomistic
 
+using Reexport
+
 using AtomsBase
 using InteratomicPotentials
 using Distances
 using LinearAlgebra
-using Random
 using StaticArrays
-using Unitful
-using UnitfulAtomic
+@reexport using Unitful
+@reexport using UnitfulAtomic
 
 using DFTK
 using Molly
 using NBodySimulator
 
+using Random
 using PeriodicTable
 using Plots
 using PyCall
