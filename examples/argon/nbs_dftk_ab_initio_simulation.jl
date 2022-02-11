@@ -3,7 +3,6 @@
 # Note that the choice of parameters is for demonstration purposes, and the results are non-physical
 
 using Atomistic
-using AtomsBase
 using DFTK
 using NBodySimulator
 using Unitful
@@ -42,8 +41,8 @@ dftk_potential = DFTKPotential(5u"hartree", [1, 1, 1]; damping = 0.7) # very non
 ab_initio_result = @time simulate(get_system(eq_result), ab_initio_simulator, dftk_potential)
 
 # Plotting on separate plots because the timespan is so much smaller than in the first phase
-display(plot_temperature(ab_initio_result, 1))
-display(plot_energy(ab_initio_result, 1))
+display(@time plot_temperature(ab_initio_result, 1))
+display(@time plot_energy(ab_initio_result, 1))
 display(@time plot_rdf(ab_initio_result, potential.σ))
 
 write_nbs_animation(ab_initio_result, "artifacts/argon_ab_initio.gif")

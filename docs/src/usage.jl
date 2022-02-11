@@ -7,7 +7,6 @@
 # ## Step 0: Load Dependencies
 
 using Atomistic
-using AtomsBase
 using InteratomicPotentials
 using NBodySimulator
 using Unitful

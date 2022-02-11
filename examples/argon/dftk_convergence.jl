@@ -1,7 +1,6 @@
 # Script to demonstrate convergence analysis of Ecut values for DFTK.jl
 
 using Atomistic
-using AtomsBase
 using DFTK
 using InteratomicPotentials
 using NBodySimulator
