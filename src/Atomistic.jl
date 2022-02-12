@@ -4,6 +4,7 @@ using Reexport
 
 using AtomsBase
 using InteratomicPotentials
+
 using Distances
 using LinearAlgebra
 using StaticArrays
@@ -14,10 +15,10 @@ using DFTK
 using Molly
 using NBodySimulator
 
-using Random
 using PeriodicTable
 using Plots
 using PyCall
+using Random
 using UnitfulRecipes
 
 import Base: @kwdef

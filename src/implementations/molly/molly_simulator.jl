@@ -7,7 +7,7 @@
     steps::Int
     t₀::T = zero(T)
     coupling = NoCoupling()
-    parallel::Bool = false  # TODO
+    parallel::Bool = false
 end
 function MollySimulator{S}(Δt::T, steps::Int; t₀::Real = zero(T), kwargs...) where {S,T<:Real}
     Δt, t₀ = promote(Δt * TIME_UNIT, t₀ * TIME_UNIT)
@@ -32,12 +32,12 @@ function simulate(system::AbstractSystem{3}, simulator::MollySimulator{S}, poten
     loggers = Dict(
         "c" => CoordinateLogger(1),
         "v" => VelocityLogger(1),
+        "p" => CustomPotentialLogger(1),
         "t" => TemperatureLogger(1),
-        "k" => CustomKineticEnergyLogger(1),
-        "p" => CustomPotentialLogger(1)
+        "k" => CustomKineticEnergyLogger(1)
     )
+    loggers["p"].force_cache[] = InteratomicPotentials.force(system, potential) .* FORCE_UNIT  # preload initial forces
     system = System(system; general_inters = (wrapper,), neighbor_finder = neighbor_finder, loggers = loggers)
-    wrapper.system[] = system
     simulate!(system, S(simulator.Δt, simulator.coupling), simulator.steps; parallel = simulator.parallel)
     MollyResult(system, simulator)
 end
@@ -46,27 +46,18 @@ end
 # Integration with InteratomicPotentials
 # -----------------------------------------------------------------------------
 
-struct InteratomicPotentialInteraction{F<:Unitful.Force,E<:Unitful.Energy} <: GeneralInteraction
+struct InteratomicPotentialInteraction <: GeneralInteraction
     nl_only::Bool  # must be true to use the SelfNeighborFinder hack
     potential::ArbitraryPotential
-    system::Ref{System}
-    force_cache::Ref{Vector{SVector{3,F}}}
-    energy_cache::Ref{E}
-    function InteratomicPotentialInteraction(potential::ArbitraryPotential)
-        F = typeof(zeros() * FORCE_UNIT)
-        E = typeof(zeros() * ENERGY_UNIT)
-        new{F,E}(true, potential, Ref{System}(), Ref{Vector{SVector{3,F}}}(), Ref{E}())
-    end
+    InteratomicPotentialInteraction(potential::ArbitraryPotential) = new(true, potential)
 end
 
-function Molly.force(inter::InteratomicPotentialInteraction, vec_ij, coord_i, coord_j, atom_i, atom_j, box_size)
-    @assert atom_i == atom_j
-    if atom_i.index == 1
-        eandf = energy_and_force(inter.system[], inter.potential)
-        inter.force_cache[] = eandf.f .* FORCE_UNIT
-        inter.energy_cache[] = eandf.e * ENERGY_UNIT
-    end
-    inter.force_cache[][atom_i.index]
+@inline @inbounds function Molly.force!(fs, inter::InteratomicPotentialInteraction, s::System, i::Integer, j::Integer, force_units, weight_14::Bool = false)
+    @assert i == j
+    fdr = s.loggers["p"].force_cache[][i]
+    Molly.check_force_units(fdr, force_units)
+    fs[i] -= ustrip.(fdr)
+    return nothing
 end
 
 struct SelfNeighborFinder <: AbstractNeighborFinder end
@@ -75,33 +66,37 @@ function Molly.find_neighbors(s::System, nf::SelfNeighborFinder, current_neighbo
     Molly.NeighborList(length(s), [(i, i, false) for i ∈ 1:length(s)])
 end
 
-struct CustomPotentialLogger{E<:Unitful.Energy}
-    n_steps::Integer
+struct CustomPotentialLogger{F<:Unitful.Force,E<:Unitful.Energy}
+    n_steps::Int
+    force_cache::Ref{Vector{SVector{3,F}}}
     energies::Vector{E}
-    CustomPotentialLogger{E}(n_steps::Integer) where {E<:Unitful.Energy} = new{E}(n_steps, E[])
+    CustomPotentialLogger{F,E}(n_steps::Int) where {F<:Unitful.Force,E<:Unitful.Energy} = new{F,E}(n_steps, Ref{Vector{SVector{3,F}}}(), E[])
 end
-function CustomPotentialLogger(n_steps::Integer)
+function CustomPotentialLogger(n_steps::Int)
+    F = typeof(zeros() * FORCE_UNIT)
     E = typeof(zeros() * ENERGY_UNIT)
-    CustomPotentialLogger{E}(n_steps)
+    CustomPotentialLogger{F,E}(n_steps)
 end
 
-function Molly.log_property!(logger::CustomPotentialLogger, s::System, neighbors = nothing, step_n::Integer = 0)
+function Molly.log_property!(logger::CustomPotentialLogger, s::System, neighbors = nothing, step_n::Int = 0)
     if step_n % logger.n_steps == 0
-        push!(logger.energies, first(s.general_inters).energy_cache[])
+        eandf = energy_and_force(s, first(s.general_inters).potential)
+        logger.force_cache[] = eandf.f .* FORCE_UNIT
+        push!(logger.energies, eandf.e * ENERGY_UNIT)
     end
 end
 
 struct CustomKineticEnergyLogger{E<:Unitful.Energy}
     n_steps::Int
     energies::Vector{E}
-    CustomKineticEnergyLogger{E}(n_steps::Integer) where {E<:Unitful.Energy} = new{E}(n_steps, E[])
+    CustomKineticEnergyLogger{E}(n_steps::Int) where {E<:Unitful.Energy} = new{E}(n_steps, E[])
 end
-function CustomKineticEnergyLogger(n_steps::Integer)
+function CustomKineticEnergyLogger(n_steps::Int)
     E = typeof(zeros() * ENERGY_UNIT)
     CustomKineticEnergyLogger{E}(n_steps)
 end
 
-function Molly.log_property!(logger::CustomKineticEnergyLogger, s::System, neighbors = nothing, step_n::Integer = 0)
+function Molly.log_property!(logger::CustomKineticEnergyLogger, s::System, neighbors = nothing, step_n::Int = 0)
     if step_n % logger.n_steps == 0
         push!(logger.energies, Molly.kinetic_energy(s))
     end
