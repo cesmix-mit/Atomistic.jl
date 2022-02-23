@@ -9,6 +9,7 @@ using Molly
 using NBodySimulator
 using StaticArrays
 using Test
+using Unitful
 
 @testset "Atomistic.jl" begin
     include("unit_convention.jl")

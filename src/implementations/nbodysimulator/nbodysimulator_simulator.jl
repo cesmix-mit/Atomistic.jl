@@ -20,21 +20,21 @@ A wrapper around NBodySimulator to implement the Atomistic API.
 - `potentials::Dict{Symbol,PotentialParameters}` dictionary of potentials;
     shouldn't be manipulated directly by the user
 """
-@kwdef struct NBSimulator{T<:Unitful.Time} <: MolecularDynamicsSimulator
+struct NBSimulator{S<:OrdinaryDiffEqAlgorithm,T<:Unitful.Time,C<:Thermostat} <: MolecularDynamicsSimulator
     Δt::T
     steps::Int
-    t₀::T = zero(T)
-    thermostat::Thermostat = NullThermostat()
-    simulator::OrdinaryDiffEqAlgorithm = NBodySimulator.VelocityVerlet()
-    potentials::Dict{Symbol,PotentialParameters} = Dict{Symbol,PotentialParameters}()
+    t₀::T
+    thermostat::C
+    simulator::S
+    potentials::Dict{Symbol,PotentialParameters}
 end
-function NBSimulator(Δt::T, steps::Int; t₀::Real = zero(T), kwargs...) where {T<:Real}
+function NBSimulator(Δt::T, steps::Int; t₀::Real = zero(T), thermostat::C = NullThermostat(), simulator::S = NBodySimulator.VelocityVerlet()) where {S<:OrdinaryDiffEqAlgorithm,T<:Real,C<:Thermostat}
     Δt, t₀ = promote(Δt * TIME_UNIT, t₀ * TIME_UNIT)
-    NBSimulator(; Δt = Δt, steps = steps, t₀ = t₀, kwargs...)
+    NBSimulator(Δt, steps, t₀, thermostat, simulator, Dict{Symbol,PotentialParameters}())
 end
-function NBSimulator(Δt::T, steps::Integer; t₀::Unitful.Time = zero(T), kwargs...) where {T<:Unitful.Time}
+function NBSimulator(Δt::T, steps::Integer; t₀::Unitful.Time = zero(T), thermostat::C = NullThermostat(), simulator::S = NBodySimulator.VelocityVerlet()) where {S<:OrdinaryDiffEqAlgorithm,T<:Unitful.Time,C<:Thermostat}
     Δt, t₀ = promote(Δt, t₀)
-    NBSimulator(; Δt = Δt, steps = steps, t₀ = t₀, kwargs...)
+    NBSimulator(Δt, steps, t₀, thermostat, simulator, Dict{Symbol,PotentialParameters}())
 end
 
 # Extract the tuple of start_time, end_time from the simulator
@@ -63,12 +63,12 @@ end
 
 # Internal struct that represents a potential in the format accepted by NBodySimulator
 # Wraps the underlying InteratomicPotential with a cache of the forces for the current timestep
-struct InteratomicPotentialParameters <: PotentialParameters
-    potential::ArbitraryPotential
+struct InteratomicPotentialParameters{P<:ArbitraryPotential} <: PotentialParameters
+    potential::P
     timestep_cache::Ref{Float64}
     force_cache::Ref{Vector{SVector{3,Float64}}}
     energy_cache::Vector{Float64}
-    InteratomicPotentialParameters(potential::ArbitraryPotential) = new(potential, Ref{Float64}(), Ref{Vector{SVector{3,Float64}}}(), Vector{Float64}())
+    InteratomicPotentialParameters(potential::ArbitraryPotential) = new{typeof(potential)}(potential, Ref{Float64}(), Ref{Vector{SVector{3,Float64}}}(), Vector{Float64}())
 end
 
 function NBodySimulator.get_accelerating_function(parameters::InteratomicPotentialParameters, simulation::NBodySimulation)
