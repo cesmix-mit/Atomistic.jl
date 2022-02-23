@@ -13,8 +13,9 @@ coupling_factor = 10 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
 initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_temp)
+
 eq_steps = 2000
-eq_thermostat = AndersenThermostat(reference_temp, Δt * coupling_factor)
+eq_thermostat = Molly.AndersenThermostat(reference_temp, Δt * coupling_factor)
 eq_simulator = MollySimulator(Δt, eq_steps, coupling = eq_thermostat)
 potential = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 

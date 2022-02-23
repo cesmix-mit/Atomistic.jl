@@ -14,7 +14,7 @@ thermostat_prob = 0.1 # this number was chosen arbitrarily
 initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_temp)
 
 eq_steps = 2000
-eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
+eq_thermostat = NBodySimulator.AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 eq_simulator = NBSimulator(Δt, eq_steps, thermostat = eq_thermostat)
 potential = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
 

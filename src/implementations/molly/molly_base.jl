@@ -9,11 +9,11 @@ function Molly.System(system::AbstractSystem{D}; kwargs...) where {D}
                  (species_type(system) <: Molly.Atom) ? copy(system.atoms_data) :
                  [AugmentedAtomData(AtomsBase.atomic_symbol(a), Dict{Symbol,Any}()) for a ∈ system]
     System(;
-        atoms = [Molly.Atom(index = i, mass = atomic_mass(a)) for (i, a) ∈ enumerate(system)],
+        atoms = [Molly.Atom(index = i, mass = auconvert(atomic_mass(a))) for (i, a) ∈ enumerate(system)],
         atoms_data = atoms_data,
-        coords = position(system),
-        velocities = AtomsBase.velocity(system),
-        box_size = SVector{D}([bounding_box(system)[i][i] for i ∈ 1:D]),
+        coords = [auconvert.(p) for p ∈ position(system)],
+        velocities = [auconvert.(v) for v ∈ AtomsBase.velocity(system)],
+        box_size = SVector{D}(auconvert(bounding_box(system)[i][i]) for i ∈ 1:D),
         force_units = FORCE_UNIT,
         energy_units = ENERGY_UNIT,
         kwargs...
@@ -25,6 +25,6 @@ struct AugmentedAtomData
     data::Dict{Symbol,Any}
 end
 
-AtomsBase.Atom(d::AtomData, p::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}) = AtomsBase.Atom(d.element, p, v; data...)
+AtomsBase.Atom(d::AugmentedAtomData, p::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}) = AtomsBase.Atom(d.element, p, v; data...)
 
 AtomsBase.atomic_symbol(s::System, i) = Symbol(s.atoms_data[i].element)
