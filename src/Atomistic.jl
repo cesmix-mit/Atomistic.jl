@@ -15,6 +15,7 @@ using DFTK
 using Molly
 using NBodySimulator
 
+using GLMakie
 using PeriodicTable
 using Plots
 using PyCall
@@ -22,9 +23,7 @@ using Random
 using UnitfulRecipes
 
 import Base: @kwdef
-import InteratomicPotentials: ArbitraryPotential
 import DFTK: Mixing
-import Molly: AbstractNeighborFinder
 import NBodySimulator: Body, BoundaryConditions, NullThermostat, SimulationResult, Thermostat
 import Plots: Plot
 
@@ -54,7 +53,7 @@ include("integrations/initialization.jl")
 # Analysis
 export plot_temperature, plot_temperature!, plot_energy, plot_energy!, plot_rdf
 include("analysis/plotting.jl")
-export write_nbs_animation, write_ase_trajectory
+export write_nbs_animation, write_molly_visualization, write_ase_trajectory
 include("analysis/visualization.jl")
 
 # DFTK Integrations
