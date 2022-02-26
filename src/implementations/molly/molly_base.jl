@@ -24,7 +24,16 @@ struct AugmentedAtomData
     element::Symbol
     data::Dict{Symbol,Any}
 end
+Base.hasproperty(data::AugmentedAtomData, x::Symbol) = hasfield(AugmentedAtomData, x) || haskey(data.data, x)
+Base.getproperty(data::AugmentedAtomData, x::Symbol) = hasfield(AugmentedAtomData, x) ? getfield(data, x) : getindex(data.data, x)
+function Base.propertynames(data::AugmentedAtomData, private::Bool = false)
+    if private
+        (fieldnames(AugmentedAtomData)..., keys(data.data)...)
+    else
+        (filter(!isequal(:data), fieldnames(AugmentedAtomData))..., keys(data.data)...)
+    end
+end
 
-AtomsBase.Atom(d::AugmentedAtomData, p::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}) = AtomsBase.Atom(d.element, p, v; data...)
+AtomsBase.Atom(d::AugmentedAtomData, p::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}) = AtomsBase.Atom(d.element, p, v; d.data...)
 
 AtomsBase.atomic_symbol(s::System, i) = Symbol(s.atoms_data[i].element)

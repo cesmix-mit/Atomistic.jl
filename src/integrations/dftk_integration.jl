@@ -7,7 +7,7 @@
 # ! all functions in this section are copied directly from experimental DFTK code
 # ! this code will be deleted once it is live in DFTK
 
-function parse_system(system::AbstractSystem{3})
+function parse_system(system::FlexibleSystem{3})
     if !all(periodicity(system))
         error("DFTK only supports calculations with periodic boundary conditions.")
     end
@@ -32,6 +32,38 @@ function parse_system(system::AbstractSystem{3})
         end
 
         potential => SVector{3,T}(lattice \ T.(austrip.(position(atom))))
+    end
+
+    oldatoms = oldatoms_from_new(atoms)
+
+    (; lattice, atoms = oldatoms)
+end
+# TODO: this is currently necessary because Molly doesn't fully implement the AtomsBase API
+function parse_system(system::System{3})
+    if !all(periodicity(system))
+        error("DFTK only supports calculations with periodic boundary conditions.")
+    end
+
+    # Parse abstract system and return data required to construct model
+    lattice = austrip.(hcat(bounding_box(system)...))
+    T = eltype(lattice)
+
+    # Cache for instantiated pseudopotentials
+    # (such that the respective objects are indistinguishable)
+    cached_pseudos = Dict{String,Any}()
+    atoms = map(enumerate(system.atoms_data)) do (i, atom)
+        if hasproperty(atom, :potential)
+            potential = atom.potential
+        elseif hasproperty(atom, :pseudopotential)
+            pspkey = atom.pseudopotential
+            potential = get!(cached_pseudos, pspkey) do
+                ElementPsp(AtomsBase.atomic_symbol(system, i); psp = load_psp(pspkey))
+            end
+        else
+            potential = ElementCoulomb(AtomsBase.atomic_symbol(system, i))
+        end
+
+        potential => SVector{3,T}(lattice \ T.(austrip.(position(system, i))))
     end
 
     oldatoms = oldatoms_from_new(atoms)

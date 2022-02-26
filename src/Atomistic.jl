@@ -15,7 +15,6 @@ using DFTK
 using Molly
 using NBodySimulator
 
-using GLMakie
 using PeriodicTable
 using Plots
 using PyCall
