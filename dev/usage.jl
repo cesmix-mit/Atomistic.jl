@@ -7,11 +7,8 @@
 # ## Step 0: Load Dependencies
 
 using Atomistic
-using AtomsBase
 using InteratomicPotentials
-using NBodySimulator
-using Unitful
-using UnitfulAtomic
+using Molly
 
 # ## Step 1A: Configuring the System
 # First, we must create an [AtomsBase.jl](https://github.com/JuliaMolSim/AtomsBase.jl)-style system.
@@ -30,13 +27,13 @@ initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_te
 
 Δt = 1e-2u"ps"
 steps = 2000
-thermostat = AndersenThermostat(austrip(reference_temp), 0.1 / austrip(Δt))
-simulator = NBSimulator(Δt, steps, thermostat = thermostat)
+thermostat = Molly.AndersenThermostat(reference_temp, Δt * 10)
+simulator = MollySimulator(Δt, steps, coupling = thermostat)
 
 # ## Step 1C: Configuring the Potential
 # Lastly, we specify the interatomic potential that we will use for the simulation, Lennard-Jones in this case.
 
-potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
+potential = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 
 # ## Step 2: Running the Simulation
 
