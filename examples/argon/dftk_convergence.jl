@@ -1,13 +1,10 @@
 # Script to demonstrate convergence analysis of Ecut values for DFTK.jl
 
 using Atomistic
-using AtomsBase
 using DFTK
 using InteratomicPotentials
 using NBodySimulator
 using Plots
-using Unitful
-using UnitfulAtomic
 
 setup_threading(n_blas = 4)
 
@@ -25,7 +22,7 @@ for atom ∈ initial_system
 end
 
 eq_steps = 20000
-eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
+eq_thermostat = NBodySimulator.AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 eq_simulator = NBSimulator(Δt, eq_steps, thermostat = eq_thermostat)
 potential = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
 

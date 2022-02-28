@@ -1,22 +1,27 @@
 module Atomistic
 
+using Reexport
+
 using AtomsBase
 using InteratomicPotentials
-using DFTK
+
 using Distances
 using LinearAlgebra
+using StaticArrays
+@reexport using Unitful
+@reexport using UnitfulAtomic
+
+using DFTK
+using Molly
 using NBodySimulator
+
 using PeriodicTable
 using Plots
 using PyCall
 using Random
-using StaticArrays
-using Unitful
-using UnitfulAtomic
 using UnitfulRecipes
 
-import Base: @kwdef, Fix2
-import InteratomicPotentials: ArbitraryPotential
+import Base: @kwdef
 import DFTK: Mixing
 import NBodySimulator: Body, BoundaryConditions, NullThermostat, SimulationResult, Thermostat
 import Plots: Plot
@@ -37,6 +42,8 @@ include("api/md_simulator.jl")
 # Implementations
 export NBSimulator, NBSResult
 include("implementations/nbodysimulator.jl")
+export MollySimulator, MollyResult
+include("implementations/molly.jl")
 
 # Initialization Convenience functions
 export generate_atoms_in_cubic_cell
@@ -45,7 +52,7 @@ include("integrations/initialization.jl")
 # Analysis
 export plot_temperature, plot_temperature!, plot_energy, plot_energy!, plot_rdf
 include("analysis/plotting.jl")
-export write_nbs_animation, write_ase_trajectory
+export write_nbs_animation, write_molly_visualization, write_ase_trajectory
 include("analysis/visualization.jl")
 
 # DFTK Integrations

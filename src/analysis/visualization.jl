@@ -3,10 +3,21 @@
 """
     write_nbs_animation(result::NBSResult, filename::String)
 
-Animate an `NBSResult` and store the result in a .gif file.
+Animate an `NBSResult` using NBodySimulator's `animate` function and store the result in a file.
+Any kwargs will be passed directly to the `animate` function.
 """
-function write_nbs_animation(result::NBSResult, filename::String)
-    animate(result.result, filename)
+function write_nbs_animation(result::NBSResult, filename::String; kwargs...)
+    animate(result.result, filename; kwargs...)
+end
+
+"""
+    write_molly_visualization(result::MollyResult, filename::String, kwargs...)
+
+Animate a `MollyResult` using Molly's `visualize` function and store the result in a file.
+Any kwargs will be passed directly to the `visualize` function.
+"""
+function write_molly_visualization(result::MollyResult, filename::String; kwargs...)
+    visualize(result.system.loggers["c"], result.system.box_size, filename; kwargs...)
 end
 
 """

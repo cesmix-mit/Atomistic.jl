@@ -1,12 +1,8 @@
 # Based on this guide: https://ase.tufts.edu/chemistry/lin/images/FortranMD_TeachersGuide.pdf
 
 using Atomistic
-using AtomsBase
-using InteratomicPotentials
 using NBodySimulator
 using Plots
-using Unitful
-using UnitfulAtomic
 
 N = 864
 element = :Ar
@@ -18,9 +14,9 @@ thermostat_prob = 0.1 # this number was chosen arbitrarily
 initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_temp)
 
 eq_steps = 2000
-eq_thermostat = AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
+eq_thermostat = NBodySimulator.AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
 eq_simulator = NBSimulator(Δt, eq_steps, thermostat = eq_thermostat)
-potential = LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
+potential = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
 
 eq_result = @time simulate(initial_system, eq_simulator, potential)
 
@@ -37,6 +33,6 @@ display(@time plot_energy!(energy, prod_result, 10))
 
 rdf = @time plot_rdf(prod_result, potential.σ, Int(0.95 * prod_steps))
 display(rdf)
-savefig(rdf, "artifacts/argon_lj_rdf.svg")
+savefig(rdf, "artifacts/argon_lj_nbs_rdf.svg")
 
 ;

@@ -8,33 +8,32 @@ struct ElementMassBody{cType<:Real,mType<:Real} <: Body
     v::SVector{3,cType} # in VELOCITY_UNIT
     m::mType            # in MASS_UNIT
     symbol::Symbol
-    number::Int
     data::Dict{Symbol,Any}
 end
-function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}, e::Element; data...)
+function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}, symbol::Union{Integer,AbstractString,Symbol}; data...)
     r, v = promote(austrip.(r), austrip.(v))
-    ElementMassBody(r, v, austrip(e.atomic_mass), Symbol(e.symbol), e.number, Dict{Symbol,Any}(data...))
+    e = elements[symbol]
+    ElementMassBody(r, v, austrip(e.atomic_mass), Symbol(e.symbol), Dict{Symbol,Any}(data...))
 end
 function ElementMassBody(body::ElementMassBody, r::SVector{3,<:Real}, v::SVector{3,<:Real})
     r, v = promote(r, v)
-    ElementMassBody(r, v, body.m, body.symbol, body.number, body.data)
+    ElementMassBody(r, v, body.m, body.symbol, body.data)
 end
 
 # Convert AtomsBase Atom to NBodySimulator body
-function ElementMassBody(atom::Atom)
-    r, v = promote(austrip.(position(atom)), austrip.(velocity(atom)))
-    ElementMassBody(r, v, austrip(atomic_mass(atom)), AtomsBase.atomic_symbol(atom), atomic_number(atom), atom.data)
+function ElementMassBody(atom::AtomsBase.Atom)
+    r, v = promote(austrip.(position(atom)), austrip.(AtomsBase.velocity(atom)))
+    ElementMassBody(r, v, austrip(atomic_mass(atom)), AtomsBase.atomic_symbol(atom), atom.data)
 end
 # Convert NBodySimulator body to AtomsBase Atom
-function AtomsBase.Atom(b::ElementMassBody, boundary_conditions::CubicPeriodicBoundaryConditions)
-    Atom(b.symbol, bound_position(b.r, boundary_conditions) .* LENGTH_UNIT, b.v .* VELOCITY_UNIT; b.data...)
-end
+AtomsBase.Atom(b::ElementMassBody, boundary_conditions::BoundaryConditions) = AtomsBase.Atom(b.symbol, bound_position(b.r, boundary_conditions) .* LENGTH_UNIT, b.v .* VELOCITY_UNIT; b.data...)
+AtomsBase.Atom(b::ElementMassBody, p::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}) = AtomsBase.Atom(b.symbol, p, v; b.data...)
 
 # Convert AtomsBase AbstractSystem to Vector of NBodySimulator bodies
 get_bodies(system::AbstractSystem{3}) = ElementMassBody.(system)
 # Convert Vector of NBodySimulator bodies to AtomsBase FlexibleSystem
 function AtomsBase.FlexibleSystem(bodies::AbstractVector{<:ElementMassBody}, boundary_conditions::BoundaryConditions)
-    particles = Fix2(Atom, boundary_conditions).(bodies)
+    particles = AtomsBase.Atom.(bodies, (boundary_conditions,))
     FlexibleSystem(particles, get_bounding_box(boundary_conditions), get_boundary_conditions(boundary_conditions))
 end
 
