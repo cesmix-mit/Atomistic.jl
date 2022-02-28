@@ -28,7 +28,7 @@
     @test simulator3.t₀ == 0.0u"ns"
     @test simulator3.thermostat == NBodySimulator.NullThermostat()
     @test simulator3.simulator == DPRKN6()
-    @test Atomistic.time_range(simulator3) == (0.0, 10austrip(400.0u"ns"))
+    @test Atomistic.time_range(simulator3) ≈ (0.0, 10austrip(400.0u"ns"))
 
     @test simulator4 isa NBSimulator{NBodySimulator.VelocityVerlet,typeof(1u"ns"),NBodySimulator.NullThermostat}
     @test simulator4.Δt == 400.0u"ns"
@@ -36,7 +36,7 @@
     @test simulator4.t₀ == 1000.0u"ns"
     @test simulator4.thermostat == NBodySimulator.NullThermostat()
     @test simulator4.simulator == NBodySimulator.VelocityVerlet()
-    @test Atomistic.time_range(simulator4) == (austrip(1000.0u"ns"), austrip(1000.0u"ns") + 10austrip(400.0u"ns"))
+    @test Atomistic.time_range(simulator4) ≈ (austrip(1000.0u"ns"), austrip(1000.0u"ns") + 10austrip(400.0u"ns"))
 
     particles = [
         AtomsBase.Atom(:Ar, (@SVector [7, 7, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
