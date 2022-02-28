@@ -9,6 +9,7 @@ The result generated from running an `NBSimulator`.
 
 **Field descriptions**
 - `result::SimulationResult` the standard simulation result from `NBodySimulator`
+- `energy_cache::Vector{Float64}` cached potential energy values from the simulation
 """
 struct NBSResult <: MolecularDynamicsResult
     result::SimulationResult

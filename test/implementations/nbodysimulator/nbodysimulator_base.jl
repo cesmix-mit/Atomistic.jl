@@ -58,14 +58,14 @@
     bodies = Atomistic.get_bodies(system)
     flexible = FlexibleSystem(bodies, nbs_boundary_conditions)
 
-    atoms_equal(a1::AtomsBase.Atom, a2::AtomsBase.Atom) = propertynames(a1) == propertynames(a2) && all(getproperty(a1, p) == getproperty(a2, p) for p ∈ propertynames(a1))
-    bodies_equal(b1::Atomistic.ElementMassBody, b2::Atomistic.ElementMassBody) = all(getproperty(b1, p) == getproperty(b2, p) for p ∈ propertynames(b1))
-
-    @test bodies_equal(bodies[1], Atomistic.ElementMassBody((@SVector [-2, -1, 3])u"bohr", (@SVector [3, 5, 21])u"bohr * hartree / ħ_au", :Ar; a = :b))
-    @test bodies_equal(bodies[2], Atomistic.ElementMassBody((@SVector [-7, 2, 13])u"bohr", (@SVector [-3, 7, 1])u"bohr * hartree / ħ_au", :Ar; c = :d))
-
-    @test atoms_equal(flexible[1], AtomsBase.Atom(:Ar, [1.0, 0.5, 0.0]u"bohr", [3, 5, 21]u"bohr * hartree / ħ_au"; a = :b))
-    @test atoms_equal(flexible[2], AtomsBase.Atom(:Ar, [0.5, 0.5, 1.0]u"bohr", [-3, 7, 1]u"bohr * hartree / ħ_au"; c = :d))
+    @test bodies == [
+        Atomistic.ElementMassBody((@SVector [-2, -1, 3])u"bohr", (@SVector [3, 5, 21])u"bohr * hartree / ħ_au", :Ar; a = :b),
+        Atomistic.ElementMassBody((@SVector [-7, 2, 13])u"bohr", (@SVector [-3, 7, 1])u"bohr * hartree / ħ_au", :Ar; c = :d)
+    ]
+    @test collect(flexible) == [
+        AtomsBase.Atom(:Ar, [1.0, 0.5, 0.0]u"bohr", [3, 5, 21]u"bohr * hartree / ħ_au"; a = :b),
+        AtomsBase.Atom(:Ar, [0.5, 0.5, 1.0]u"bohr", [-3, 7, 1]u"bohr * hartree / ħ_au"; c = :d)
+    ]
 
     @test Atomistic.nbs_boundary_conditions(system) == nbs_boundary_conditions
     @test get_boundary_conditions(nbs_boundary_conditions) == boundary_conditions

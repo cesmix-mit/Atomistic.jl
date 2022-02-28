@@ -2,6 +2,15 @@
 # Implementation of Atomistic MolecularDynamicsResult API
 # -----------------------------------------------------------------------------
 
+"""
+    MollyResult <: MolecularDynamicsResult
+
+The result generated from running an `MollySimulator`.
+
+**Field descriptions**
+- `system::System` the `System` resulting from the simulation
+- `simulator::MollySimulator` the `MollySimulator` that produced the result
+"""
 struct MollyResult <: MolecularDynamicsResult
     system::System
     simulator::MollySimulator

@@ -2,6 +2,27 @@
 # Implementation of Atomistic MolecularDynamicsSimulator API
 # -----------------------------------------------------------------------------
 
+"""
+    MollySimulator{S,T<:Unitful.Time,C} <: MolecularDynamicsSimulator
+
+A wrapper around Molly to implement the Atomistic API.
+
+**Type parameter descriptions**
+- `S` the type of simulator
+- `T<:Unitful.Time` the type for the time fields
+- `C` the type for the coupling field
+
+**Field descriptions**
+- `Δt::T` the time between timesteps, assumed to be in atomic units
+- `steps::Integer` the number of timesteps for the simulation
+- `t₀::T` the starting time of the simulation, assumed to be in atomic units;
+    defaults to 0
+- `coupling::C` the coupling for the simulation;
+    many options are defined by `Molly`, but a user could also define a custom thermostat;
+    defaults to `NoCoupling()`
+- `stride::Int` the number of timesteps between logger runs
+    defaults to 1
+"""
 struct MollySimulator{S,T<:Unitful.Time,C} <: MolecularDynamicsSimulator
     Δt::T
     steps::Int
@@ -42,6 +63,8 @@ end
 # Integration with InteratomicPotentials
 # -----------------------------------------------------------------------------
 
+# Internal struct that represents a potential in the format accepted by Molly
+# Wraps the underlying InteratomicPotential with a cache of the potential energy for the current timestep
 struct InteratomicPotentialInter{P<:ArbitraryPotential,E<:Unitful.Energy}
     potential::P
     energy_cache::Ref{E}

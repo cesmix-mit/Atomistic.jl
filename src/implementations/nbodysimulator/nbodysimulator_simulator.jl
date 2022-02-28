@@ -7,15 +7,20 @@
 
 A wrapper around NBodySimulator to implement the Atomistic API.
 
+**Type parameter descriptions**
+- `S` the type of ODE solver
+- `T<:Unitful.Time` the type for the time fields
+- `C` the type for the thermostat field
+
 **Field descriptions**
-- `Δt::Real` the time between timesteps, assumed to be in atomic units
+- `Δt::T` the time between timesteps, assumed to be in atomic units
 - `steps::Integer` the number of timesteps for the simulation
-- `t₀::Real` the starting time of the simulation, assumed to be in atomic units;
+- `t₀::T` the starting time of the simulation, assumed to be in atomic units;
     defaults to 0
-- `thermostat::Thermostat` the thermostat for the simulation;
+- `thermostat::C` the thermostat for the simulation;
     many options are defined by `NBodySimulator`, but a user could also define a custom thermostat;
     defaults to the `NullThermostat`
-- `simulator::OrdinaryDiffEqAlgorithm` the algorithm to be used for the ODE;
+- `simulator::S` the algorithm to be used for the ODE;
     defaults to VelocityVerlet
 - `potentials::Dict{Symbol,PotentialParameters}` dictionary of potentials;
     shouldn't be manipulated directly by the user
@@ -63,6 +68,7 @@ end
 
 # Internal struct that represents a potential in the format accepted by NBodySimulator
 # Wraps the underlying InteratomicPotential with a cache of the forces for the current timestep
+# Also stores the potential energy from every timestep to be referenceable after the simulation
 struct InteratomicPotentialParameters{P<:ArbitraryPotential} <: PotentialParameters
     potential::P
     timestep_cache::Ref{Float64}

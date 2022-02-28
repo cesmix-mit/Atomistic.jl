@@ -1,27 +1,10 @@
 # Unit tests for implementations/nbodysimulator/nbodysimulator_simulator.jl
 
 @testset "nbodysimulator_simulator.jl" begin
-    particles = [
-        AtomsBase.Atom(:Ar, (@SVector [7, 7, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        AtomsBase.Atom(:Ar, (@SVector [7, 7, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        AtomsBase.Atom(:Ar, (@SVector [7, 21, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        AtomsBase.Atom(:Ar, (@SVector [7, 21, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        AtomsBase.Atom(:Ar, (@SVector [21, 7, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        AtomsBase.Atom(:Ar, (@SVector [21, 7, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        AtomsBase.Atom(:Ar, (@SVector [21, 21, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
-        AtomsBase.Atom(:Ar, (@SVector [21, 21, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au")
-    ]
-    box = (@SVector [(@SVector [28.0, 0.0, 0.0]), (@SVector [0.0, 28.0, 0.0]), (@SVector [0.0, 0.0, 28.0])])u"bohr"
-    boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]
-    system = FlexibleSystem(particles, box, boundary_conditions)
-
     simulator1 = NBSimulator(400, 10, thermostat = NBodySimulator.AndersenThermostat(100, 2e-4))
     simulator2 = NBSimulator(400, 10, t₀ = 1000)
     simulator3 = NBSimulator(400u"ns", 10, simulator = DPRKN6())
     simulator4 = NBSimulator(400u"ns", 10, t₀ = 1000u"ns")
-
-    potential1 = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
-    potential2 = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 
     @test simulator1 isa NBSimulator{NBodySimulator.VelocityVerlet,typeof(1u"ħ_au / hartree"),<:NBodySimulator.AndersenThermostat}
     @test simulator1.Δt == 400.0u"ħ_au / hartree"
@@ -54,6 +37,23 @@
     @test simulator4.thermostat == NBodySimulator.NullThermostat()
     @test simulator4.simulator == NBodySimulator.VelocityVerlet()
     @test Atomistic.time_range(simulator4) == (austrip(1000.0u"ns"), austrip(1000.0u"ns") + 10austrip(400.0u"ns"))
+
+    particles = [
+        AtomsBase.Atom(:Ar, (@SVector [7, 7, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [7, 7, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [7, 21, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [7, 21, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [21, 7, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [21, 7, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [21, 21, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
+        AtomsBase.Atom(:Ar, (@SVector [21, 21, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au")
+    ]
+    box = (@SVector [(@SVector [28.0, 0.0, 0.0]), (@SVector [0.0, 28.0, 0.0]), (@SVector [0.0, 0.0, 28.0])])u"bohr"
+    boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]
+    system = FlexibleSystem(particles, box, boundary_conditions)
+
+    potential1 = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
+    potential2 = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 
     result1 = simulate(system, simulator1, potential1)
     result2 = simulate(system, simulator2, potential2)
