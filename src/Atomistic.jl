@@ -18,7 +18,6 @@ using NBodySimulator
 using PeriodicTable
 using Plots
 using PyCall
-using Random
 using UnitfulRecipes
 
 import Base: @kwdef

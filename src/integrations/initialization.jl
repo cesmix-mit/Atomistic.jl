@@ -1,9 +1,9 @@
 # Convenience functions for initializing AtomsBase systems.
 
 # See NBodySimulator.generate_bodies_in_cell_nodes
-function generate_atoms_in_cubic_cell(n::Integer, symbol::Union{Integer,AbstractString,Symbol}, L::Unitful.Length, reference_temp::Unitful.Temperature; rng = MersenneTwister(n))
+function generate_atoms_in_cubic_cell(n::Integer, symbol::Union{Integer,AbstractString,Symbol}, L::Unitful.Length, reference_temp::Unitful.Temperature)
     average_velocity = √(u"k" * reference_temp / elements[symbol].atomic_mass)
-    velocities = average_velocity * randn(rng, Float64, (3, n))
+    velocities = average_velocity * randn(Float64, (3, n))
     particles = Vector{AtomsBase.Atom}(undef, n)
 
     count = 1
