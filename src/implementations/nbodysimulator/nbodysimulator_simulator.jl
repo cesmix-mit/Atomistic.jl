@@ -57,7 +57,7 @@ function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::
     NBSResult(result, [NBodySimulator.potential_energy(result, t) for t ∈ result.solution.t])
 end
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator)
-    nb_system = PotentialNBodySystem{ElementMassBody}(get_bodies(system), simulator.potentials)
+    nb_system = PotentialNBodySystem{ElementMassBody}(ElementMassBody.(system), simulator.potentials)
     simulation = NBodySimulation(nb_system, time_range(simulator), nbs_boundary_conditions(system), simulator.thermostat, austrip(u"k"))
     run_simulation(simulation, simulator.simulator, dt = austrip(simulator.Δt))
 end
@@ -82,14 +82,14 @@ function NBodySimulator.get_accelerating_function(parameters::InteratomicPotenti
     boundary_conditions = simulation.boundary_conditions
     (dv, u, v, t, i) -> begin
         if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
-            particles = [ElementMassBody(bodies[i], SVector{3}(u[:, j]), SVector{3}(v[:, j])) for j ∈ 1:length(bodies)]
-            system = FlexibleSystem(particles, boundary_conditions)
+            particles = [AtomsBase.Atom(b, SVector{3}(r), SVector{3}(v), boundary_conditions) for (b, r, v) ∈ zip(bodies, eachcol(u), eachcol(v))]
+            system = FlexibleSystem(particles, get_bounding_box(boundary_conditions), get_boundary_conditions(boundary_conditions))
             eandf = energy_and_force(system, parameters.potential)
             parameters.timestep_cache[] = t
             parameters.force_cache[] = eandf.f
             push!(parameters.energy_cache, eandf.e)
         end
-        dv .+= parameters.force_cache[][i] / bodies[i].m
+        dv .+= parameters.force_cache[][i] ./ bodies[i].m
     end
 end
 

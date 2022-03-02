@@ -191,38 +191,40 @@ function rdf(result::MolecularDynamicsResult, start::Integer, stop::Integer)
     @assert all(b isa Periodic for b ∈ boundary_conditions)
 
     d = Distances.PeriodicEuclidean([box[i][i] for i ∈ 1:3])
+    L = box[1][1]
 
     maxbin = 1000
-    L = box[1][1]
+    z = zero(typeof(L))
     radius = 0.5 * L
     dr = radius / maxbin
-    hist = zeros(maxbin)
-    for t ∈ start:stop
+    hist_threads = zeros(maxbin, nthreads())
+    @threads for t ∈ start:stop
         pos = get_positions(result, t)
         for i ∈ 1:n
             for j ∈ i+1:n
-                r = evaluate(d, pos[i], pos[j])
-                if zero(typeof(dr)) < r < radius
+                @inbounds r = evaluate(d, pos[i], pos[j])
+                if z < r < radius
                     bin = ceil(Int, r / dr)
-                    hist[bin] += 2
+                    @inbounds hist_threads[bin, threadid()] += 2
                 end
             end
         end
     end
+    hist = sum(eachcol(hist_threads))
 
     c = 4 / 3 * π * n / L^3
-    r = zeros(typeof(dr), maxbin)
-    g = zeros(maxbin)
+    rs = zeros(typeof(dr), maxbin)
+    gr = zeros(maxbin)
     tlen = length(start:stop)
     for bin ∈ 1:maxbin
         rlower = (bin - 1) * dr
         rupper = rlower + dr
         nideal = c * (rupper^3 - rlower^3)
-        r[bin] = rlower + dr / 2
-        g[bin] = (hist[bin] / (tlen * n)) / nideal
+        @inbounds rs[bin] = rlower + dr / 2
+        @inbounds gr[bin] = (hist[bin] / (tlen * n)) / nideal
     end
 
-    (; r, g)
+    (; r = rs, g = gr)
 end
 rdf(result::MolecularDynamicsResult, start::Integer) = rdf(result, start, length(result))
 rdf(result::MolecularDynamicsResult) = rdf(result, 1, length(result))

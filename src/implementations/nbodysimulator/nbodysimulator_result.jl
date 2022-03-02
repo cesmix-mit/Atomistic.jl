@@ -27,11 +27,11 @@ reference_temperature(::NullThermostat) = missing
 
 function get_positions(result::NBSResult, t::Integer)
     positions = get_position(result.result, result.result.solution.t[t])
-    [bound_position(SVector{3}(p), result.result.simulation.boundary_conditions) for p ∈ eachcol(positions)] * LENGTH_UNIT
+    [bound_position(SVector{3}(p), result.result.simulation.boundary_conditions) * LENGTH_UNIT for p ∈ eachcol(positions)]
 end
 function get_velocities(result::NBSResult, t::Integer)
     velocities = get_velocity(result.result, result.result.solution.t[t])
-    [SVector{3}(v) for v ∈ eachcol(velocities)] * VELOCITY_UNIT
+    [SVector{3}(v) * VELOCITY_UNIT for v ∈ eachcol(velocities)]
 end
 get_particles(result::NBSResult, t::Integer) = AtomsBase.Atom.(result.result.simulation.system.bodies, get_positions(result, t), get_velocities(result, t))
 

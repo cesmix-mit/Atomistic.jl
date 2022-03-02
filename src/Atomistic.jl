@@ -8,6 +8,7 @@ using InteratomicPotentials
 using Distances
 using LinearAlgebra
 using StaticArrays
+using Base.Threads
 @reexport using Unitful
 @reexport using UnitfulAtomic
 

@@ -15,10 +15,6 @@ function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.
     e = elements[symbol]
     ElementMassBody(r, v, austrip(e.atomic_mass), Symbol(e.symbol), Dict{Symbol,Any}(data...))
 end
-function ElementMassBody(body::ElementMassBody, r::SVector{3,<:Real}, v::SVector{3,<:Real})
-    r, v = promote(r, v)
-    ElementMassBody(r, v, body.m, body.symbol, body.data)
-end
 
 # Convert AtomsBase Atom to NBodySimulator body
 function ElementMassBody(atom::AtomsBase.Atom)
@@ -26,16 +22,9 @@ function ElementMassBody(atom::AtomsBase.Atom)
     ElementMassBody(r, v, austrip(atomic_mass(atom)), AtomsBase.atomic_symbol(atom), atom.data)
 end
 # Convert NBodySimulator body to AtomsBase Atom
-AtomsBase.Atom(b::ElementMassBody, boundary_conditions::BoundaryConditions) = AtomsBase.Atom(b.symbol, bound_position(b.r, boundary_conditions) .* LENGTH_UNIT, b.v .* VELOCITY_UNIT; b.data...)
-AtomsBase.Atom(b::ElementMassBody, p::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}) = AtomsBase.Atom(b.symbol, p, v; b.data...)
-
-# Convert AtomsBase AbstractSystem to Vector of NBodySimulator bodies
-get_bodies(system::AbstractSystem{3}) = ElementMassBody.(system)
-# Convert Vector of NBodySimulator bodies to AtomsBase FlexibleSystem
-function AtomsBase.FlexibleSystem(bodies::AbstractVector{<:ElementMassBody}, boundary_conditions::BoundaryConditions)
-    particles = AtomsBase.Atom.(bodies, (boundary_conditions,))
-    FlexibleSystem(particles, get_bounding_box(boundary_conditions), get_boundary_conditions(boundary_conditions))
-end
+AtomsBase.Atom(b::ElementMassBody, boundary_conditions::BoundaryConditions) = AtomsBase.Atom(b, b.r, b.v, boundary_conditions)
+AtomsBase.Atom(b::ElementMassBody, r::SVector{3,<:Real}, v::SVector{3,<:Real}, boundary_conditions::BoundaryConditions) = AtomsBase.Atom(b, bound_position(r, boundary_conditions) * LENGTH_UNIT, v * VELOCITY_UNIT)
+AtomsBase.Atom(b::ElementMassBody, r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}) = AtomsBase.Atom(b.symbol, r, v; b.data...)
 
 # Convert AtomsBase boundary conditions to NBodySimulator boundary conditions
 function nbs_boundary_conditions(system::AbstractSystem{3})
