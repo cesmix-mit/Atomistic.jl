@@ -86,6 +86,21 @@
     @test propertynames(data) == (:element, :a)
     @test propertynames(data, true) == (:element, :data, :a)
 
+    system = System(;
+        atoms = [Molly.Atom(; index = 1, mass = auconvert(39.9481u"u"))],
+        atoms_data = [data],
+        coords = [(@SVector [-2.0, -1.0, 3.0])u"bohr"],
+        box_size = 1.5u"bohr"
+    )
+    view = system[1]
+
+    @test hasproperty(view, :a)
+    @test !hasproperty(view, :b)
+    @test view.a == :b
+    @test_throws KeyError view.b
+    @test propertynames(view) == (:system, :index, :a)
+    @test propertynames(view, true) == (:system, :index, :a)
+
     atom = AtomsBase.Atom(data, (@SVector [-2.0, -1.0, 3.0])u"bohr", (@SVector [3.0, 5.0, 21.0])u"bohr * hartree / ħ_au")
 
     @test atom == particles[1]

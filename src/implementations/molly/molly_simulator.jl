@@ -55,7 +55,7 @@ function simulate(system::AbstractSystem{3}, simulator::MollySimulator{S}, poten
         "t" => TemperatureLogger(TEMPERATURE_TYPE, simulator.stride)
     )
     system = System(system; general_inters = (wrapper,), loggers = loggers)
-    simulate!(system, S(simulator.Δt, simulator.coupling), simulator.steps)
+    simulate!(system, S(dt = simulator.Δt, coupling = simulator.coupling), simulator.steps)
     MollyResult(system, simulator)
 end
 

@@ -40,7 +40,9 @@ function Base.propertynames(data::AugmentedAtomData, private::Bool = false)
     end
 end
 
+Base.hasproperty(view::AtomView{<:System}, x::Symbol) = hasfield(AtomView, x) || haskey(getfield(view, :system).atoms_data[getfield(view, :index)].data, x)
+Base.getproperty(view::AtomView{<:System}, x::Symbol) = hasfield(AtomView, x) ? getfield(view, x) : getindex(getfield(view, :system).atoms_data[getfield(view, :index)].data, x)
+Base.propertynames(view::AtomView{<:System}, private::Bool = false) = (fieldnames(AtomView)..., keys(getfield(view, :system).atoms_data[getfield(view, :index)].data)...)
+
 # Convert Molly Atom to AtomsBase Atom
 AtomsBase.Atom(d::AugmentedAtomData, p::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}) = AtomsBase.Atom(d.element, p, v; d.data...)
-
-AtomsBase.atomic_symbol(s::System, i) = Symbol(s.atoms_data[i].element)

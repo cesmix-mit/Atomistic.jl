@@ -16,25 +16,22 @@ function parse_system(system::AbstractSystem{3})
     lattice = austrip.(hcat(bounding_box(system)...))
     T = eltype(lattice)
 
-    # TODO: this is currently necessary because Molly doesn't fully implement the AtomsBase API
-    atoms = typeof(system) <: System ? system.atoms_data : system
-
     # Cache for instantiated pseudopotentials
     # (such that the respective objects are indistinguishable)
     cached_pseudos = Dict{String,Any}()
-    atoms = map(enumerate(atoms)) do (i, atom)
+    atoms = map(system) do atom
         if hasproperty(atom, :potential)
             potential = atom.potential
         elseif hasproperty(atom, :pseudopotential)
             pspkey = atom.pseudopotential
             potential = get!(cached_pseudos, pspkey) do
-                ElementPsp(AtomsBase.atomic_symbol(system, i); psp = load_psp(pspkey))
+                ElementPsp(AtomsBase.atomic_symbol(atom); psp = load_psp(pspkey))
             end
         else
-            potential = ElementCoulomb(AtomsBase.atomic_symbol(system, i))
+            potential = ElementCoulomb(AtomsBase.atomic_symbol(atom))
         end
 
-        potential => SVector{3,T}(lattice \ T.(austrip.(position(system, i))))
+        potential => SVector{3,T}(lattice \ T.(austrip.(position(atom))))
     end
 
     oldatoms = oldatoms_from_new(atoms)
