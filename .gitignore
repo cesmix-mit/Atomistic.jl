@@ -2,6 +2,7 @@
 *.jl.cov
 *.jl.mem
 
+LocalPreferences.toml
 Manifest.toml
 
 # generated docs
