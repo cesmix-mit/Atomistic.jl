@@ -9,17 +9,14 @@ using Distances
 using LinearAlgebra
 using StaticArrays
 using Base.Threads
-@reexport using Unitful
-@reexport using UnitfulAtomic
+@reexport using Unitful, UnitfulAtomic
 
 using DFTK
 using Molly
 using NBodySimulator
 
 using PeriodicTable
-using Plots
-using PyCall
-using UnitfulRecipes
+using Plots, UnitfulRecipes
 
 import Base: @kwdef
 import DFTK: Mixing
@@ -52,8 +49,6 @@ include("integrations/initialization.jl")
 # Analysis
 export plot_temperature, plot_temperature!, plot_energy, plot_energy!, plot_rdf
 include("analysis/plotting.jl")
-export write_nbs_animation, write_molly_visualization, write_ase_trajectory
-include("analysis/visualization.jl")
 
 # DFTK Integrations
 export DFTKPotential

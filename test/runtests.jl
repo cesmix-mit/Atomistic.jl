@@ -40,6 +40,5 @@ Base.:(==)(a1::Atomistic.AugmentedAtomData, a2::Atomistic.AugmentedAtomData) = p
     end
     @testset "Analysis Unit Tests" begin
         include("analysis/plotting.jl")
-        include("analysis/visualization.jl")
     end
 end

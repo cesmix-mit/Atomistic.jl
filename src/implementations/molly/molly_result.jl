@@ -43,3 +43,13 @@ get_particles(result::MollyResult, t::Integer) = AtomsBase.Atom.(result.system.a
 temperature(result::MollyResult, t::Integer) = result.system.loggers["t"].temperatures[t]
 kinetic_energy(result::MollyResult, t::Integer) = result.system.loggers["k"].energies[t]
 potential_energy(result::MollyResult, t::Integer) = result.system.loggers["p"].energies[t]
+
+"""
+    visualize(result::MollyResult, filename::String; kwargs...)
+
+Animate a `MollyResult` using Molly's `visualize` function and store the result in a file.
+Any kwargs will be passed directly to the `visualize` function.
+
+This function is only available when GLMakie is imported.
+"""
+Molly.visualize(result::MollyResult, filename::String; kwargs...) = visualize(result.system.loggers["c"], result.system.box_size, filename; kwargs...)

@@ -45,7 +45,6 @@ display(@time plot_temperature(ab_initio_result, 1))
 display(@time plot_energy(ab_initio_result, 1))
 display(@time plot_rdf(ab_initio_result, potential.σ))
 
-write_molly_visualization(ab_initio_result, "artifacts/argon_ab_initio_molly.mp4")
-write_ase_trajectory(ab_initio_result, "artifacts/argon_ab_initio_molly.traj")
+visualize(ab_initio_result, "artifacts/argon_ab_initio_molly.mp4")
 
 ;
