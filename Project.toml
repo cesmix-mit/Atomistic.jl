@@ -21,7 +21,7 @@ UnitfulRecipes = "42071c24-d89e-48dd-8a24-8a12d9b8861f"
 
 [compat]
 AtomsBase = "0.2"
-DFTK = "0.4"
+DFTK = "0.4, 0.5"
 Distances = "0.10"
 InteratomicPotentials = "0.1"
 Molly = "0.9"
