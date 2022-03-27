@@ -16,8 +16,8 @@
     @test eandf1.e isa Float64
     @test eandf1.f isa AbstractVector{<:SVector{3,<:Float64}}
 
-    @test potential1.previous_scfres[].energies.total == eandf1.e
-    @test compute_forces_cart(potential1.previous_scfres[])[1] == eandf1.f
+    @test potential1.previous_scf[].energies.total == eandf1.e
+    @test compute_forces_cart(potential1.previous_scf[]) == eandf1.f
 
     system2 = System(system1)
     eandf2 = energy_and_force(system2, potential2)
@@ -25,6 +25,6 @@
     @test eandf2.e isa Float64
     @test eandf2.f isa AbstractVector{<:SVector{3,<:Float64}}
 
-    @test potential2.previous_scfres[].energies.total == eandf2.e
-    @test compute_forces_cart(potential2.previous_scfres[])[1] == eandf2.f
+    @test potential2.previous_scf[].energies.total == eandf2.e
+    @test compute_forces_cart(potential2.previous_scf[]) == eandf2.f
 end

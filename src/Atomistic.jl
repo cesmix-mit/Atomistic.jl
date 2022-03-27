@@ -18,7 +18,6 @@ using NBodySimulator
 using PeriodicTable
 using Plots, UnitfulRecipes
 
-import Base: @kwdef
 import DFTK: Mixing
 import NBodySimulator: Body, BoundaryConditions, NullThermostat, SimulationResult, Thermostat
 import Plots: Plot
