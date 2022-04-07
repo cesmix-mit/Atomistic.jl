@@ -1,7 +1,7 @@
 # # Using Atomistic-Compatible Packages
 
 # There are three main steps to using an implementation of the Atomistic API.
-# This simple toy example will walk you through each step using [NBodySimulator.jl](https://github.com/SciML/NBodySimulator.jl) for the dynamics.
+# This simple toy example will walk you through each step using [Molly.jl](https://github.com/JuliaMolSim/Molly.jl) for the dynamics.
 # Some of the values from this example were taken from [this guide](https://ase.tufts.edu/chemistry/lin/images/FortranMD_TeachersGuide.pdf).
 
 # ## Step 0: Load Dependencies
@@ -23,12 +23,12 @@ reference_temp = 94.4u"K"
 initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_temp)
 
 # ## Step 1B: Configuring the Simulator
-# Second, we initialize our simulator. In this case we are using an AndersenThermostat which is provided by NBodySimulator.
+# Second, we initialize our simulator. In this case we are using an AndersenThermostat which is provided by Molly.
 
 Δt = 1e-2u"ps"
 steps = 2000
 thermostat = Molly.AndersenThermostat(reference_temp, Δt * 10)
-simulator = MollySimulator(Δt, steps, coupling = thermostat)
+simulator = MollySimulator(Δt, steps, coupling=thermostat)
 
 # ## Step 1C: Configuring the Potential
 # Lastly, we specify the interatomic potential that we will use for the simulation, Lennard-Jones in this case.
