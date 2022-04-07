@@ -10,7 +10,7 @@ struct ElementMassBody{cType<:Real,mType<:Real} <: Body
     symbol::Symbol
     data::Dict{Symbol,Any}
 end
-function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}, symbol::Union{Integer,AbstractString,Symbol}; data...)
+function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}, symbol::AtomsBase.AtomId; data...)
     r, v = promote(austrip.(r), austrip.(v))
     e = elements[symbol]
     ElementMassBody(r, v, austrip(e.atomic_mass), Symbol(e.symbol), Dict{Symbol,Any}(data...))

@@ -22,8 +22,6 @@ A wrapper around NBodySimulator to implement the Atomistic API.
     defaults to the `NullThermostat`
 - `simulator::S` the algorithm to be used for the ODE;
     defaults to VelocityVerlet
-- `potentials::Dict{Symbol,PotentialParameters}` dictionary of potentials;
-    shouldn't be manipulated directly by the user
 """
 struct NBSimulator{S<:OrdinaryDiffEqAlgorithm,T<:Unitful.Time,C<:Thermostat} <: MolecularDynamicsSimulator
     Δt::T
@@ -31,15 +29,14 @@ struct NBSimulator{S<:OrdinaryDiffEqAlgorithm,T<:Unitful.Time,C<:Thermostat} <: 
     t₀::T
     thermostat::C
     simulator::S
-    potentials::Dict{Symbol,PotentialParameters}
 end
-function NBSimulator(Δt::T, steps::Int; t₀::Real = zero(T), thermostat::C = NullThermostat(), simulator::S = NBodySimulator.VelocityVerlet()) where {S<:OrdinaryDiffEqAlgorithm,T<:Real,C<:Thermostat}
+function NBSimulator(Δt::T, steps::Int; t₀::Real=zero(T), thermostat::C=NullThermostat(), simulator::S=NBodySimulator.VelocityVerlet()) where {S<:OrdinaryDiffEqAlgorithm,T<:Real,C<:Thermostat}
     Δt, t₀ = promote(Δt * TIME_UNIT, t₀ * TIME_UNIT)
-    NBSimulator(Δt, steps, t₀, thermostat, simulator, Dict{Symbol,PotentialParameters}())
+    NBSimulator(Δt, steps, t₀, thermostat, simulator)
 end
-function NBSimulator(Δt::T, steps::Integer; t₀::Unitful.Time = zero(T), thermostat::C = NullThermostat(), simulator::S = NBodySimulator.VelocityVerlet()) where {S<:OrdinaryDiffEqAlgorithm,T<:Unitful.Time,C<:Thermostat}
+function NBSimulator(Δt::T, steps::Integer; t₀::Unitful.Time=zero(T), thermostat::C=NullThermostat(), simulator::S=NBodySimulator.VelocityVerlet()) where {S<:OrdinaryDiffEqAlgorithm,T<:Unitful.Time,C<:Thermostat}
     Δt, t₀ = promote(Δt, t₀)
-    NBSimulator(Δt, steps, t₀, thermostat, simulator, Dict{Symbol,PotentialParameters}())
+    NBSimulator(Δt, steps, t₀, thermostat, simulator)
 end
 
 # Extract the tuple of start_time, end_time from the simulator
@@ -47,19 +44,17 @@ time_range(simulator::NBSimulator) = Float64.(austrip.((simulator.t₀, simulato
 
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::ArbitraryPotential)
     wrapper = InteratomicPotentialParameters(potential)
-    simulator.potentials[:custom] = wrapper
-    result = simulate(system, simulator)
+    result = simulate(system, simulator, Dict{Symbol,PotentialParameters}(:custom => wrapper))
     NBSResult(result, wrapper.energy_cache)
 end
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::LennardJonesParameters)
-    simulator.potentials[:lennard_jones] = potential
-    result = simulate(system, simulator)
+    result = simulate(system, simulator, Dict{Symbol,PotentialParameters}(:lennard_jones => potential))
     NBSResult(result, [NBodySimulator.potential_energy(result, t) for t ∈ result.solution.t])
 end
-function simulate(system::AbstractSystem{3}, simulator::NBSimulator)
-    nb_system = PotentialNBodySystem{ElementMassBody}(ElementMassBody.(system), simulator.potentials)
+function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potentials::Dict{Symbol,PotentialParameters})
+    nb_system = PotentialNBodySystem{ElementMassBody}(ElementMassBody.(system), potentials)
     simulation = NBodySimulation(nb_system, time_range(simulator), nbs_boundary_conditions(system), simulator.thermostat, austrip(u"k"))
-    run_simulation(simulation, simulator.simulator, dt = austrip(simulator.Δt))
+    run_simulation(simulation, simulator.simulator, dt=austrip(simulator.Δt))
 end
 
 # -----------------------------------------------------------------------------
@@ -82,6 +77,7 @@ function NBodySimulator.get_accelerating_function(parameters::InteratomicPotenti
     boundary_conditions = simulation.boundary_conditions
     (dv, u, v, t, i) -> begin
         if !isassigned(parameters.timestep_cache) || t != parameters.timestep_cache[]
+            # TODO: avoid copying data at every timestep
             particles = [AtomsBase.Atom(b, SVector{3}(r), SVector{3}(v), boundary_conditions) for (b, r, v) ∈ zip(bodies, eachcol(u), eachcol(v))]
             system = FlexibleSystem(particles, get_bounding_box(boundary_conditions), get_boundary_conditions(boundary_conditions))
             eandf = energy_and_force(system, parameters.potential)
