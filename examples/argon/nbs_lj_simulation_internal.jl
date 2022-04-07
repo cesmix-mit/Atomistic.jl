@@ -15,23 +15,23 @@ initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_te
 
 eq_steps = 2000
 eq_thermostat = NBodySimulator.AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
-eq_simulator = NBSimulator(Δt, eq_steps, thermostat = eq_thermostat)
+eq_simulator = NBSimulator(Δt, eq_steps, thermostat=eq_thermostat)
 potential = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
 
 eq_result = @time simulate(initial_system, eq_simulator, potential)
 
-temp = @time plot_temperature(eq_result, 10)
-energy = @time plot_energy(eq_result, 10)
+temp = plot_temperature(eq_result, 10)
+energy = plot_energy(eq_result, 10)
 
 prod_steps = 5000
-prod_simulator = NBSimulator(Δt, prod_steps, t₀ = get_time(eq_result))
+prod_simulator = NBSimulator(Δt, prod_steps, t₀=get_time(eq_result))
 
 prod_result = @time simulate(get_system(eq_result), prod_simulator, potential)
 
-display(@time plot_temperature!(temp, prod_result, 10))
-display(@time plot_energy!(energy, prod_result, 10))
+display(plot_temperature!(temp, prod_result, 10))
+display(plot_energy!(energy, prod_result, 10))
 
-rdf = @time plot_rdf(prod_result, potential.σ, Int(0.95 * prod_steps))
+rdf = plot_rdf(prod_result, potential.σ, Int(0.95 * prod_steps))
 display(rdf)
 savefig(rdf, "artifacts/argon_lj_nbs_rdf.svg")
 

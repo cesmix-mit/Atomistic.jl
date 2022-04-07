@@ -224,7 +224,7 @@ function rdf(result::MolecularDynamicsResult, start::Integer, stop::Integer)
         @inbounds gr[bin] = (hist[bin] / (tlen * n)) / nideal
     end
 
-    (; r = rs, g = gr)
+    (; r=rs, g=gr)
 end
 rdf(result::MolecularDynamicsResult, start::Integer) = rdf(result, start, length(result))
 rdf(result::MolecularDynamicsResult) = rdf(result, 1, length(result))

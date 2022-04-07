@@ -2,8 +2,8 @@
 
 @testset "molly_result.jl" begin
     particles = [
-        AtomsBase.Atom(:Ar, (@SVector [7.0, 7.0, 7.0])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"; meta = :data),
-        AtomsBase.Atom(:Ar, (@SVector [7.0, 7.0, 21.0])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"; hello = "world"),
+        AtomsBase.Atom(:Ar, (@SVector [7.0, 7.0, 7.0])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"; meta=:data),
+        AtomsBase.Atom(:Ar, (@SVector [7.0, 7.0, 21.0])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"; hello="world"),
         AtomsBase.Atom(:Ar, (@SVector [7.0, 21.0, 7.0])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
         AtomsBase.Atom(:Ar, (@SVector [7.0, 21.0, 21.0])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
         AtomsBase.Atom(:Ar, (@SVector [21.0, 7.0, 7.0])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
@@ -15,9 +15,9 @@
     boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]
     system = FlexibleSystem(particles, box, boundary_conditions)
 
-    simulator = MollySimulator(400, 10, t₀ = 1000, coupling = Molly.AndersenThermostat(94.4u"K", 0.1u"ps"))
-    simulator2 = MollySimulator(400, 9, t₀ = 1000, stride = 2)
-    simulator3 = MollySimulator(400, 10, t₀ = 1000, stride = 2)
+    simulator = MollySimulator(400, 10, t₀=1000, coupling=Molly.AndersenThermostat(94.4u"K", 0.1u"ps"))
+    simulator2 = MollySimulator(400, 9, t₀=1000, stride=2)
+    simulator3 = MollySimulator(400, 10, t₀=1000, stride=2)
 
     potential = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
 
@@ -55,5 +55,5 @@
     @test Atomistic.kinetic_energy(result) isa Unitful.Energy
     @test Atomistic.potential_energy(result) isa Unitful.Energy
 
-    @test all(isapprox(Atomistic.total_energy(result3, t), Atomistic.total_energy(result3), rtol = 0.1) for t ∈ 1:5)
+    @test all(isapprox(Atomistic.total_energy(result3, t), Atomistic.total_energy(result3), rtol=0.1) for t ∈ 1:5)
 end

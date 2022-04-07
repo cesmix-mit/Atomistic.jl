@@ -30,19 +30,19 @@ struct MollySimulator{S,T<:Unitful.Time,C} <: MolecularDynamicsSimulator
     coupling::C
     stride::Int
 end
-function MollySimulator{S}(Δt::T, steps::Int; t₀::Real = zero(T), coupling::C = NoCoupling(), stride::Int = 1) where {S,T<:Real,C}
+function MollySimulator{S}(Δt::T, steps::Int; t₀::Real=zero(T), coupling::C=NoCoupling(), stride::Int=1) where {S,T<:Real,C}
     Δt, t₀ = promote(Δt * TIME_UNIT, t₀ * TIME_UNIT)
     MollySimulator{S,typeof(Δt),C}(Δt, steps, t₀, coupling, stride)
 end
-function MollySimulator{S}(Δt::T, steps::Int; t₀::Unitful.Time = zero(T), coupling::C = NoCoupling(), stride::Int = 1) where {S,T<:Unitful.Time,C}
+function MollySimulator{S}(Δt::T, steps::Int; t₀::Unitful.Time=zero(T), coupling::C=NoCoupling(), stride::Int=1) where {S,T<:Unitful.Time,C}
     Δt, t₀ = promote(Δt, t₀)
     MollySimulator{S,T,C}(Δt, steps, t₀, coupling, stride)
 end
-function MollySimulator(Δt::T, steps::Int; t₀::Real = zero(T), coupling::C = NoCoupling(), stride::Int = 1) where {T<:Real,C}
-    MollySimulator{Molly.VelocityVerlet}(Δt, steps; t₀ = t₀, coupling = coupling, stride = stride)
+function MollySimulator(Δt::T, steps::Int; t₀::Real=zero(T), coupling::C=NoCoupling(), stride::Int=1) where {T<:Real,C}
+    MollySimulator{Molly.VelocityVerlet}(Δt, steps; t₀=t₀, coupling=coupling, stride=stride)
 end
-function MollySimulator(Δt::T, steps::Int; t₀::Unitful.Time = zero(T), coupling::C = NoCoupling(), stride::Int = 1) where {T<:Unitful.Time,C}
-    MollySimulator{Molly.VelocityVerlet}(Δt, steps; t₀ = t₀, coupling = coupling, stride = stride)
+function MollySimulator(Δt::T, steps::Int; t₀::Unitful.Time=zero(T), coupling::C=NoCoupling(), stride::Int=1) where {T<:Unitful.Time,C}
+    MollySimulator{Molly.VelocityVerlet}(Δt, steps; t₀=t₀, coupling=coupling, stride=stride)
 end
 
 function simulate(system::AbstractSystem{3}, simulator::MollySimulator{S}, potential::ArbitraryPotential) where {S}
@@ -54,8 +54,8 @@ function simulate(system::AbstractSystem{3}, simulator::MollySimulator{S}, poten
         "k" => KineticEnergyLogger(ENERGY_TYPE, simulator.stride),
         "t" => TemperatureLogger(TEMPERATURE_TYPE, simulator.stride)
     )
-    system = System(system; general_inters = (wrapper,), loggers = loggers)
-    simulate!(system, S(dt = simulator.Δt, coupling = simulator.coupling), simulator.steps)
+    system = System(system; general_inters=(wrapper,), loggers=loggers)
+    simulate!(system, S(dt=simulator.Δt, coupling=simulator.coupling), simulator.steps)
     MollyResult(system, simulator)
 end
 
@@ -71,12 +71,12 @@ struct InteratomicPotentialInter{P<:ArbitraryPotential,E<:Unitful.Energy}
     InteratomicPotentialInter(potential::ArbitraryPotential) = new{typeof(potential),ENERGY_TYPE}(potential, Ref{ENERGY_TYPE}())
 end
 
-function Molly.forces(inter::InteratomicPotentialInter, sys, neighbors = nothing)
+function Molly.forces(inter::InteratomicPotentialInter, sys, neighbors=nothing)
     eandf = energy_and_force(sys, inter.potential)
     inter.energy_cache[] = eandf.e * sys.energy_units
     eandf.f .* sys.force_units
 end
 
-function Molly.potential_energy(inter::InteratomicPotentialInter, sys, neighbors = nothing)
+function Molly.potential_energy(inter::InteratomicPotentialInter, sys, neighbors=nothing)
     inter.energy_cache[]
 end

@@ -1,10 +1,10 @@
 # Unit tests for implementations/nbodysimulator/nbodysimulator_simulator.jl
 
 @testset "nbodysimulator_simulator.jl" begin
-    simulator1 = NBSimulator(400, 10, thermostat = NBodySimulator.AndersenThermostat(100, 2e-4))
-    simulator2 = NBSimulator(400, 10, t₀ = 1000)
-    simulator3 = NBSimulator(400u"ns", 10, simulator = DPRKN6())
-    simulator4 = NBSimulator(400u"ns", 10, t₀ = 1000u"ns")
+    simulator1 = NBSimulator(400, 10, thermostat=NBodySimulator.AndersenThermostat(100, 2e-4))
+    simulator2 = NBSimulator(400, 10, t₀=1000)
+    simulator3 = NBSimulator(400u"ns", 10, simulator=DPRKN6())
+    simulator4 = NBSimulator(400u"ns", 10, t₀=1000u"ns")
 
     @test simulator1 isa NBSimulator{NBodySimulator.VelocityVerlet,typeof(1u"ħ_au / hartree"),<:NBodySimulator.AndersenThermostat}
     @test simulator1.Δt == 400.0u"ħ_au / hartree"

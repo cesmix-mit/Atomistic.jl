@@ -1,7 +1,7 @@
 # Unit tests for implementations/nbodysimulator/nbodysimulator_base.jl
 
 @testset "implementations/nbodysimulator/nbodysimulator_base.jl" begin
-    body1 = Atomistic.ElementMassBody((@SVector [1, 2, 3])u"nm", (@SVector [4, 5, 6])u"nm/s", :Ar; meta = "data")
+    body1 = Atomistic.ElementMassBody((@SVector [1, 2, 3])u"nm", (@SVector [4, 5, 6])u"nm/s", :Ar; meta="data")
 
     @test body1 isa Atomistic.ElementMassBody{Float64,Float64}
     @test body1.r ≈ (@SVector [1, 2, 3])austrip(1u"nm")
@@ -10,7 +10,7 @@
     @test body1.symbol == :Ar
     @test body1.data == Dict(:meta => "data")
 
-    atom1 = AtomsBase.Atom(:Ar, [-2, -1, 3]u"bohr"; hello = :world)
+    atom1 = AtomsBase.Atom(:Ar, [-2, -1, 3]u"bohr"; hello=:world)
     body2 = Atomistic.ElementMassBody(atom1)
 
     @test body2 isa Atomistic.ElementMassBody{Float64,Float64}
@@ -49,8 +49,8 @@
     @test atom4.data == atom1.data
 
     particles = [
-        AtomsBase.Atom(:Ar, [-2, -1, 3]u"bohr", [3, 5, 21]u"bohr * hartree / ħ_au"; a = :b),
-        AtomsBase.Atom(:Ar, [-7, 2, 13]u"bohr", [-3, 7, 1]u"bohr * hartree / ħ_au"; c = :d)
+        AtomsBase.Atom(:Ar, [-2, -1, 3]u"bohr", [3, 5, 21]u"bohr * hartree / ħ_au"; a=:b),
+        AtomsBase.Atom(:Ar, [-7, 2, 13]u"bohr", [-3, 7, 1]u"bohr * hartree / ħ_au"; c=:d)
     ]
     box = (@SVector [(@SVector [1.5, 0.0, 0.0]), (@SVector [0.0, 1.5, 0.0]), (@SVector [0.0, 0.0, 1.5])])u"bohr"
     boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]

@@ -1,10 +1,10 @@
 # Unit tests for implementations/molly/molly_simulator.jl
 
 @testset "molly_simulator.jl" begin
-    simulator1 = MollySimulator(400, 10, coupling = Molly.AndersenThermostat(94.4u"K", 0.1u"ps"))
-    simulator2 = MollySimulator{Molly.StormerVerlet}(400, 10, t₀ = 1000, stride = 2)
+    simulator1 = MollySimulator(400, 10, coupling=Molly.AndersenThermostat(94.4u"K", 0.1u"ps"))
+    simulator2 = MollySimulator{Molly.StormerVerlet}(400, 10, t₀=1000, stride=2)
     simulator3 = MollySimulator{Molly.StormerVerlet}(400u"ns", 10)
-    simulator4 = MollySimulator(400u"ns", 10, t₀ = 1000u"ns")
+    simulator4 = MollySimulator(400u"ns", 10, t₀=1000u"ns")
 
     @test simulator1 isa MollySimulator{Molly.VelocityVerlet,typeof(1u"ħ_au / hartree"),<:Molly.AndersenThermostat}
     @test simulator1.Δt == 400.0u"ħ_au / hartree"
