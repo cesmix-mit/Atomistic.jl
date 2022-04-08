@@ -52,12 +52,11 @@
         AtomsBase.Atom(:Ar, [-2, -1, 3]u"bohr", [3, 5, 21]u"bohr * hartree / ħ_au"; a=:b),
         AtomsBase.Atom(:Ar, [-7, 2, 13]u"bohr", [-3, 7, 1]u"bohr * hartree / ħ_au"; c=:d)
     ]
-    box = (@SVector [(@SVector [1.5, 0.0, 0.0]), (@SVector [0.0, 1.5, 0.0]), (@SVector [0.0, 0.0, 1.5])])u"bohr"
-    boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]
-    system = FlexibleSystem(particles, box, boundary_conditions)
+    box = [[1.5, 0.0, 0.0], [0.0, 1.5, 0.0], [0.0, 0.0, 1.5]]u"bohr"
+    system = periodic_system(particles, box)
 
     @test Atomistic.nbs_boundary_conditions(system) == nbs_boundary_conditions
-    @test get_boundary_conditions(nbs_boundary_conditions) == boundary_conditions
+    @test get_boundary_conditions(nbs_boundary_conditions) == [Periodic(), Periodic(), Periodic()]
     @test get_bounding_box(nbs_boundary_conditions) == box
 
     @test Atomistic.bound_position((@SVector [1, -1, 10]), nbs_boundary_conditions) == (@SVector [1, 0.5, 1])

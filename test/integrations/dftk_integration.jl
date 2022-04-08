@@ -3,11 +3,9 @@
 @testset "integrations/dftk_integration.jl" begin
     potential = DFTKPotential(5u"hartree", [1, 1, 1]; functionals=[:lda_x, :lda_c_pw], scf_kwargs=Dict(:damping => 0.7, :tol => 1e-4))
 
-    pspkey = list_psp(:Ar, functional="lda")[1].identifier
-    particles = [AtomsBase.Atom(:Ar, [i & 1 == 0 ? 7 : 21, i & 2 == 0 ? 7 : 21, i & 4 == 0 ? 7 : 21]u"bohr"; pseudopotential=pspkey) for i ∈ 0:7]
-    box = [[28.0, 0, 0], [0, 28.0, 0], [0, 0, 28.0]]u"bohr"
-    boundary_conditions = [Periodic(), Periodic(), Periodic()]
-    system = FlexibleSystem(particles, box, boundary_conditions)
+    particles = [AtomsBase.Atom(:Ar, [i & 1 == 0 ? 7 : 21, i & 2 == 0 ? 7 : 21, i & 4 == 0 ? 7 : 21]u"bohr") for i ∈ 0:7]
+    box = [[28.0, 0.0, 0.0], [0.0, 28.0, 0.0], [0.0, 0.0, 28.0]]u"bohr"
+    system = attach_psp(periodic_system(particles, box); functional="lda")
 
     eandf = energy_and_force(system, potential)
     @test eandf.e isa Float64

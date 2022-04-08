@@ -15,11 +15,7 @@ reference_temp = 94.4u"K"
 thermostat_prob = 0.1 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
-initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_temp)
-pspkey = list_psp(:Ar, functional="lda")[1].identifier
-for atom ∈ initial_system
-    atom.data[:pseudopotential] = pspkey
-end
+initial_system = attach_psp(generate_atoms_in_cubic_cell(N, element, box_size, reference_temp); functional="lda")
 
 eq_steps = 20000
 eq_thermostat = NBodySimulator.AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))

@@ -17,6 +17,5 @@ function generate_atoms_in_cubic_cell(n::Integer, symbol::Union{Integer,Abstract
     end
 
     bounding_box = SVector{3}(SVector{3}.(eachrow(L * I(3))))
-    boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]
-    FlexibleSystem(particles, bounding_box, boundary_conditions)
+    periodic_system(particles, bounding_box)
 end

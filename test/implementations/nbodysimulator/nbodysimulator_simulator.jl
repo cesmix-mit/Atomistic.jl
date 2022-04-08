@@ -48,9 +48,8 @@
         AtomsBase.Atom(:Ar, (@SVector [21, 21, 7])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
         AtomsBase.Atom(:Ar, (@SVector [21, 21, 21])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au")
     ]
-    box = (@SVector [(@SVector [28.0, 0.0, 0.0]), (@SVector [0.0, 28.0, 0.0]), (@SVector [0.0, 0.0, 28.0])])u"bohr"
-    boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]
-    system = FlexibleSystem(particles, box, boundary_conditions)
+    box = [[28.0, 0.0, 0.0], [0.0, 28.0, 0.0], [0.0, 0.0, 28.0]]u"bohr"
+    system = periodic_system(particles, box)
 
     potential1 = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
     potential2 = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])

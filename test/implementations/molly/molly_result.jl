@@ -11,9 +11,8 @@
         AtomsBase.Atom(:Ar, (@SVector [21.0, 21.0, 7.0])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au"),
         AtomsBase.Atom(:Ar, (@SVector [21.0, 21.0, 21.0])u"bohr", 6e-5(@SVector randn(3))u"bohr * hartree / ħ_au")
     ]
-    box = (@SVector [(@SVector [28.0, 0.0, 0.0]), (@SVector [0.0, 28.0, 0.0]), (@SVector [0.0, 0.0, 28.0])])u"bohr"
-    boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]
-    system = FlexibleSystem(particles, box, boundary_conditions)
+    box = [[28.0, 0.0, 0.0], [0.0, 28.0, 0.0], [0.0, 0.0, 28.0]]u"bohr"
+    system = periodic_system(particles, box)
 
     simulator = MollySimulator(400, 10, t₀=1000, coupling=Molly.AndersenThermostat(94.4u"K", 0.1u"ps"))
     simulator2 = MollySimulator(400, 9, t₀=1000, stride=2)
@@ -31,7 +30,7 @@
 
     @test get_num_bodies(result) == 8
     @test get_bounding_box(result) == box
-    @test get_boundary_conditions(result) == boundary_conditions
+    @test get_boundary_conditions(result) == [Periodic(), Periodic(), Periodic()]
 
     @test reference_temperature(result) == 94.4u"K"
     @test ismissing(reference_temperature(result2))

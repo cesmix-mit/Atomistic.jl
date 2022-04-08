@@ -8,7 +8,7 @@
     box = (@SVector [(@SVector [1.5, 0.0, 0.0]), (@SVector [0.0, 1.5, 0.0]), (@SVector [0.0, 0.0, 1.5])])u"bohr"
     boundary_conditions = @SVector [Periodic(), Periodic(), Periodic()]
     flexible = FlexibleSystem(particles, box, boundary_conditions)
-    fast = FastSystem(flexible)
+    fast = FastSystem(particles, box, boundary_conditions)
 
     system1 = System(flexible)
     system2 = System(fast)
