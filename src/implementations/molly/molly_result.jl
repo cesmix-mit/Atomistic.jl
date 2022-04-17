@@ -20,7 +20,7 @@ function get_time_range(result::MollyResult)
     s = result.simulator
     Δt = s.Δt * s.stride
     start = s.t₀ + Δt - s.Δt
-    steps = s.steps ÷ s.stride - 1
+    steps = s.steps ÷ s.stride
     start:Δt:start+Δt*steps
 end
 get_num_bodies(result::MollyResult) = length(result.system)

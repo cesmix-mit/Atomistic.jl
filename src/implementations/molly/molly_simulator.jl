@@ -68,7 +68,7 @@ end
 struct InteratomicPotentialInter{P<:ArbitraryPotential,E<:Unitful.Energy}
     potential::P
     energy_cache::Ref{E}
-    InteratomicPotentialInter(potential::ArbitraryPotential) = new{typeof(potential),ENERGY_TYPE}(potential, Ref{ENERGY_TYPE}())
+    InteratomicPotentialInter(potential::ArbitraryPotential) = new{typeof(potential),ENERGY_TYPE}(potential, Ref(Inf * ENERGY_UNIT))
 end
 
 function Molly.forces(inter::InteratomicPotentialInter, sys, neighbors=nothing)
@@ -78,5 +78,9 @@ function Molly.forces(inter::InteratomicPotentialInter, sys, neighbors=nothing)
 end
 
 function Molly.potential_energy(inter::InteratomicPotentialInter, sys, neighbors=nothing)
-    inter.energy_cache[]
+    if isinf(inter.energy_cache[])
+        InteratomicPotentials.potential_energy(sys, inter.potential) * sys.energy_units
+    else
+        inter.energy_cache[]
+    end
 end

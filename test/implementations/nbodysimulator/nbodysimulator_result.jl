@@ -36,9 +36,9 @@
     @test get_velocities(result) isa AbstractVector{<:StaticVector{3,<:Unitful.Velocity}}
     @test get_particles(result) isa AbstractVector{<:AtomsBase.Atom}
 
-    @test all(get_positions(result, t) isa AbstractVector{<:StaticVector{3,<:Unitful.Length}} for t ∈ 1:10)
-    @test all(get_velocities(result, t) isa AbstractVector{<:StaticVector{3,<:Unitful.Velocity}} for t ∈ 1:10)
-    @test all(get_particles(result, t) isa AbstractVector{<:AtomsBase.Atom} for t ∈ 1:10)
+    @test all(get_positions(result, t) isa AbstractVector{<:StaticVector{3,<:Unitful.Length}} for t ∈ 1:11)
+    @test all(get_velocities(result, t) isa AbstractVector{<:StaticVector{3,<:Unitful.Velocity}} for t ∈ 1:11)
+    @test all(get_particles(result, t) isa AbstractVector{<:AtomsBase.Atom} for t ∈ 1:11)
 
     @test all(all(all(0.0u"bohr" ≤ c < 28.0u"bohr" for c ∈ p) for p ∈ get_positions(result, t)) for t ∈ 1:11)
     @test all(get_particles(result, t)[1].meta == :data && get_particles(result, t)[2].hello == "world" for t ∈ 1:11)
@@ -47,6 +47,6 @@
     @test Atomistic.kinetic_energy(result) isa Unitful.Energy
     @test Atomistic.potential_energy(result) isa Unitful.Energy
 
-    @test all(isapprox(Atomistic.total_energy(result2, t), Atomistic.total_energy(result2), rtol=0.1) for t ∈ 1:10)
-    @test all(isapprox(Atomistic.total_energy(result3, t), Atomistic.total_energy(result3), rtol=0.1) for t ∈ 1:10)
+    @test all(isapprox(Atomistic.total_energy(result2, t), Atomistic.total_energy(result2), rtol=0.1) for t ∈ 1:11)
+    @test all(isapprox(Atomistic.total_energy(result3, t), Atomistic.total_energy(result3), rtol=0.1) for t ∈ 1:11)
 end
