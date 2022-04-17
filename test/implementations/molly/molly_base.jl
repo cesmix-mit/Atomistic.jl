@@ -19,8 +19,8 @@
         Molly.Atom(; index=2, mass=auconvert(39.9481u"u"))
     ]
     @test system1.atoms_data == [
-        Atomistic.AugmentedAtomData(:Ar, Dict{Symbol,Any}(:a => :b)),
-        Atomistic.AugmentedAtomData(:Ar, Dict{Symbol,Any}(:c => :d))
+        AugmentedAtomData(:Ar, Dict{Symbol,Any}(:a => :b)),
+        AugmentedAtomData(:Ar, Dict{Symbol,Any}(:c => :d))
     ]
     @test system1.coords == [
         (@SVector [-2.0, -1.0, 3.0])u"bohr",
@@ -39,8 +39,8 @@
         Molly.Atom(; index=2, mass=auconvert(39.9481u"u"))
     ]
     @test system2.atoms_data == [
-        Atomistic.AugmentedAtomData(:Ar, Dict{Symbol,Any}()),
-        Atomistic.AugmentedAtomData(:Ar, Dict{Symbol,Any}())
+        AugmentedAtomData(:Ar, Dict{Symbol,Any}()),
+        AugmentedAtomData(:Ar, Dict{Symbol,Any}())
     ]
     @test system2.coords == [
         (@SVector [-2.0, -1.0, 3.0])u"bohr",
@@ -59,8 +59,8 @@
         Molly.Atom(; index=2, mass=auconvert(39.9481u"u"))
     ]
     @test system3.atoms_data == [
-        Atomistic.AugmentedAtomData(:Ar, Dict{Symbol,Any}(:a => :b)),
-        Atomistic.AugmentedAtomData(:Ar, Dict{Symbol,Any}(:c => :d))
+        AugmentedAtomData(:Ar, Dict{Symbol,Any}(:a => :b)),
+        AugmentedAtomData(:Ar, Dict{Symbol,Any}(:c => :d))
     ]
     @test system3.coords == [
         (@SVector [-2.0, -1.0, 3.0])u"bohr",
@@ -75,7 +75,7 @@
     @test system3.energy_units == u"hartree"
     @test system3.loggers["c"] isa typeof(CoordinateLogger(1))
 
-    data = Atomistic.AugmentedAtomData(:Ar, a=:b)
+    data = AugmentedAtomData(:Ar, a=:b)
 
     @test hasproperty(data, :element)
     @test hasproperty(data, :a)
@@ -105,5 +105,5 @@
 
     @test atom == particles[1]
 
-    @test AtomsBase.atomic_symbol(system1, 1) == :Ar
+    @test atomic_symbol(system1, 1) == :Ar
 end

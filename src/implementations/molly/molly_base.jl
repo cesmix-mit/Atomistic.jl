@@ -7,11 +7,11 @@
 function Molly.System(system::AbstractSystem{D}; kwargs...) where {D}
     @assert hcat(bounding_box(system)...) == bounding_box(system)[1][1] * I(D)
     @assert all(periodicity(system))
-    atoms_data = (species_type(system) <: AtomsBase.Atom) ? [AugmentedAtomData(AtomsBase.atomic_symbol(a); a.data...) for a ∈ system] :
+    atoms_data = (species_type(system) <: AtomsBase.Atom) ? [AugmentedAtomData(atomic_symbol(a); a.data...) for a ∈ system] :
                  (species_type(system) <: Molly.Atom) ? copy(system.atoms_data) :
-                 AugmentedAtomData.(AtomsBase.atomic_symbol(system))
-    velocities = ismissing(AtomsBase.velocity(system)) ? [@SVector zeros(VELOCITY_TYPE, 3) for _ ∈ 1:length(system)] :
-                 [auconvert.(v) for v ∈ AtomsBase.velocity(system)]
+                 AugmentedAtomData.(atomic_symbol(system))
+    velocities = ismissing(velocity(system)) ? [@SVector zeros(VELOCITY_TYPE, 3) for _ ∈ 1:length(system)] :
+                 [auconvert.(v) for v ∈ velocity(system)]
     System(;
         atoms=[Molly.Atom(index=i, mass=auconvert(m)) for (i, m) ∈ enumerate(atomic_mass(system))],
         atoms_data=atoms_data,

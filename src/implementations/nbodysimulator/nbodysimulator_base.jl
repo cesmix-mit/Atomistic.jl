@@ -12,14 +12,13 @@ struct ElementMassBody{cType<:Real,mType<:Real} <: Body
 end
 function ElementMassBody(r::SVector{3,<:Unitful.Length}, v::SVector{3,<:Unitful.Velocity}, symbol::AtomsBase.AtomId; data...)
     r, v = promote(austrip.(r), austrip.(v))
-    e = elements[symbol]
-    ElementMassBody(r, v, austrip(e.atomic_mass), Symbol(e.symbol), Dict{Symbol,Any}(data...))
+    ElementMassBody(r, v, austrip(elements[symbol].atomic_mass), Symbol(elements[symbol].symbol), Dict{Symbol,Any}(data...))
 end
 
 # Convert AtomsBase Atom to NBodySimulator body
 function ElementMassBody(atom::AtomsBase.Atom)
-    r, v = promote(austrip.(position(atom)), austrip.(AtomsBase.velocity(atom)))
-    ElementMassBody(r, v, austrip(atomic_mass(atom)), AtomsBase.atomic_symbol(atom), atom.data)
+    r, v = promote(austrip.(position(atom)), austrip.(velocity(atom)))
+    ElementMassBody(r, v, austrip(atomic_mass(atom)), atomic_symbol(atom), atom.data)
 end
 # Convert NBodySimulator body to AtomsBase Atom
 AtomsBase.Atom(b::ElementMassBody, boundary_conditions::BoundaryConditions) = AtomsBase.Atom(b, b.r, b.v, boundary_conditions)

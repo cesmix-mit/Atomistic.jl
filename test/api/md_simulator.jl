@@ -5,5 +5,5 @@
     struct MockSimulator <: MolecularDynamicsSimulator end
     struct MockPotential <: InteratomicPotentials.ArbitraryPotential end
 
-    @test_throws Atomistic.UnimplementedError{MockSimulator} simulate(MockSystem(), MockSimulator(), MockPotential())
+    @test_throws UnimplementedError{MockSimulator} simulate(MockSystem(), MockSimulator(), MockPotential())
 end

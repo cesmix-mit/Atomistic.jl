@@ -10,9 +10,11 @@ using StaticArrays
 using Test
 using Unitful
 
+import Atomistic: ElementMassBody, AugmentedAtomData, UnimplementedError
+
 Base.:(==)(a1::AtomsBase.Atom, a2::AtomsBase.Atom) = propertynames(a1) == propertynames(a2) && all(getproperty(a1, p) == getproperty(a2, p) for p ∈ propertynames(a1))
-Base.:(==)(b1::Atomistic.ElementMassBody, b2::Atomistic.ElementMassBody) = all(getproperty(b1, p) == getproperty(b2, p) for p ∈ propertynames(b1))
-Base.:(==)(a1::Atomistic.AugmentedAtomData, a2::Atomistic.AugmentedAtomData) = propertynames(a1) == propertynames(a2) && all(getproperty(a1, p) == getproperty(a2, p) for p ∈ propertynames(a1))
+Base.:(==)(b1::ElementMassBody, b2::ElementMassBody) = all(getproperty(b1, p) == getproperty(b2, p) for p ∈ propertynames(b1))
+Base.:(==)(a1::AugmentedAtomData, a2::AugmentedAtomData) = propertynames(a1) == propertynames(a2) && all(getproperty(a1, p) == getproperty(a2, p) for p ∈ propertynames(a1))
 
 @testset "Atomistic.jl" begin
     include("unit_convention.jl")
