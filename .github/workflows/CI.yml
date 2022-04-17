@@ -21,8 +21,6 @@ jobs:
           - windows-latest
         arch:
           - x64
-    env:
-      PYTHON: "" # Force using Conda in PyCall (required for DFTK on ubuntu)
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1

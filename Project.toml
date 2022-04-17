@@ -5,7 +5,6 @@ version = "0.3.5"
 
 [deps]
 AtomsBase = "a963bdd2-2df7-4f54-a1ee-49d51e6be12a"
-DFTK = "acf6eb54-70d9-11e9-0013-234b7a5f5337"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 InteratomicPotentials = "a9efe35a-c65d-452d-b8a8-82646cd5cb04"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -21,7 +20,6 @@ UnitfulRecipes = "42071c24-d89e-48dd-8a24-8a12d9b8861f"
 
 [compat]
 AtomsBase = "0.2"
-DFTK = "0.5"
 Distances = "0.10"
 InteratomicPotentials = "0.1"
 Molly = "0.10"

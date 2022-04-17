@@ -11,18 +11,20 @@ using StaticArrays
 using Base.Threads
 @reexport using Unitful, UnitfulAtomic
 
-using DFTK
 using Molly
 using NBodySimulator
 
 using PeriodicTable
 using Plots, UnitfulRecipes
 
-import DFTK: Mixing
 import NBodySimulator: Body, BoundaryConditions, NullThermostat, SimulationResult, Thermostat
 import Plots: Plot
 
 include("unit_convention.jl")
+
+# Initialization Convenience functions
+export generate_atoms_in_cubic_cell
+include("initialization.jl")
 
 # API
 include("api/exceptions.jl")
@@ -41,16 +43,8 @@ include("implementations/nbodysimulator.jl")
 export MollySimulator, MollyResult
 include("implementations/molly.jl")
 
-# Initialization Convenience functions
-export generate_atoms_in_cubic_cell
-include("integrations/initialization.jl")
-
 # Analysis
 export plot_temperature, plot_temperature!, plot_energy, plot_energy!, plot_rdf
 include("analysis/plotting.jl")
-
-# DFTK Integrations
-export DFTKPotential
-include("integrations/dftk_integration.jl")
 
 end

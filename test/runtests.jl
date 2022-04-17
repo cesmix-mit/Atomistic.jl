@@ -3,7 +3,6 @@
 using Atomistic
 
 using AtomsBase
-using DFTK
 using InteratomicPotentials
 using Molly
 using NBodySimulator
@@ -17,14 +16,11 @@ Base.:(==)(a1::Atomistic.AugmentedAtomData, a2::Atomistic.AugmentedAtomData) = p
 
 @testset "Atomistic.jl" begin
     include("unit_convention.jl")
+    include("initialization.jl")
     @testset "Atomistic API Unit Tests" begin
         include("api/exceptions.jl")
         include("api/md_result.jl")
         include("api/md_simulator.jl")
-    end
-    @testset "Integrations Unit Tests" begin
-        include("integrations/initialization.jl")
-        include("integrations/dftk_integration.jl")
     end
     @testset "Implementations Unit Tests" begin
         @testset "NBodySimulator Implementation" begin
