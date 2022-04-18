@@ -6,7 +6,7 @@ Developed as part of the [CESMIX](https://computing.mit.edu/cesmix/) Julia packa
 
 ## Conventions
 
-The unit convention throughout the package and other packages in the CESMIX Julia Suite is to assume all unspecified units to be atomic units as defined in the [UnitfulAtomic.jl](https://github.com/sostock/UnitfulAtomic.jl) package. All exposed interfaces should allow for numeric or unitful input. For clarity's sake, it is _strongly recommended_ that user code utilize Unitful wherever possible. Internally, Atomistic will automatically convert these quantities to be compatible without a significant performance penalty.
+The unit convention throughout the package and other packages in the CESMIX Julia Suite is to assume all unspecified units to be atomic units as defined in the [UnitfulAtomic.jl](https://github.com/sostock/UnitfulAtomic.jl) package. All exposed interfaces should allow for numeric or unitful input. For clarity's sake, it is _strongly recommended_ that user code utilize Unitful wherever possible. Internally, Atomistic.jl will automatically convert these quantities to be compatible without a significant performance penalty.
 
 ## Next Steps
 
