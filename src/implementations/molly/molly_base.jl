@@ -2,7 +2,6 @@
 # Integration with AtomsBase 
 # -----------------------------------------------------------------------------
 
-# TODO: all the auconverts can be removed once InteratomicPotentials.jl properly supports unitful
 # Convert arbitrary AbstractSystem to a System
 function Molly.System(system::AbstractSystem{D}; kwargs...) where {D}
     @assert hcat(bounding_box(system)...) == bounding_box(system)[1][1] * I(D)
@@ -11,13 +10,13 @@ function Molly.System(system::AbstractSystem{D}; kwargs...) where {D}
                  (species_type(system) <: Molly.Atom) ? copy(system.atoms_data) :
                  AugmentedAtomData.(atomic_symbol(system))
     velocities = ismissing(velocity(system)) ? [@SVector zeros(VELOCITY_TYPE, 3) for _ ∈ 1:length(system)] :
-                 [auconvert.(v) for v ∈ velocity(system)]
+                 velocity(system)
     System(;
-        atoms=[Molly.Atom(index=i, mass=auconvert(m)) for (i, m) ∈ enumerate(atomic_mass(system))],
-        atoms_data=atoms_data,
-        coords=[auconvert.(p) for p ∈ position(system)],
-        velocities=velocities,
-        box_size=SVector{D}(auconvert(bounding_box(system)[i][i]) for i ∈ 1:D),
+        atoms=[Molly.Atom(index=i, mass=m) for (i, m) ∈ enumerate(atomic_mass(system))],
+        atoms_data,
+        coords=position(system),
+        velocities,
+        box_size=SVector{D}(bounding_box(system)[i][i] for i ∈ 1:D),
         force_units=FORCE_UNIT,
         energy_units=ENERGY_UNIT,
         kwargs...

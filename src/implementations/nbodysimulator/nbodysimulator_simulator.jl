@@ -42,7 +42,7 @@ end
 # Extract the tuple of start_time, end_time from the simulator
 time_range(simulator::NBSimulator) = Float64.(austrip.((simulator.t₀, simulator.t₀ + simulator.steps * simulator.Δt)))
 
-function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::ArbitraryPotential)
+function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::AbstractPotential)
     wrapper = InteratomicPotentialParameters(potential)
     result = simulate(system, simulator, Dict{Symbol,PotentialParameters}(:custom => wrapper))
     NBSResult(result, wrapper.energy_cache)
@@ -64,12 +64,12 @@ end
 # Internal struct that represents a potential in the format accepted by NBodySimulator
 # Wraps the underlying InteratomicPotential with a cache of the forces for the current timestep
 # Also stores the potential energy from every timestep to be referenceable after the simulation
-struct InteratomicPotentialParameters{P<:ArbitraryPotential} <: PotentialParameters
+struct InteratomicPotentialParameters{P<:AbstractPotential} <: PotentialParameters
     potential::P
     timestep_cache::Ref{Float64}
     force_cache::Ref{Vector{SVector{3,Float64}}}
     energy_cache::Vector{Float64}
-    InteratomicPotentialParameters(potential::ArbitraryPotential) = new{typeof(potential)}(potential, Ref{Float64}(), Ref{Vector{SVector{3,Float64}}}(), Vector{Float64}())
+    InteratomicPotentialParameters(potential::AbstractPotential) = new{typeof(potential)}(potential, Ref{Float64}(), Ref{Vector{SVector{3,Float64}}}(), Vector{Float64}())
 end
 
 function NBodySimulator.get_accelerating_function(parameters::InteratomicPotentialParameters, simulation::NBodySimulation)
@@ -82,8 +82,8 @@ function NBodySimulator.get_accelerating_function(parameters::InteratomicPotenti
             system = FlexibleSystem(particles, get_bounding_box(boundary_conditions), get_boundary_conditions(boundary_conditions))
             eandf = energy_and_force(system, parameters.potential)
             parameters.timestep_cache[] = t
-            parameters.force_cache[] = eandf.f
-            push!(parameters.energy_cache, eandf.e)
+            parameters.force_cache[] = [austrip.(f) for f ∈ eandf.f]
+            push!(parameters.energy_cache, austrip.(eandf.e))
         end
         dv .+= parameters.force_cache[][i] ./ bodies[i].m
     end

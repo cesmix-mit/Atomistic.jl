@@ -15,8 +15,8 @@
     system3 = System(system1; loggers=Dict("c" => CoordinateLogger(1)))
 
     @test system1.atoms == [
-        Molly.Atom(; index=1, mass=auconvert(39.9481u"u"))
-        Molly.Atom(; index=2, mass=auconvert(39.9481u"u"))
+        Molly.Atom(; index=1, mass=39.9481u"u")
+        Molly.Atom(; index=2, mass=39.9481u"u")
     ]
     @test system1.atoms_data == [
         AugmentedAtomData(:Ar, Dict{Symbol,Any}(:a => :b)),
@@ -35,8 +35,8 @@
     @test system1.energy_units == u"hartree"
 
     @test system2.atoms == [
-        Molly.Atom(; index=1, mass=auconvert(39.9481u"u"))
-        Molly.Atom(; index=2, mass=auconvert(39.9481u"u"))
+        Molly.Atom(; index=1, mass=39.9481u"u")
+        Molly.Atom(; index=2, mass=39.9481u"u")
     ]
     @test system2.atoms_data == [
         AugmentedAtomData(:Ar, Dict{Symbol,Any}()),
@@ -55,8 +55,8 @@
     @test system2.energy_units == u"hartree"
 
     @test system3.atoms == [
-        Molly.Atom(; index=1, mass=auconvert(39.9481u"u"))
-        Molly.Atom(; index=2, mass=auconvert(39.9481u"u"))
+        Molly.Atom(; index=1, mass=39.9481u"u")
+        Molly.Atom(; index=2, mass=39.9481u"u")
     ]
     @test system3.atoms_data == [
         AugmentedAtomData(:Ar, Dict{Symbol,Any}(:a => :b)),
