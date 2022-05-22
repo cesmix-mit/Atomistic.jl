@@ -16,11 +16,10 @@ using Molly
 # We are using a helper function to initialize the system automatically with a particular temperature.
 
 N = 864
-element = :Ar
 box_size = 3.47786u"nm"
 reference_temp = 94.4u"K"
 
-initial_system = generate_atoms_in_cubic_cell(N, element, box_size, reference_temp)
+initial_system = generate_atoms_in_cubic_cell(N, :Ar, box_size, reference_temp)
 
 # ## Step 1B: Configuring the Simulator
 # Second, we initialize our simulator. In this case we are using an AndersenThermostat which is provided by Molly.
@@ -33,7 +32,7 @@ simulator = MollySimulator(Δt, steps, coupling=thermostat)
 # ## Step 1C: Configuring the Potential
 # Lastly, we specify the interatomic potential that we will use for the simulation, Lennard-Jones in this case.
 
-potential = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
+potential = InteratomicPotentials.LennardJones(1.657e-21u"J", 0.34u"nm", 0.765u"nm", [:Ar])
 
 # ## Step 2: Running the Simulation
 
