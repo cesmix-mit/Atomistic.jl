@@ -51,15 +51,10 @@
     box = [[28.0, 0.0, 0.0], [0.0, 28.0, 0.0], [0.0, 0.0, 28.0]]u"bohr"
     system = periodic_system(particles, box)
 
-    potential1 = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
-    potential2 = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
+    potential = InteratomicPotentials.LennardJones(1.657e-21u"J", 0.34u"nm", 0.765u"nm", [:Ar])
 
-    result1 = simulate(system, simulator1, potential1)
-    result2 = simulate(system, simulator2, potential2)
+    result = simulate(system, simulator1, potential)
 
-    @test result1 isa NBSResult
-    @test result2 isa NBSResult
-
-    @test length(result1.energy_cache) == length(result1.result.solution.t)
-    @test length(result2.energy_cache) == length(result2.result.solution.t)
+    @test result isa NBSResult
+    @test length(result.energy_cache) == length(result.result.solution.t)
 end

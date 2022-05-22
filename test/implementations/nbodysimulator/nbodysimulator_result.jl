@@ -17,12 +17,10 @@
     simulator1 = NBSimulator(400, 10, t₀=1000, thermostat=NBodySimulator.AndersenThermostat(2e-4, 2e-4))
     simulator2 = NBSimulator(400, 10, t₀=1000)
 
-    potential1 = LennardJonesParameters(1.657e-21u"J", 0.34u"nm", 0.765u"nm")
-    potential2 = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
+    potential = InteratomicPotentials.LennardJones(1.657e-21u"J", 0.34u"nm", 0.765u"nm", [:Ar])
 
-    result = simulate(system, simulator1, potential1)
-    result2 = simulate(system, simulator2, potential1)
-    result3 = simulate(system, simulator2, potential2)
+    result = simulate(system, simulator1, potential)
+    result2 = simulate(system, simulator2, potential)
 
     @test get_time_range(result) == (1000:400:5000)u"ħ_au / hartree"
     @test get_num_bodies(result) == 8
@@ -48,5 +46,4 @@
     @test Atomistic.potential_energy(result) isa Unitful.Energy
 
     @test all(isapprox(Atomistic.total_energy(result2, t), Atomistic.total_energy(result2), rtol=0.1) for t ∈ 1:11)
-    @test all(isapprox(Atomistic.total_energy(result3, t), Atomistic.total_energy(result3), rtol=0.1) for t ∈ 1:11)
 end

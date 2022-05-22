@@ -11,18 +11,17 @@ using Molly
 setup_threading(n_blas=4)
 
 N = 8
-element = :Ar
 box_size = 1.5u"nm" # this number was chosen arbitrarily
 reference_temp = 94.4u"K"
 coupling_factor = 10 # this number was chosen arbitrarily
 Δt = 1e-2u"ps"
 
-attach_psp(generate_atoms_in_cubic_cell(N, element, box_size, reference_temp); functional="lda")
+initial_system = attach_psp(generate_atoms_in_cubic_cell(N, :Ar, box_size, reference_temp); functional="lda")
 
 eq_steps = 20000
 eq_thermostat = Molly.AndersenThermostat(reference_temp, Δt * coupling_factor)
 eq_simulator = MollySimulator(Δt, eq_steps, coupling=eq_thermostat)
-potential = InteratomicPotentials.LennardJones(austrip(1.657e-21u"J"), austrip(0.34u"nm"), austrip(0.765u"nm"), [:Ar])
+potential = InteratomicPotentials.LennardJones(1.657e-21u"J", 0.34u"nm", 0.765u"nm", [:Ar])
 
 eq_result = @time simulate(initial_system, eq_simulator, potential)
 

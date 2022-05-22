@@ -44,17 +44,11 @@ time_range(simulator::NBSimulator) = Float64.(austrip.((simulator.t₀, simulato
 
 function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::AbstractPotential)
     wrapper = InteratomicPotentialParameters(potential)
-    result = simulate(system, simulator, Dict{Symbol,PotentialParameters}(:custom => wrapper))
-    NBSResult(result, wrapper.energy_cache)
-end
-function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potential::LennardJonesParameters)
-    result = simulate(system, simulator, Dict{Symbol,PotentialParameters}(:lennard_jones => potential))
-    NBSResult(result, [NBodySimulator.potential_energy(result, t) for t ∈ result.solution.t])
-end
-function simulate(system::AbstractSystem{3}, simulator::NBSimulator, potentials::Dict{Symbol,PotentialParameters})
+    potentials = Dict{Symbol,PotentialParameters}(:custom => wrapper)
     nb_system = PotentialNBodySystem{ElementMassBody}(ElementMassBody.(system), potentials)
     simulation = NBodySimulation(nb_system, time_range(simulator), nbs_boundary_conditions(system), simulator.thermostat, austrip(u"k"))
-    run_simulation(simulation, simulator.simulator, dt=austrip(simulator.Δt))
+    result = run_simulation(simulation, simulator.simulator, dt=austrip(simulator.Δt))
+    NBSResult(result, wrapper.energy_cache)
 end
 
 # -----------------------------------------------------------------------------
@@ -68,8 +62,8 @@ struct InteratomicPotentialParameters{P<:AbstractPotential} <: PotentialParamete
     potential::P
     timestep_cache::Ref{Float64}
     force_cache::Ref{Vector{SVector{3,Float64}}}
-    energy_cache::Vector{Float64}
-    InteratomicPotentialParameters(potential::AbstractPotential) = new{typeof(potential)}(potential, Ref{Float64}(), Ref{Vector{SVector{3,Float64}}}(), Vector{Float64}())
+    energy_cache::Vector{ENERGY_TYPE}
+    InteratomicPotentialParameters(potential::AbstractPotential) = new{typeof(potential)}(potential, Ref{Float64}(), Ref{Vector{SVector{3,Float64}}}(), Vector{ENERGY_TYPE}())
 end
 
 function NBodySimulator.get_accelerating_function(parameters::InteratomicPotentialParameters, simulation::NBodySimulation)
@@ -83,16 +77,8 @@ function NBodySimulator.get_accelerating_function(parameters::InteratomicPotenti
             eandf = energy_and_force(system, parameters.potential)
             parameters.timestep_cache[] = t
             parameters.force_cache[] = [austrip.(f) for f ∈ eandf.f]
-            push!(parameters.energy_cache, austrip.(eandf.e))
+            push!(parameters.energy_cache, uconvert(ENERGY_UNIT, eandf.e))
         end
         dv .+= parameters.force_cache[][i] ./ bodies[i].m
     end
-end
-
-# -----------------------------------------------------------------------------
-# Unitful Support for Built-in LennardJonesParameters
-# -----------------------------------------------------------------------------
-
-function NBodySimulator.LennardJonesParameters(ϵ::Unitful.Energy, σ::Unitful.Length, R::Unitful.Length)
-    LennardJonesParameters(austrip(ϵ), austrip(σ), austrip(R))
 end

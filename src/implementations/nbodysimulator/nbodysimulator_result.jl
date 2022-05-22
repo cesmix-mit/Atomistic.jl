@@ -13,7 +13,7 @@ The result generated from running an `NBSimulator`.
 """
 struct NBSResult <: MolecularDynamicsResult
     result::SimulationResult
-    energy_cache::Vector{Float64}
+    energy_cache::Vector{ENERGY_TYPE}
 end
 
 get_time_range(result::NBSResult) = result.result.solution.t * TIME_UNIT
@@ -37,7 +37,7 @@ get_particles(result::NBSResult, t::Integer) = AtomsBase.Atom.(result.result.sim
 
 temperature(result::NBSResult, t::Integer) = NBodySimulator.temperature(result.result, result.result.solution.t[t]) * TEMPERATURE_UNIT
 kinetic_energy(result::NBSResult, t::Integer) = NBodySimulator.kinetic_energy(result.result, result.result.solution.t[t]) * ENERGY_UNIT
-potential_energy(result::NBSResult, t::Integer) = result.energy_cache[t] * ENERGY_UNIT
+potential_energy(result::NBSResult, t::Integer) = result.energy_cache[t]
 
 """
     animate(result::NBSResult, filename::String; kwargs...)
