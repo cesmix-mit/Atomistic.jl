@@ -15,7 +15,7 @@ using Molly
 using NBodySimulator
 
 using PeriodicTable
-using Plots, UnitfulRecipes
+using Plots
 
 import NBodySimulator: Body, BoundaryConditions, NullThermostat, SimulationResult, Thermostat
 import Plots: Plot
