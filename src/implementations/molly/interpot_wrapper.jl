@@ -1,13 +1,13 @@
 # -----------------------------------------------------------------------------
 # Integration with InteratomicPotentials
 # -----------------------------------------------------------------------------
-e_dim = dimension(u"eV")
-l_dim = dimension(u"Å")
+const E_DIM = dimension(u"eV")
+const L_DIM = dimension(u"Å")
 
-def_eunit = u"eV"
-def_lunit = u"Å"
+const DEF_EUNIT = u"eV"
+const DEF_LUNIT = u"Å"
 
-nounit_t = typeof(NoUnits)
+const NOUNIT_T = typeof(NoUnits)
 
 struct InteratomicPotentialInter{P<:AbstractPotential}
     potential::P
@@ -16,8 +16,8 @@ struct InteratomicPotentialInter{P<:AbstractPotential}
 
     # internal constructor, ensuring energy units and length units have correct dimensions
     ( InteratomicPotentialInter(pot::AbstractPotential, 
-                                eu::Union{nounit_t, Unitful.Units{UE,e_dim,nothing}} = def_eunit, 
-                                lu::Union{nounit_t, Unitful.Units{UL,l_dim,nothing}} = def_lunit) 
+                                eu::Union{NOUNIT_T, Unitful.Units{UE,E_DIM,nothing}} = DEF_EUNIT,
+                                lu::Union{NOUNIT_T, Unitful.Units{UL,L_DIM,nothing}} = DEF_LUNIT)
                                 where {UE,UL} = new{typeof(pot)}(pot,eu,lu) )
 end
 

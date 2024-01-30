@@ -43,6 +43,8 @@ using Molly
 #export NBSimulator, NBSResult
 #include("implementations/nbodysimulator.jl")
 #export MollySimulator, MollyResult
+export staticAtoms
+export InteratomicPotentialInter
 include("implementations/molly.jl")
 
 # Analysis
