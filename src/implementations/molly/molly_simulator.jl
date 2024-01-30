@@ -58,25 +58,3 @@ function simulate(system::AbstractSystem{3}, simulator::MollySimulator{S}, poten
     simulate!(system, S(dt=simulator.Δt, coupling=simulator.coupling), simulator.steps)
     MollyResult(system, simulator)
 end
-
-# -----------------------------------------------------------------------------
-# Integration with InteratomicPotentials
-# -----------------------------------------------------------------------------
-
-# Internal struct that represents a potential in the format accepted by Molly
-# Wraps the underlying InteratomicPotential with a cache of the potential energy for the current timestep
-struct InteratomicPotentialInter{P<:AbstractPotential,E<:Unitful.Energy}
-    potential::P
-    energy_cache::Ref{E}
-    InteratomicPotentialInter(potential::AbstractPotential) = new{typeof(potential),ENERGY_TYPE}(potential, Ref(Inf * ENERGY_UNIT))
-end
-
-function Molly.forces(inter::InteratomicPotentialInter, sys, neighbors=nothing)
-    eandf = energy_and_force(sys, inter.potential)
-    inter.energy_cache[] = eandf.e
-    eandf.f
-end
-
-function Molly.potential_energy(inter::InteratomicPotentialInter, sys, neighbors=nothing)
-    isinf(inter.energy_cache[]) ? InteratomicPotentials.potential_energy(sys, inter.potential) : inter.energy_cache[]
-end
