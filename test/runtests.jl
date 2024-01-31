@@ -36,7 +36,7 @@ using AtomsIO
             #include("implementations/molly/molly_simulator.jl")
             #include("implementations/molly/molly_result.jl")
             include("implementations/molly/molly_temp_tests.jl")
-            #include("implementations/molly/interpot_wrapper_tests.jl")
+            include("implementations/molly/interpot_wrapper_tests.jl")
         end
     end
     #@testset "Analysis Unit Tests" begin
