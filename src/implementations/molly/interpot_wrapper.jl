@@ -25,7 +25,6 @@ function Molly.forces(inter::InteratomicPotentialInter,
                       sys::AbstractSystem,
                       neighbors = nothing;
                       n_threads = Threads.nthreads())
-    print(sys)
     forces = InteratomicPotentials.force(sys,inter.potential)
 
     # initial profiling didn't show huge performance hit from unit conversion 
